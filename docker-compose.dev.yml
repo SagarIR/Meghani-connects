@@ -1,0 +1,45 @@
+version: '3.8'
+
+# Development docker-compose - uses local code with hot reload
+
+services:
+  # PostgreSQL Database
+  db:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: meghani_connect
+      POSTGRES_USER: meghani_admin
+      POSTGRES_PASSWORD: meghani_dev_2024
+    ports:
+      - "5432:5432"
+
+  # Redis for Celery
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  # Django Backend (development mode)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=dev-secret-key-not-for-production
+      - DATABASE_URL=postgres://meghani_admin:meghani_dev_2024@db:5432/meghani_connect
+      - REDIS_URL=redis://redis:6379/0
+      - ALLOWED_HOSTS=*
+      - CORS_ALLOW_ALL_ORIGINS=True
+    volumes:
+      - ./backend:/app
+    depends_on:
+      - db
+      - redis
+
+volumes:
+  postgres_data_dev:
