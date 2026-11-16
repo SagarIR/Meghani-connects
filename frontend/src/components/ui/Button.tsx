@@ -5,9 +5,10 @@ import clsx from 'clsx'
 import { Loader2 } from 'lucide-react'
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'ghost' | 'outline'
+  variant?: 'primary' | 'secondary' | 'danger' | 'success' | 'ghost' | 'outline' | 'luxury'
   size?: 'sm' | 'md' | 'lg'
   loading?: boolean
+  isLoading?: boolean
   icon?: React.ReactNode
   iconPosition?: 'left' | 'right'
   fullWidth?: boolean
@@ -18,6 +19,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
   variant = 'primary',
   size = 'md',
   loading = false,
+  isLoading,
   icon,
   iconPosition = 'left',
   fullWidth = false,
@@ -25,6 +27,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
   disabled,
   ...props
 }, ref) => {
+  const isButtonLoading = loading || isLoading || false
   const baseStyles = `
     relative inline-flex items-center justify-center gap-2 font-semibold rounded-xl
     transition-all duration-200 ease-out
@@ -70,6 +73,11 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
       hover:bg-primary-50 hover:-translate-y-0.5
       focus:ring-primary-500
     `,
+    luxury: `
+      bg-gradient-to-r from-[#C9A04F] to-[#DFC17B] text-[#101010] font-bold shadow-lg shadow-[#C9A04F]/20
+      hover:from-[#DFC17B] hover:to-[#C9A04F] hover:shadow-xl hover:shadow-[#C9A04F]/30 hover:-translate-y-0.5
+      focus:ring-[#C9A04F]
+    `,
   }
 
   const sizes = {
@@ -81,7 +89,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
   return (
     <button
       ref={ref}
-      disabled={disabled || loading}
+      disabled={disabled || isButtonLoading}
       className={clsx(
         baseStyles,
         variants[variant],
@@ -91,7 +99,7 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
       )}
       {...props}
     >
-      {loading ? (
+      {isButtonLoading ? (
         <>
           <Loader2 className="w-4 h-4 animate-spin" />
           <span>Loading...</span>

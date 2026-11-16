@@ -273,7 +273,7 @@ export default function GlobalSearch() {
                     <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-gray-100 rounded-xl sm:rounded-2xl flex items-center justify-center mb-3 sm:mb-4">
                       <Search className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
                     </div>
-                    <p className="text-sm sm:text-base text-gray-500">No results for "{query}"</p>
+                    <p className="text-sm sm:text-base text-gray-500">No results for &ldquo;{query}&rdquo;</p>
                     <p className="text-xs sm:text-sm text-gray-400 mt-1">Try different keywords</p>
                   </div>
                 ) : (

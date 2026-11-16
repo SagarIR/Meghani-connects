@@ -10,11 +10,20 @@ class Product(models.Model):
         ('accessory', 'Accessory'),
     ]
 
+    AVAILABILITY_CHOICES = [
+        ('in_stock', 'In Stock'),
+        ('out_of_stock', 'Out of Stock'),
+        ('on_request', 'On Request'),
+        ('discontinued', 'Discontinued'),
+    ]
+
     name = models.CharField(max_length=200)
     brand = models.CharField(max_length=100, blank=True)
     category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
     cost_price = models.DecimalField(max_digits=10, decimal_places=2)
     selling_price = models.DecimalField(max_digits=10, decimal_places=2)
+    price_visible = models.BooleanField(default=True)
+    availability = models.CharField(max_length=20, choices=AVAILABILITY_CHOICES, default='in_stock')
     stock = models.PositiveIntegerField(default=0)
     barcode = models.CharField(max_length=50, unique=True, blank=True, null=True)
     supplier_name = models.CharField(max_length=100, blank=True)

@@ -886,7 +886,7 @@ export default function CustomersPage() {
           <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4">
             <Trash2 className="w-7 h-7 sm:w-8 sm:h-8 text-red-600" />
           </div>
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Delete "{selectedCustomer?.name}"?</h3>
+          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Delete &ldquo;{selectedCustomer?.name}&rdquo;?</h3>
           <p className="text-sm sm:text-base text-gray-500 mb-6">This will also remove their purchase and repair history links. This action cannot be undone.</p>
           <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3">
             <Button variant="secondary" onClick={() => setShowDeleteModal(false)} className="flex-1">Cancel</Button>

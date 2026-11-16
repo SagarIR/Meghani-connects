@@ -624,7 +624,7 @@ export default function RepairsPage() {
                           </button>
                           {config.next && (
                             <button 
-                              onClick={(e) => { e.stopPropagation(); openStatusUpdateModal(repair) }} 
+                              onClick={(e) => { e.stopPropagation(); openStatusModal(repair, config.next!) }} 
                               className="p-1.5 hover:bg-primary-50 rounded-lg transition-colors"
                             >
                               <ArrowRight className="w-4 h-4 text-primary-500" />

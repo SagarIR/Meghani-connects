@@ -3,7 +3,7 @@
 import clsx from 'clsx'
 
 interface BadgeProps {
-  variant?: 'primary' | 'success' | 'warning' | 'danger' | 'gray' | 'outline'
+  variant?: 'primary' | 'success' | 'warning' | 'danger' | 'gray' | 'outline' | 'info' | 'default' | 'luxury'
   size?: 'sm' | 'md' | 'lg'
   dot?: boolean
   pulse?: boolean
@@ -19,6 +19,9 @@ const variants = {
   danger: 'bg-danger-100 text-danger-700 border-danger-200',
   gray: 'bg-gray-100 text-gray-700 border-gray-200',
   outline: 'bg-transparent border-gray-300 text-gray-600',
+  info: 'bg-blue-100 text-blue-700 border-blue-200',
+  default: 'bg-gray-100 text-gray-700 border-gray-200',
+  luxury: 'bg-[#C9A04F]/10 text-[#C9A04F] border-[#C9A04F]/30',
 }
 
 const dotColors = {
@@ -28,6 +31,9 @@ const dotColors = {
   danger: 'bg-danger-500',
   gray: 'bg-gray-500',
   outline: 'bg-gray-500',
+  info: 'bg-blue-500',
+  default: 'bg-gray-500',
+  luxury: 'bg-[#C9A04F]',
 }
 
 const sizes = {

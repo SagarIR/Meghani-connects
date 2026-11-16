@@ -3,12 +3,15 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, AllowAny
 from django.db.models import Q
 from django.conf import settings
 from django.http import HttpResponse
 from .models import Product
-from .serializers import ProductSerializer, ProductListSerializer, ProductStockUpdateSerializer
+from .serializers import (
+    ProductSerializer, ProductListSerializer, ProductStockUpdateSerializer,
+    PublicProductSerializer
+)
 from .import_service import ProductImportService
 
 
@@ -190,3 +193,73 @@ class ProductExportTemplateView(APIView):
         )
         response['Content-Disposition'] = 'attachment; filename="product_import_template.xlsx"'
         return response
+
+
+class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Public customer-facing product catalogue endpoint.
+    Unauthenticated read-only access.
+    Excludes internal confidential fields (cost_price, supplier_name, profit_margin).
+    Strictly respects price visibility (returns None if price_visible=False).
+    """
+    permission_classes = [AllowAny]
+    serializer_class = PublicProductSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'brand', 'category', 'description']
+    ordering_fields = ['name', 'selling_price', 'created_at']
+    ordering = ['-created_at']
+
+    def get_queryset(self):
+        queryset = Product.objects.filter(is_active=True)
+
+        category = self.request.query_params.get('category')
+        if category:
+            queryset = queryset.filter(category=category)
+
+        brand = self.request.query_params.get('brand')
+        if brand:
+            queryset = queryset.filter(brand__iexact=brand)
+
+        availability = self.request.query_params.get('availability')
+        if availability:
+            queryset = queryset.filter(availability=availability)
+
+        min_price = self.request.query_params.get('min_price')
+        if min_price:
+            try:
+                queryset = queryset.filter(selling_price__gte=float(min_price))
+            except ValueError:
+                pass
+
+        max_price = self.request.query_params.get('max_price')
+        if max_price:
+            try:
+                queryset = queryset.filter(selling_price__lte=float(max_price))
+            except ValueError:
+                pass
+
+        return queryset
+
+    @action(detail=False, methods=['get'])
+    def brands(self, request):
+        """List unique active brands for discovery"""
+        brands = Product.objects.filter(is_active=True).exclude(
+            brand=''
+        ).values_list('brand', flat=True).distinct().order_by('brand')
+        return Response(list(brands))
+
+    @action(detail=False, methods=['get'])
+    def categories(self, request):
+        """List categories with product counts"""
+        from django.db.models import Count
+        categories = Product.objects.filter(is_active=True).values('category').annotate(
+            count=Count('id')
+        ).order_by('category')
+        return Response(categories)
+
+    @action(detail=False, methods=['get'])
+    def featured(self, request):
+        """List featured watches for public showcase"""
+        products = Product.objects.filter(is_active=True)[:8]
+        serializer = PublicProductSerializer(products, many=True)
+        return Response(serializer.data)

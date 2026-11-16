@@ -43,6 +43,7 @@ export interface Customer {
   loyalty_points: number
   total_purchases: number
   purchase_count: number
+  notes?: string
   created_at: string
 }
 

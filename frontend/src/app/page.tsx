@@ -1,26 +1,12 @@
-'use client'
+import HomePage, { metadata } from './(public)/page';
+import PublicLayout from './(public)/layout';
 
-import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { useAuth } from '@/context/AuthContext'
+export { metadata };
 
-export default function Home() {
-  const router = useRouter()
-  const { user, loading } = useAuth()
-
-  useEffect(() => {
-    if (!loading) {
-      if (user) {
-        router.push('/dashboard')
-      } else {
-        router.push('/login')
-      }
-    }
-  }, [user, loading, router])
-
+export default function RootPage() {
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-    </div>
-  )
+    <PublicLayout>
+      <HomePage />
+    </PublicLayout>
+  );
 }

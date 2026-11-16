@@ -3,7 +3,8 @@ from .views import (
     HealthCheckView, ReadinessView, LivenessView, SystemInfoView,
     AuditLogListView, AuditLogStatsView,
     BusinessSettingsView, UserPreferencesView,
-    BackupListView, BackupDownloadView, BackupRestoreView, BackupDeleteView, BackupCleanupView
+    BackupListView, BackupDownloadView, BackupRestoreView, BackupDeleteView, BackupCleanupView,
+    ImageUploadView
 )
 
 urlpatterns = [
@@ -25,5 +26,6 @@ urlpatterns = [
     path('backups/<str:filename>/download/', BackupDownloadView.as_view(), name='backup-download'),
     path('backups/<str:filename>/restore/', BackupRestoreView.as_view(), name='backup-restore'),
     path('backups/<str:filename>/delete/', BackupDeleteView.as_view(), name='backup-delete'),
-    path('backups/cleanup/', BackupCleanupView.as_view(), name='backup-cleanup'),
+    # Media & Cloudinary Upload
+    path('upload/image/', ImageUploadView.as_view(), name='image-upload'),
 ]

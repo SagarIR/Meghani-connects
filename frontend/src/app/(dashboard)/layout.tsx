@@ -37,6 +37,9 @@ export default function DashboardLayout({
     return () => window.removeEventListener('resize', handleResize)
   }, [])
 
+  // Initialize keyboard shortcuts
+  useKeyboardShortcuts()
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
@@ -76,9 +79,6 @@ export default function DashboardLayout({
       </div>
     )
   }
-
-  // Initialize keyboard shortcuts
-  useKeyboardShortcuts()
 
   if (!user) {
     return null

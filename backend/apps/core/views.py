@@ -328,3 +328,37 @@ class BackupCleanupView(APIView):
         result = service.cleanup_old_backups(keep_count=keep_count)
         
         return Response(result)
+
+
+class ImageUploadView(APIView):
+    """
+    Secure Image Upload endpoint.
+    Handles upload to Cloudinary (or local media storage fallback).
+    Never exposes API secrets to client code.
+    """
+    permission_classes = [AllowAny]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        file_obj = request.FILES.get('file') or request.FILES.get('image')
+        if not file_obj:
+            return Response({'error': 'No image file provided'}, status=400)
+
+        # Validate file size (max 5MB)
+        if file_obj.size > 5 * 1024 * 1024:
+            return Response({'error': 'File size exceeds maximum 5MB limit'}, status=400)
+
+        # Validate extension
+        allowed_extensions = ['.jpg', '.jpeg', '.png', '.webp', '.avif']
+        ext = os.path.splitext(file_obj.name.lower())[1]
+        if ext not in allowed_extensions:
+            return Response({'error': f'Unsupported format {ext}. Allowed: {", ".join(allowed_extensions)}'}, status=400)
+
+        from .cloudinary_service import CloudinaryMediaService
+        service = CloudinaryMediaService()
+        folder = request.data.get('folder', 'meghani-watches')
+        result = service.upload_image(file_obj, folder=folder)
+
+        if result.get('success'):
+            return Response(result, status=201)
+        return Response(result, status=500)
