@@ -14,11 +14,11 @@ function runTests() {
         ? `₹${product.price.toLocaleString('en-IN')}`
         : 'Price on Request';
 
-      text = `Hello Meghani Watch Co.,\n\nI am interested in acquiring this timepiece from your collection:\n\n*${product.name}*\n• Brand: ${product.brand}\n• Category: ${product.category}\n• Availability: ${product.availability.replace('_', ' ').toUpperCase()}\n• Price: ${priceText}\n${product.barcode ? `• Ref Code: ${product.barcode}\n` : ''}\nCould you please share availability details and assist me with a boutique viewing or order?\n\nThank you.`;
+      text = `Hello Meghani Watch Co.,\n\nI am interested in this watch from your collection:\n\n*${product.name}*\n• Brand: ${product.brand}\n• Category: ${product.category}\n• Availability: ${product.availability.replace('_', ' ').toUpperCase()}\n• Price: ${priceText}\n${product.barcode ? `• Reference Code: ${product.barcode}\n` : ''}\nPlease let me know if it is available in your Vadodara showroom and how I can see or purchase it.\n\nThank you.`;
     } else if (customMessage) {
-      text = `Hello Meghani Watch Co.,\n\n${customMessage}\n\nI look forward to your assistance.`;
+      text = `Hello Meghani Watch Co.,\n\n${customMessage}\n\nThank you.`;
     } else {
-      text = `Hello Meghani Watch Co.,\n\nI would like to inquire about your curated luxury watch collection and boutique consultation services.`;
+      text = `Hello Meghani Watch Co.,\n\nI would like to enquire about your watch collection and showroom in Vadodara.`;
     }
 
     return `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(text)}`;
@@ -61,8 +61,8 @@ function runTests() {
 
   // Case 1C: General enquiry without product
   const url3 = buildWhatsAppEnquiryUrl();
-  assert(decodeURIComponent(url3).includes('curated luxury watch collection'), 'General boutique consultation enquiry');
-  console.log('✓ Case 1C Passed: General boutique consultation WhatsApp enquiry');
+  assert(decodeURIComponent(url3).includes('watch collection and showroom in Vadodara'), 'General showroom consultation enquiry');
+  console.log('✓ Case 1C Passed: General showroom consultation WhatsApp enquiry');
 
   // Test 2: In-memory Filtering, Searching and Sorting logic (replicates getPublicProducts)
   const seedProducts = [

@@ -30,7 +30,7 @@ export default function Breadcrumbs({ items }: BreadcrumbsProps) {
               className="flex items-center gap-1.5 hover:text-[#C9A45C] transition-colors"
             >
               <Home className="w-3.5 h-3.5" />
-              <span className="tracking-wide">Boutique</span>
+              <span className="tracking-wide">Home</span>
             </Link>
           </li>
 

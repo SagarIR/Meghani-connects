@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import AuditLog
+from .models import AuditLog, Offer, GalleryItem, Milestone
 from .settings_models import BusinessSettings, UserPreferences
 
 
@@ -43,3 +43,28 @@ class AuditLogAdmin(admin.ModelAdmin):
     def has_delete_permission(self, request, obj=None):
         # Only superusers can delete audit logs
         return request.user.is_superuser
+
+
+@admin.register(Offer)
+class OfferAdmin(admin.ModelAdmin):
+    list_display = ['title', 'badge', 'code', 'validity', 'is_active', 'display_order']
+    list_filter = ['is_active']
+    search_fields = ['title', 'code', 'description']
+    list_editable = ['is_active', 'display_order']
+
+
+@admin.register(GalleryItem)
+class GalleryItemAdmin(admin.ModelAdmin):
+    list_display = ['title', 'category', 'is_active', 'display_order']
+    list_filter = ['category', 'is_active']
+    search_fields = ['title', 'caption']
+    list_editable = ['is_active', 'display_order']
+
+
+@admin.register(Milestone)
+class MilestoneAdmin(admin.ModelAdmin):
+    list_display = ['year', 'title', 'is_active', 'display_order']
+    list_filter = ['is_active']
+    search_fields = ['year', 'title']
+    list_editable = ['is_active', 'display_order']
+

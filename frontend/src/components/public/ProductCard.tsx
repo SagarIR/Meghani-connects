@@ -38,13 +38,13 @@ export default function ProductCard({ product, featured = false, priority = fals
       case 'out_of_stock':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider bg-[#1A1816]/80 text-[#8D8980] border border-[#2E2A22]">
-            Awaiting Allocation
+            Out of Stock
           </span>
         );
       case 'discontinued':
         return (
           <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium uppercase tracking-wider bg-[#12110F] text-[#6A665E] border border-[#24211A]">
-            Archived Piece
+            Discontinued
           </span>
         );
     }
@@ -66,7 +66,7 @@ export default function ProductCard({ product, featured = false, priority = fals
         <Link href={`/shop/${product.id}`} className="block w-full h-full">
           <Image
             src={product.image || 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=800&q=80'}
-            alt={`${product.brand} ${product.name} - ${product.category} Luxury Timepiece | Meghani Watch Co.`}
+            alt={`${product.brand} ${product.name} - ${product.category} Watch | Meghani Watch Co.`}
             fill
             priority={priority}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
@@ -99,7 +99,7 @@ export default function ProductCard({ product, featured = false, priority = fals
       <div className="p-5 flex-1 flex flex-col justify-between bg-[#171613]">
         <div>
           <div className="flex items-center gap-2 text-[11px] text-[#8D8980] uppercase tracking-[0.1em] mb-2 font-medium">
-            <span>{product.category} Timepiece</span>
+            <span>{product.category} Watch</span>
             <span className="text-[#3D382E]">•</span>
             <span className="flex items-center gap-1 text-[#C9A45C]">
               <ShieldCheck className="w-3 h-3" />
@@ -120,7 +120,7 @@ export default function ProductCard({ product, featured = false, priority = fals
         <div className="pt-4 mt-4 border-t border-[#23201A] flex items-center justify-between gap-3">
           <div>
             <span className="text-[10px] text-[#8D8980] uppercase tracking-widest block font-medium">
-              Investment
+              Price
             </span>
             {isPriceHidden ? (
               <span className="font-serif text-sm sm:text-base text-[#C9A45C] tracking-wide block font-medium mt-0.5">
@@ -152,7 +152,7 @@ export default function ProductCard({ product, featured = false, priority = fals
               <Link
                 href={`/shop/${product.id}`}
                 className="p-2 rounded-lg bg-white/[0.03] text-[#8D8980] hover:text-[#F3EFE6] hover:bg-white/[0.08] transition-colors block"
-                title="View Complete Specifications"
+                title="View Watch Details"
                 aria-label={`View details of ${product.name}`}
               >
                 <ArrowRight className="w-4 h-4" />

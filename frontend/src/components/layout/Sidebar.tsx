@@ -7,7 +7,7 @@ import clsx from 'clsx'
 import { 
   LayoutDashboard, ShoppingCart, Package, Wrench, 
   Users, Wallet, BarChart3, Settings, Watch, LogOut, 
-  History, Bell, Sparkles, ChevronRight, X
+  History, Bell, Sparkles, ChevronRight, X, Globe
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 
@@ -20,6 +20,7 @@ const navigation = [
   { name: 'Customers', href: '/customers', icon: Users, color: 'from-pink-500 to-pink-600' },
   { name: 'Expenses', href: '/expenses', icon: Wallet, color: 'from-red-500 to-red-600' },
   { name: 'Reports', href: '/reports', icon: BarChart3, color: 'from-indigo-500 to-indigo-600' },
+  { name: 'Website CMS', href: '/website-cms', icon: Globe, color: 'from-amber-500 to-yellow-600' },
   { name: 'Notifications', href: '/notifications', icon: Bell, color: 'from-amber-500 to-amber-600' },
   { name: 'Settings', href: '/settings', icon: Settings, color: 'from-gray-500 to-gray-600' },
 ]

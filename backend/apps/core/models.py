@@ -197,3 +197,66 @@ class AuditLogMixin:
                     pass
         
         return changes if changes else None
+
+
+class Offer(models.Model):
+    title = models.CharField(max_length=200)
+    badge = models.CharField(max_length=100, blank=True)
+    discount = models.CharField(max_length=100, blank=True)
+    description = models.TextField(blank=True)
+    code = models.CharField(max_length=50, blank=True)
+    validity = models.CharField(max_length=100, blank=True)
+    terms = models.TextField(blank=True)
+    banner_image = models.URLField(max_length=500, blank=True)
+    target_category = models.CharField(max_length=50, blank=True)
+    is_active = models.BooleanField(default=True)
+    display_order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'offers'
+        ordering = ['display_order', '-created_at']
+
+    def __str__(self):
+        return self.title
+
+
+class GalleryItem(models.Model):
+    CATEGORY_CHOICES = [
+        ('craftsmanship', 'Craftsmanship & Movements'),
+        ('timepieces', 'Iconic Timepieces'),
+        ('heritage', 'Horological Heritage'),
+        ('boutique', 'The Vadodara Boutique'),
+    ]
+
+    title = models.CharField(max_length=200)
+    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='timepieces')
+    image_url = models.URLField(max_length=500)
+    caption = models.TextField(blank=True)
+    details = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    display_order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'gallery_items'
+        ordering = ['display_order', '-created_at']
+
+    def __str__(self):
+        return self.title
+
+
+class Milestone(models.Model):
+    year = models.CharField(max_length=20)
+    title = models.CharField(max_length=200)
+    description = models.TextField()
+    display_order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'milestones'
+        ordering = ['display_order', 'year']
+
+    def __str__(self):
+        return f"{self.year} - {self.title}"
+

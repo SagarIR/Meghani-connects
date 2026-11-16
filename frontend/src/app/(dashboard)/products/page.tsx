@@ -7,7 +7,8 @@ import * as yup from 'yup'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Plus, Search, Package, Edit, Trash2, Eye, Filter, 
-  Grid3X3, List, SortAsc, Tag, Box, Sparkles, Upload
+  Grid3X3, List, SortAsc, Tag, Box, Sparkles, Upload,
+  Image as ImageIcon, Sliders, ArrowRight, Loader2, CheckCircle2
 } from 'lucide-react'
 import { api } from '@/services/api'
 import { Product } from '@/types'
@@ -35,16 +36,26 @@ const schema = yup.object({
   supplier_name: yup.string(),
   description: yup.string(),
   warranty_months: yup.number().min(0).default(0),
+  is_featured: yup.boolean().default(false),
+  is_new_arrival: yup.boolean().default(false),
+  price_visible: yup.boolean().default(true),
+  image: yup.string().nullable(),
+  movement: yup.string(),
+  caseDiameter: yup.string(),
+  caseMaterial: yup.string(),
+  glass: yup.string(),
+  waterResistance: yup.string(),
+  strapMaterial: yup.string(),
 })
 
 type FormData = yup.InferType<typeof schema>
 
 const categories = [
-  { value: 'analog', label: 'Analog Watch', icon: '⌚' },
-  { value: 'digital', label: 'Digital Watch', icon: '🕐' },
-  { value: 'smart', label: 'Smart Watch', icon: '📱' },
-  { value: 'wall', label: 'Wall Clock', icon: '🕰️' },
-  { value: 'accessory', label: 'Accessory', icon: '💎' },
+  { value: 'analog', label: 'Analog Watch' },
+  { value: 'digital', label: 'Digital Watch' },
+  { value: 'smart', label: 'Smart Watch' },
+  { value: 'wall', label: 'Wall Clock' },
+  { value: 'accessory', label: 'Accessory' },
 ]
 
 export default function ProductsPage() {
@@ -75,10 +86,40 @@ export default function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
+  // Tab and form state
+  type FormTab = 'general' | 'media' | 'specs'
+  const [activeModalTab, setActiveModalTab] = useState<FormTab>('general')
+  const [availableBrands, setAvailableBrands] = useState<{ id: number; name: string }[]>([])
+  const [isCustomBrand, setIsCustomBrand] = useState(false)
+  const [isUploadingImage, setIsUploadingImage] = useState(false)
+  const [showUrlInput, setShowUrlInput] = useState(false)
+
+  const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<FormData>({
     resolver: yupResolver(schema),
-    defaultValues: { category: 'analog', stock: 0, warranty_months: 0 }
+    defaultValues: { category: 'analog', stock: 0, warranty_months: 24, cost_price: 0, selling_price: 0 }
   })
+
+  // Watched form values for live preview
+  const watchedCost = watch('cost_price') || 0
+  const watchedSelling = watch('selling_price') || 0
+  const watchedImage = watch('image') || ''
+  const liveProfit = Number(watchedSelling) - Number(watchedCost)
+  const liveMargin = Number(watchedCost) > 0 ? ((liveProfit / Number(watchedCost)) * 100).toFixed(1) : '0'
+
+  // Fetch available brands on mount
+  useEffect(() => {
+    fetchBrands()
+  }, [])
+
+  const fetchBrands = async () => {
+    try {
+      const res = await api.get('/brands/')
+      const items = Array.isArray(res.data) ? res.data : (res.data?.results || [])
+      setAvailableBrands(items)
+    } catch (e) {
+      console.error('Failed to fetch brands:', e)
+    }
+  }
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -140,14 +181,93 @@ export default function ProductsPage() {
 
   const openAddModal = () => {
     setSelectedProduct(null)
-    reset({ category: 'analog', stock: 0, warranty_months: 0, name: '', brand: '', barcode: '', supplier_name: '', description: '', cost_price: 0, selling_price: 0 })
+    setActiveModalTab('general')
+    setIsCustomBrand(false)
+    setShowUrlInput(false)
+    reset({
+      category: 'analog',
+      stock: 0,
+      warranty_months: 24,
+      name: '',
+      brand: availableBrands[0]?.name || '',
+      barcode: '',
+      supplier_name: '',
+      description: '',
+      cost_price: 0,
+      selling_price: 0,
+      is_featured: false,
+      is_new_arrival: false,
+      price_visible: true,
+      image: '',
+      movement: '',
+      caseDiameter: '',
+      caseMaterial: '',
+      glass: '',
+      waterResistance: '',
+      strapMaterial: ''
+    })
     setShowFormModal(true)
   }
 
   const openEditModal = (product: Product) => {
     setSelectedProduct(product)
-    reset(product)
+    setActiveModalTab('general')
+    const brandMatches = availableBrands.some(b => b.name.toLowerCase() === (product.brand || '').toLowerCase())
+    setIsCustomBrand(!brandMatches && Boolean(product.brand))
+    setShowUrlInput(Boolean(product.image?.startsWith('http')))
+    reset({
+      ...product,
+      is_featured: product.is_featured ?? false,
+      is_new_arrival: product.is_new_arrival ?? false,
+      price_visible: product.price_visible ?? true,
+      movement: product.specifications?.movement || '',
+      caseDiameter: product.specifications?.caseDiameter || '',
+      caseMaterial: product.specifications?.caseMaterial || '',
+      glass: product.specifications?.glass || '',
+      waterResistance: product.specifications?.waterResistance || '',
+      strapMaterial: product.specifications?.strapMaterial || '',
+    })
     setShowFormModal(true)
+  }
+
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be under 5MB')
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('folder', 'meghani-products')
+
+    setIsUploadingImage(true)
+    try {
+      const res = await api.post('/upload/image/', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+      })
+      if (res.data?.url) {
+        setValue('image', res.data.url)
+        toast.success('Image uploaded successfully')
+      } else {
+        toast.error('Upload did not return an image URL')
+      }
+    } catch (err: any) {
+      console.error('Upload error:', err)
+      toast.error(err.response?.data?.error || 'Failed to upload image')
+    } finally {
+      setIsUploadingImage(false)
+      if (e.target) e.target.value = ''
+    }
+  }
+
+  const onFormError = (formErrors: any) => {
+    if (formErrors.name || formErrors.cost_price || formErrors.selling_price || formErrors.stock || formErrors.category) {
+      setActiveModalTab('general')
+      toast.error('Please fill in required fields in General & Pricing')
+    }
   }
 
   const openViewModal = (product: Product) => {
@@ -163,11 +283,37 @@ export default function ProductsPage() {
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true)
     try {
+      const specs: Record<string, string> = { ...(selectedProduct?.specifications || {}) }
+      if (data.movement) specs.movement = data.movement
+      if (data.caseDiameter) specs.caseDiameter = data.caseDiameter
+      if (data.caseMaterial) specs.caseMaterial = data.caseMaterial
+      if (data.glass) specs.glass = data.glass
+      if (data.waterResistance) specs.waterResistance = data.waterResistance
+      if (data.strapMaterial) specs.strapMaterial = data.strapMaterial
+
+      const payload: any = {
+        name: data.name,
+        brand: data.brand || '',
+        category: data.category,
+        cost_price: data.cost_price,
+        selling_price: data.selling_price,
+        stock: data.stock,
+        barcode: data.barcode || null,
+        supplier_name: data.supplier_name || '',
+        description: data.description || '',
+        warranty_months: data.warranty_months || 0,
+        is_featured: Boolean(data.is_featured),
+        is_new_arrival: Boolean(data.is_new_arrival),
+        price_visible: Boolean(data.price_visible),
+        image: data.image || null,
+        specifications: specs
+      }
+
       if (selectedProduct) {
-        await api.patch(`/products/${selectedProduct.id}/`, data)
+        await api.patch(`/products/${selectedProduct.id}/`, payload)
         toast.success('Product updated successfully')
       } else {
-        await api.post('/products/', data)
+        await api.post('/products/', payload)
         toast.success('Product created successfully')
       }
       setShowFormModal(false)
@@ -550,42 +696,441 @@ export default function ProductsPage() {
         isOpen={showFormModal} 
         onClose={() => setShowFormModal(false)} 
         title={selectedProduct ? 'Edit Product' : 'Add New Product'}
-        description={selectedProduct ? 'Update product information' : 'Fill in the product details below'}
-        size="lg"
+        description={selectedProduct ? 'Update product information and horological details' : 'Add a new timepiece or accessory to inventory'}
+        size="xl"
       >
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-5">
-            <Input label="Product Name" placeholder="Enter product name" {...register('name')} error={errors.name?.message} />
-            <Input label="Brand" placeholder="Enter brand name" {...register('brand')} />
-            <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">Category</label>
-              <select {...register('category')} className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm sm:text-base">
-                {categories.map((cat) => (
-                  <option key={cat.value} value={cat.value}>{cat.label}</option>
-                ))}
-              </select>
-            </div>
-            <Input label="Barcode" placeholder="Scan or enter barcode" {...register('barcode')} />
-            <Input label="Cost Price" type="number" placeholder="0" {...register('cost_price')} error={errors.cost_price?.message} />
-            <Input label="Selling Price" type="number" placeholder="0" {...register('selling_price')} error={errors.selling_price?.message} />
-            <Input label="Stock Quantity" type="number" placeholder="0" {...register('stock')} error={errors.stock?.message} />
-            <Input label="Warranty (Months)" type="number" placeholder="0" {...register('warranty_months')} />
-            <Input label="Supplier" placeholder="Supplier name" {...register('supplier_name')} className="sm:col-span-2" />
-            <div className="sm:col-span-2">
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-1.5">Description</label>
-              <textarea 
-                {...register('description')} 
-                rows={3} 
-                placeholder="Product description..."
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all resize-none text-sm sm:text-base"
-              />
-            </div>
+        <form onSubmit={handleSubmit(onSubmit, onFormError)} className="space-y-4">
+          {/* Modal Tabs Header */}
+          <div className="flex items-center gap-1.5 p-1 bg-gray-100 rounded-xl">
+            <button
+              type="button"
+              onClick={() => setActiveModalTab('general')}
+              className={clsx(
+                "flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs sm:text-sm font-semibold rounded-lg transition-all",
+                activeModalTab === 'general'
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-900 hover:bg-white/50"
+              )}
+            >
+              <Tag className="w-4 h-4 text-primary-600" />
+              <span>General & Pricing</span>
+              {(errors.name || errors.cost_price || errors.selling_price || errors.stock || errors.category) && (
+                <span className="w-2 h-2 rounded-full bg-danger-500" />
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveModalTab('media')}
+              className={clsx(
+                "flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs sm:text-sm font-semibold rounded-lg transition-all",
+                activeModalTab === 'media'
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-900 hover:bg-white/50"
+              )}
+            >
+              <ImageIcon className="w-4 h-4 text-primary-600" />
+              <span>Photo & Description</span>
+              {watchedImage && (
+                <span className="w-2 h-2 rounded-full bg-success-500" />
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveModalTab('specs')}
+              className={clsx(
+                "flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs sm:text-sm font-semibold rounded-lg transition-all",
+                activeModalTab === 'specs'
+                  ? "bg-white text-gray-900 shadow-sm"
+                  : "text-gray-500 hover:text-gray-900 hover:bg-white/50"
+              )}
+            >
+              <Sliders className="w-4 h-4 text-primary-600" />
+              <span>Website & Specs</span>
+            </button>
           </div>
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4 sm:pt-5 border-t border-gray-100">
-            <Button type="button" variant="secondary" onClick={() => setShowFormModal(false)} className="w-full sm:w-auto">Cancel</Button>
-            <Button type="submit" loading={isSubmitting} className="w-full sm:w-auto">
-              {selectedProduct ? 'Update' : 'Create'}
-            </Button>
+
+          {/* TAB 1: General & Pricing */}
+          {activeModalTab === 'general' && (
+            <div className="space-y-4 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+                {/* Product Name */}
+                <div className="sm:col-span-2">
+                  <Input 
+                    label="Product Name *" 
+                    placeholder="e.g. Titan Neo Splash Quartz Watch" 
+                    {...register('name')} 
+                    error={errors.name?.message} 
+                  />
+                </div>
+
+                {/* Brand Selection */}
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Brand</label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCustomBrand(!isCustomBrand)
+                        if (isCustomBrand) {
+                          setValue('brand', availableBrands[0]?.name || '')
+                        } else {
+                          setValue('brand', '')
+                        }
+                      }}
+                      className="text-xs text-primary-600 hover:text-primary-700 font-semibold"
+                    >
+                      {isCustomBrand ? "Choose from list" : "+ Custom Brand"}
+                    </button>
+                  </div>
+                  {isCustomBrand ? (
+                    <Input 
+                      placeholder="Type custom brand name" 
+                      {...register('brand')} 
+                    />
+                  ) : (
+                    <select
+                      {...register('brand')}
+                      onChange={(e) => {
+                        if (e.target.value === '__custom__') {
+                          setIsCustomBrand(true)
+                          setValue('brand', '')
+                        } else {
+                          setValue('brand', e.target.value)
+                        }
+                      }}
+                      className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none text-sm text-gray-900 font-medium"
+                    >
+                      <option value="">Select a brand...</option>
+                      {availableBrands.map((b) => (
+                        <option key={b.id || b.name} value={b.name}>{b.name}</option>
+                      ))}
+                      <option value="__custom__">+ Enter custom brand...</option>
+                    </select>
+                  )}
+                </div>
+
+                {/* Category */}
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Category *</label>
+                  <select 
+                    {...register('category')} 
+                    className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none text-sm text-gray-900 font-medium"
+                  >
+                    {categories.map((cat) => (
+                      <option key={cat.value} value={cat.value}>{cat.label}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Barcode & SKU */}
+                <div>
+                  <Input 
+                    label="Barcode / SKU" 
+                    placeholder="Scan barcode or enter SKU" 
+                    {...register('barcode')} 
+                  />
+                </div>
+
+                {/* Supplier Name */}
+                <div>
+                  <Input 
+                    label="Supplier / Distributor" 
+                    placeholder="e.g. Titan Company Ltd" 
+                    {...register('supplier_name')} 
+                  />
+                </div>
+
+                {/* Cost Price */}
+                <div>
+                  <Input 
+                    label="Cost Price (₹) *" 
+                    type="number" 
+                    step="any"
+                    placeholder="0" 
+                    {...register('cost_price')} 
+                    error={errors.cost_price?.message} 
+                  />
+                </div>
+
+                {/* Selling Price */}
+                <div>
+                  <Input 
+                    label="Selling Price (₹) *" 
+                    type="number" 
+                    step="any"
+                    placeholder="0" 
+                    {...register('selling_price')} 
+                    error={errors.selling_price?.message} 
+                  />
+                </div>
+
+                {/* Real-time Profit & Margin Pill */}
+                <div className="sm:col-span-2 p-3 bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-xl flex items-center justify-between">
+                  <span className="text-xs font-semibold text-gray-600">Calculated Profit & Margin:</span>
+                  <div className="flex items-center gap-2">
+                    <span className={clsx(
+                      "text-xs font-bold px-2.5 py-1 rounded-md border",
+                      liveProfit >= 0 
+                        ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
+                        : "bg-rose-50 text-rose-700 border-rose-200"
+                    )}>
+                      Profit: {formatCurrency(liveProfit)}
+                    </span>
+                    <span className="text-xs font-medium text-gray-500">
+                      Markup: <strong className="text-gray-900">{liveMargin}%</strong>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Stock Quantity */}
+                <div>
+                  <Input 
+                    label="Stock Quantity *" 
+                    type="number" 
+                    placeholder="0" 
+                    {...register('stock')} 
+                    error={errors.stock?.message} 
+                  />
+                </div>
+
+                {/* Warranty (Months) */}
+                <div>
+                  <Input 
+                    label="Warranty (Months)" 
+                    type="number" 
+                    placeholder="24" 
+                    {...register('warranty_months')} 
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 2: Photo & Description */}
+          {activeModalTab === 'media' && (
+            <div className="space-y-4 pt-1">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs sm:text-sm font-semibold text-gray-800">Product Primary Photo</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowUrlInput(!showUrlInput)}
+                    className="text-xs text-primary-600 hover:text-primary-700 font-medium"
+                  >
+                    {showUrlInput ? "Upload image file instead" : "Or paste image link"}
+                  </button>
+                </div>
+
+                {showUrlInput ? (
+                  <div className="space-y-1.5">
+                    <Input 
+                      placeholder="https://example.com/watch-image.jpg" 
+                      {...register('image')} 
+                    />
+                    <p className="text-xs text-gray-500">Direct HTTPS link to the product photo.</p>
+                  </div>
+                ) : (
+                  <div>
+                    {watchedImage ? (
+                      <div className="p-4 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50 flex items-center gap-4">
+                        <div className="w-24 h-24 rounded-xl overflow-hidden bg-white border border-gray-200 flex-shrink-0 shadow-sm">
+                          <img 
+                            src={watchedImage} 
+                            alt="Product preview" 
+                            className="w-full h-full object-cover" 
+                            onError={(e) => {
+                              (e.target as HTMLElement).style.display = 'none'
+                            }}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-900">Image Attached</p>
+                          <p className="text-xs text-gray-500 truncate mt-0.5">{watchedImage}</p>
+                          <div className="flex items-center gap-2 mt-3">
+                            <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 hover:border-gray-300 rounded-lg text-xs font-semibold text-gray-700 shadow-2xs hover:bg-gray-50 transition-all">
+                              <Upload className="w-3.5 h-3.5 text-gray-500" />
+                              <span>Replace Image</span>
+                              <input 
+                                type="file" 
+                                accept="image/png,image/jpeg,image/webp,image/avif" 
+                                className="hidden" 
+                                onChange={handleImageFileChange}
+                                disabled={isUploadingImage}
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => setValue('image', '')}
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded-lg text-xs font-semibold text-rose-700 transition-all"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                              <span>Remove</span>
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <label className={clsx(
+                        "border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all",
+                        isUploadingImage 
+                          ? "bg-primary-50/50 border-primary-300 pointer-events-none" 
+                          : "border-gray-300 bg-gray-50/60 hover:bg-gray-50 hover:border-primary-400"
+                      )}>
+                        <input 
+                          type="file" 
+                          accept="image/png,image/jpeg,image/webp,image/avif" 
+                          className="hidden" 
+                          onChange={handleImageFileChange}
+                          disabled={isUploadingImage}
+                        />
+                        {isUploadingImage ? (
+                          <div className="py-2 flex flex-col items-center gap-2">
+                            <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
+                            <p className="text-sm font-semibold text-primary-700">Uploading photo to server...</p>
+                            <p className="text-xs text-gray-500">Processing file securely</p>
+                          </div>
+                        ) : (
+                          <div className="py-1 flex flex-col items-center gap-2">
+                            <div className="w-12 h-12 rounded-full bg-primary-100/60 flex items-center justify-center text-primary-600 mb-1">
+                              <Upload className="w-6 h-6" />
+                            </div>
+                            <div>
+                              <span className="text-sm font-bold text-primary-600 hover:underline">Click to upload photo</span>
+                              <span className="text-sm text-gray-600"> or drag and drop</span>
+                            </div>
+                            <p className="text-xs text-gray-400">PNG, JPG, WEBP or AVIF up to 5MB</p>
+                          </div>
+                        )}
+                      </label>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Product Description */}
+              <div>
+                <label className="block text-xs sm:text-sm font-semibold text-gray-800 mb-1.5">Description & Story</label>
+                <textarea 
+                  {...register('description')} 
+                  rows={4} 
+                  placeholder="Provide a detailed description of the watch craftsmanship, dial styling, target audience, and key selling points..."
+                  className="w-full px-3.5 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm text-gray-900 resize-none"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* TAB 3: Website & Specs */}
+          {activeModalTab === 'specs' && (
+            <div className="space-y-4 pt-1">
+              {/* Public Website Visibility Settings */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+                <div>
+                  <p className="text-xs font-bold text-slate-800 uppercase tracking-wider">Public Website Badges & Visibility</p>
+                  <p className="text-xs text-slate-500 mt-0.5">Control how this watch appears to online visitors on the showcase portal.</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <label className="flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-primary-300 transition-colors">
+                    <input 
+                      type="checkbox" 
+                      {...register('is_featured')} 
+                      className="w-4 h-4 mt-0.5 rounded text-primary-600 focus:ring-primary-500" 
+                    />
+                    <div>
+                      <p className="text-xs font-bold text-gray-900">Featured Showcase</p>
+                      <p className="text-[11px] text-gray-500 mt-0.5">Show in hero and featured collections</p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-primary-300 transition-colors">
+                    <input 
+                      type="checkbox" 
+                      {...register('is_new_arrival')} 
+                      className="w-4 h-4 mt-0.5 rounded text-primary-600 focus:ring-primary-500" 
+                    />
+                    <div>
+                      <p className="text-xs font-bold text-gray-900">New Arrival Badge</p>
+                      <p className="text-[11px] text-gray-500 mt-0.5">Display NEW badge on card</p>
+                    </div>
+                  </label>
+
+                  <label className="flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-primary-300 transition-colors">
+                    <input 
+                      type="checkbox" 
+                      {...register('price_visible')} 
+                      className="w-4 h-4 mt-0.5 rounded text-primary-600 focus:ring-primary-500" 
+                    />
+                    <div>
+                      <p className="text-xs font-bold text-gray-900">Price Visible</p>
+                      <p className="text-[11px] text-gray-500 mt-0.5">Show price (uncheck for On Request)</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+
+              {/* Horological Specifications */}
+              <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-3">
+                <div>
+                  <p className="text-xs font-bold text-gray-800 uppercase tracking-wider">Technical Horological Specifications</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Optional specifications displayed in the watch specifications table on the public site.</p>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                  <Input label="Movement / Calibre" placeholder="e.g. Automatic Calibre 8200 / Quartz" {...register('movement')} />
+                  <Input label="Case Diameter" placeholder="e.g. 42 mm" {...register('caseDiameter')} />
+                  <Input label="Case Material" placeholder="e.g. 316L Stainless Steel / Rose Gold PVD" {...register('caseMaterial')} />
+                  <Input label="Dial Glass" placeholder="e.g. Anti-Reflective Sapphire Crystal" {...register('glass')} />
+                  <Input label="Water Resistance" placeholder="e.g. 100m / 10 ATM" {...register('waterResistance')} />
+                  <Input label="Strap Material" placeholder="e.g. Genuine Calfskin Leather / Metal Mesh" {...register('strapMaterial')} />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Fixed Bottom Action Bar */}
+          <div className="flex items-center justify-between pt-4 mt-5 border-t border-gray-100">
+            <div className="flex items-center gap-1.5 text-xs text-gray-500">
+              <span>Section:</span>
+              <span className="font-semibold text-gray-800 capitalize">
+                {activeModalTab === 'general' ? '1. General & Pricing' : activeModalTab === 'media' ? '2. Photo & Details' : '3. Website & Specs'}
+              </span>
+            </div>
+
+            <div className="flex items-center gap-2 sm:gap-3">
+              <Button 
+                type="button" 
+                variant="secondary" 
+                onClick={() => setShowFormModal(false)}
+              >
+                Cancel
+              </Button>
+
+              {activeModalTab !== 'specs' && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    if (activeModalTab === 'general') setActiveModalTab('media')
+                    else if (activeModalTab === 'media') setActiveModalTab('specs')
+                  }}
+                  className="flex items-center gap-1"
+                >
+                  <span>Next Tab</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Button>
+              )}
+
+              <Button 
+                type="submit" 
+                loading={isSubmitting}
+                className="bg-primary-600 hover:bg-primary-700 text-white font-semibold shadow-sm"
+              >
+                {selectedProduct ? 'Update Product' : 'Create Product'}
+              </Button>
+            </div>
           </div>
         </form>
       </Modal>

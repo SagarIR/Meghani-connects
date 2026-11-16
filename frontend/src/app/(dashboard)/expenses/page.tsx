@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Plus, Wallet, Calendar, Home, Users, Zap, Wrench, ShoppingCart, 
-  Megaphone, Truck, MoreHorizontal, TrendingUp, TrendingDown, DollarSign,
+  Megaphone, Truck, MoreHorizontal, TrendingUp, TrendingDown, IndianRupee,
   Filter, Edit, Trash2, PieChart, LayoutGrid, List
 } from 'lucide-react'
 import { api } from '@/services/api'
@@ -607,11 +607,11 @@ export default function ExpensesPage() {
           </div>
 
           <Input
-            label="Amount"
+            label="Amount (INR)"
             type="number"
             value={formData.amount}
             onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-            icon={<DollarSign className="w-4 h-4" />}
+            icon={<IndianRupee className="w-4 h-4" />}
             placeholder="0"
             required
           />

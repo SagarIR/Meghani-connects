@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Customer
+from .models import Customer, Enquiry
 
 
 @admin.register(Customer)
@@ -14,3 +14,13 @@ class CustomerAdmin(admin.ModelAdmin):
         ('Details', {'fields': ('address', 'date_of_birth', 'language_preference')}),
         ('Loyalty', {'fields': ('loyalty_points', 'notes')}),
     )
+
+
+@admin.register(Enquiry)
+class EnquiryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'phone', 'enquiry_type', 'preferred_date', 'product_name', 'status', 'created_at']
+    list_filter = ['enquiry_type', 'status', 'created_at']
+    search_fields = ['name', 'phone', 'email', 'product_name']
+    list_editable = ['status']
+    ordering = ['-created_at']
+

@@ -35,6 +35,7 @@ export interface PublicProduct {
 }
 
 export interface BrandItem {
+  id?: number;
   name: string;
   slug: string;
   count: number;
@@ -45,10 +46,12 @@ export interface BrandItem {
   logoText?: string;
   heroImage: string;
   is_featured: boolean;
+  is_active?: boolean;
 }
 
 export interface CategoryItem {
   id: ProductCategory;
+  numericId?: number;
   name: string;
   slug: string;
   tagline: string;
@@ -56,6 +59,7 @@ export interface CategoryItem {
   imageUrl: string;
   count: number;
   features: string[];
+  is_active?: boolean;
 }
 
 export interface OfferItem {
@@ -70,6 +74,7 @@ export interface OfferItem {
   bannerImage: string;
   targetCategory?: ProductCategory;
   targetBrand?: string;
+  is_active?: boolean;
 }
 
 export interface GalleryItem {
@@ -79,6 +84,8 @@ export interface GalleryItem {
   imageUrl: string;
   caption: string;
   details?: string;
+  is_active?: boolean;
+  display_order?: number;
 }
 
 export interface BusinessStoreInfo {
@@ -105,6 +112,15 @@ export interface BusinessStoreInfo {
     instagram?: string;
     facebook?: string;
   };
+  terms_and_conditions?: string;
+  privacy_policy?: string;
+}
+
+export interface MilestoneItem {
+  year: string;
+  title: string;
+  description: string;
+  display_order?: number;
 }
 
 export interface EnquirySubmission {

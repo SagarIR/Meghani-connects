@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Customer
+from .models import Customer, Enquiry
 
 
 class CustomerSerializer(serializers.ModelSerializer):
@@ -26,3 +26,15 @@ class CustomerListSerializer(serializers.ModelSerializer):
 class CustomerLoyaltySerializer(serializers.Serializer):
     points = serializers.IntegerField(min_value=1)
     action = serializers.ChoiceField(choices=['add', 'redeem'])
+
+
+class EnquirySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Enquiry
+        fields = [
+            'id', 'name', 'phone', 'email', 'enquiry_type', 'preferred_date',
+            'product', 'product_name', 'message', 'status', 'notes',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+

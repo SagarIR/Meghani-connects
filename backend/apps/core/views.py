@@ -11,11 +11,15 @@ from django.db import connection
 from django.utils import timezone
 from django.core.cache import cache
 from django.conf import settings
-from .models import AuditLog
+from .models import AuditLog, Offer, GalleryItem, Milestone
 from .settings_models import BusinessSettings, UserPreferences
-from .serializers import AuditLogSerializer, BusinessSettingsSerializer, UserPreferencesSerializer
+from .serializers import (
+    AuditLogSerializer, BusinessSettingsSerializer, UserPreferencesSerializer,
+    PublicBusinessSettingsSerializer, OfferSerializer, GalleryItemSerializer, MilestoneSerializer
+)
 from .backup_service import BackupService
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework import viewsets
 from django.http import FileResponse
 import redis
 import os
@@ -196,7 +200,7 @@ class BusinessSettingsView(APIView):
     Get and update business settings (admin only)
     """
     permission_classes = [IsAdminUser]
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     
     def get(self, request):
         settings_obj = BusinessSettings.get_settings()
@@ -362,3 +366,92 @@ class ImageUploadView(APIView):
         if result.get('success'):
             return Response(result, status=201)
         return Response(result, status=500)
+
+
+class PublicBusinessSettingsView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        settings_obj = BusinessSettings.get_settings()
+        serializer = PublicBusinessSettingsSerializer(settings_obj, context={'request': request})
+        return Response(serializer.data)
+
+
+class OfferViewSet(viewsets.ModelViewSet):
+    serializer_class = OfferSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['title', 'badge', 'code', 'discount']
+    ordering_fields = ['display_order', 'id']
+    ordering = ['display_order', 'id']
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def get_queryset(self):
+        if self.request.user and self.request.user.is_authenticated:
+            return Offer.objects.all()
+        return Offer.objects.filter(is_active=True)
+
+
+class GalleryItemViewSet(viewsets.ModelViewSet):
+    serializer_class = GalleryItemSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['title', 'category', 'caption']
+    ordering_fields = ['display_order', 'id']
+    ordering = ['display_order', 'id']
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def get_queryset(self):
+        qs = GalleryItem.objects.all() if (self.request.user and self.request.user.is_authenticated) else GalleryItem.objects.filter(is_active=True)
+        cat = self.request.query_params.get('category')
+        if cat and cat != 'all':
+            qs = qs.filter(category=cat)
+        return qs.order_by('display_order', 'id')
+
+
+class MilestoneViewSet(viewsets.ModelViewSet):
+    serializer_class = MilestoneSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['year', 'title', 'description']
+    ordering_fields = ['display_order', 'year']
+    ordering = ['display_order', 'year']
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def get_queryset(self):
+        return Milestone.objects.all().order_by('display_order', 'year')
+
+
+class PublicOfferView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = OfferSerializer
+    queryset = Offer.objects.filter(is_active=True)
+
+
+class PublicGalleryView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = GalleryItemSerializer
+    queryset = GalleryItem.objects.filter(is_active=True)
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        cat = self.request.query_params.get('category')
+        if cat and cat != 'all':
+            qs = qs.filter(category=cat)
+        return qs
+
+
+class PublicMilestoneView(ListAPIView):
+    permission_classes = [AllowAny]
+    serializer_class = MilestoneSerializer
+    queryset = Milestone.objects.filter(is_active=True)
+

@@ -83,4 +83,26 @@ class PublicProductCatalogueTests(TestCase):
             self.assertEqual(response.data.get('provider'), 'cloudinary')
             self.assertIn('res.cloudinary.com', response.data.get('url'))
 
+    def test_public_brands_and_categories_endpoints(self):
+        """Verify dynamic brands and categories endpoints"""
+        from apps.products.models import Brand, Category
+        Brand.objects.create(name='Rolex', slug='rolex', display_order=1, is_active=True)
+        Brand.objects.create(name='Secret Brand', slug='secret', display_order=2, is_active=False)
+        Category.objects.create(name='Chronograph', slug='chronograph', display_order=1, is_active=True)
+
+        # Brands
+        res_brands = self.client.get('/api/brands/')
+        self.assertEqual(res_brands.status_code, status.HTTP_200_OK)
+        brand_results = res_brands.data['results'] if isinstance(res_brands.data, dict) and 'results' in res_brands.data else res_brands.data
+        self.assertEqual(len(brand_results), 1)
+        self.assertEqual(brand_results[0]['slug'], 'rolex')
+
+        # Categories
+        res_cats = self.client.get('/api/categories/')
+        self.assertEqual(res_cats.status_code, status.HTTP_200_OK)
+        cat_results = res_cats.data['results'] if isinstance(res_cats.data, dict) and 'results' in res_cats.data else res_cats.data
+        self.assertEqual(len(cat_results), 1)
+        self.assertEqual(cat_results[0]['slug'], 'chronograph')
+
+
 

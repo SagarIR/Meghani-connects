@@ -92,13 +92,6 @@ export default function DashboardPage() {
         >
           <div className="flex items-center gap-2 sm:gap-3 mb-1 sm:mb-2">
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{greeting}!</h1>
-            <motion.span
-              animate={{ rotate: [0, 15, -15, 0] }}
-              transition={{ duration: 0.5, delay: 0.5 }}
-              className="text-xl sm:text-2xl lg:text-3xl"
-            >
-              👋
-            </motion.span>
           </div>
           <p className="text-sm sm:text-base text-gray-500 flex items-center gap-2">
             <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />

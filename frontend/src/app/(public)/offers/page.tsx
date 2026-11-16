@@ -1,31 +1,37 @@
-import { PUBLIC_OFFERS, MEGHANI_STORE_INFO } from '@/services/publicCatalogue';
+import { PUBLIC_OFFERS, getPublicOffers, getStoreInfo } from '@/services/publicCatalogue';
 import { buildPageMetadata, SITE_URL } from '@/utils/seo';
 import OffersClient from './OffersClient';
 
 export const metadata = buildPageMetadata({
-  title: 'Boutique Privileges, Festive Offers & Wedding Suites',
+  title: 'Special Offers & Boutique Privileges — Festive Deals & Wedding Pairs | Meghani Watch Co.',
   description:
-    'Discover seasonal promotions, festive wedding suites, and complimentary watchmaker inspection privileges at Meghani Watch Co. in Vadodara.',
+    'Discover special offers, festive deals, wedding gift pairs, and free watch service checks at Meghani Watch Co. in Vadodara.',
   path: '/offers',
   keywords: [
     'watch offers Vadodara',
-    'luxury watch discounts Vadodara',
-    'wedding watch gifts',
-    'Titan festive offer',
-    'free watchmaker inspection Vadodara',
-    'Citizen Eco Drive privilege'
+    'watch discounts Vadodara',
+    'wedding watch pairs',
+    'Titan festive offer Vadodara',
+    'free watch inspection Vadodara',
+    'Casio watch offers Gujarat'
   ],
   ogImage: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80',
 });
 
-export default function OffersPage() {
+export default async function OffersPage() {
+  const [offers, storeInfo] = await Promise.all([
+    getPublicOffers(),
+    getStoreInfo()
+  ]);
+  const offersList = offers.length > 0 ? offers : PUBLIC_OFFERS;
+
   const offersSchema = {
     '@context': 'https://schema.org',
     '@type': 'CollectionPage',
     '@id': `${SITE_URL}/offers/#webpage`,
-    name: 'Boutique Privileges & Special Offers | Meghani Watch Co.',
+    name: 'Special Offers & Boutique Privileges | Meghani Watch Co.',
     description:
-      'Curated seasonal advantages, celebratory wedding pairs, and atelier service privileges in Vadodara.',
+      'Special festive offers, wedding gift pairs, and complimentary watch service checks in Vadodara.',
     url: `${SITE_URL}/offers`,
   };
 
@@ -35,7 +41,7 @@ export default function OffersPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(offersSchema) }}
       />
-      <OffersClient />
+      <OffersClient initialOffers={offersList} storeInfo={storeInfo} />
     </>
   );
 }

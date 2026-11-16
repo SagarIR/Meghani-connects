@@ -3,14 +3,14 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework.permissions import IsAdminUser, AllowAny
+from rest_framework.permissions import IsAdminUser, AllowAny, IsAuthenticated
 from django.db.models import Q
 from django.conf import settings
 from django.http import HttpResponse
-from .models import Product
+from .models import Product, Brand, Category
 from .serializers import (
     ProductSerializer, ProductListSerializer, ProductStockUpdateSerializer,
-    PublicProductSerializer
+    PublicProductSerializer, BrandSerializer, CategorySerializer
 )
 from .import_service import ProductImportService
 
@@ -238,19 +238,31 @@ class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
             except ValueError:
                 pass
 
+        featured = self.request.query_params.get('featured')
+        if featured == 'true':
+            queryset = queryset.filter(is_featured=True)
+
         return queryset
 
     @action(detail=False, methods=['get'])
     def brands(self, request):
-        """List unique active brands for discovery"""
+        """List active brands with details"""
+        db_brands = Brand.objects.filter(is_active=True)
+        if db_brands.exists():
+            serializer = BrandSerializer(db_brands, many=True)
+            return Response(serializer.data)
         brands = Product.objects.filter(is_active=True).exclude(
             brand=''
         ).values_list('brand', flat=True).distinct().order_by('brand')
-        return Response(list(brands))
+        return Response([{'name': b, 'slug': b.lower(), 'count': 0} for b in brands])
 
     @action(detail=False, methods=['get'])
     def categories(self, request):
         """List categories with product counts"""
+        db_categories = Category.objects.filter(is_active=True)
+        if db_categories.exists():
+            serializer = CategorySerializer(db_categories, many=True)
+            return Response(serializer.data)
         from django.db.models import Count
         categories = Product.objects.filter(is_active=True).values('category').annotate(
             count=Count('id')
@@ -260,6 +272,85 @@ class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
     @action(detail=False, methods=['get'])
     def featured(self, request):
         """List featured watches for public showcase"""
-        products = Product.objects.filter(is_active=True)[:8]
+        products = Product.objects.filter(is_active=True, is_featured=True)
+        if not products.exists():
+            products = Product.objects.filter(is_active=True)[:8]
         serializer = PublicProductSerializer(products, many=True)
         return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], url_path='gallery')
+    def add_gallery_image(self, request, pk=None):
+        """Add an additional gallery image to a product"""
+        from .models import ProductImage
+        from .serializers import ProductImageSerializer
+        product = self.get_object()
+        image_url = request.data.get('image_url')
+        file_obj = request.FILES.get('image') or request.FILES.get('file')
+        display_order = request.data.get('display_order', 0)
+        img = ProductImage.objects.create(
+            product=product,
+            image=file_obj,
+            image_url=image_url or '',
+            display_order=display_order
+        )
+        return Response(ProductImageSerializer(img).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['delete'], url_path='gallery/(?P<image_id>[^/.]+)')
+    def delete_gallery_image(self, request, pk=None, image_id=None):
+        """Delete a gallery image from a product"""
+        product = self.get_object()
+        try:
+            img = product.gallery_images.get(id=image_id)
+            img.delete()
+            return Response({'success': True, 'message': 'Image deleted'})
+        except Exception:
+            return Response({'error': 'Image not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class BrandViewSet(viewsets.ModelViewSet):
+    serializer_class = BrandSerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'country', 'tagline']
+    ordering_fields = ['display_order', 'name', 'created_at']
+    ordering = ['display_order', 'name']
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def get_queryset(self):
+        if self.request.user and self.request.user.is_authenticated:
+            return Brand.objects.all()
+        return Brand.objects.filter(is_active=True)
+
+    def get_object(self):
+        lookup_val = self.kwargs.get('pk') or self.kwargs.get('slug')
+        if lookup_val and str(lookup_val).isdigit():
+            return Brand.objects.get(id=int(lookup_val))
+        return Brand.objects.get(slug=lookup_val)
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    serializer_class = CategorySerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'tagline', 'description']
+    ordering_fields = ['display_order', 'name']
+    ordering = ['display_order', 'name']
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [IsAuthenticated()]
+
+    def get_queryset(self):
+        if self.request.user and self.request.user.is_authenticated:
+            return Category.objects.all()
+        return Category.objects.filter(is_active=True)
+
+    def get_object(self):
+        lookup_val = self.kwargs.get('pk') or self.kwargs.get('slug')
+        if lookup_val and str(lookup_val).isdigit():
+            return Category.objects.get(id=int(lookup_val))
+        return Category.objects.get(slug=lookup_val)
+

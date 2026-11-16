@@ -34,6 +34,15 @@ interface BusinessSettings {
   repair_prefix: string
   invoice_footer: string
   terms_and_conditions: string
+  privacy_policy?: string
+  whatsapp_number?: string
+  landmark?: string
+  opening_hours_weekdays?: string
+  opening_hours_sunday?: string
+  google_maps_url?: string
+  google_maps_embed_src?: string
+  instagram_url?: string
+  facebook_url?: string
   loyalty_points_per_100: number
   loyalty_redemption_rate: number
   low_stock_threshold: number
@@ -118,7 +127,7 @@ export default function SettingsPage() {
     try {
       const formData = new FormData()
       Object.entries(businessSettings).forEach(([key, value]) => {
-        if (key !== 'id' && key !== 'logo' && key !== 'logo_url' && key !== 'updated_at') {
+        if (value !== undefined && value !== null && key !== 'id' && key !== 'logo' && key !== 'logo_url' && key !== 'updated_at') {
           formData.append(key, String(value))
         }
       })
@@ -446,6 +455,90 @@ export default function SettingsPage() {
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, pan_number: e.target.value} : null)}
                         placeholder="AAAAA0000A"
                       />
+                    </div>
+                  </div>
+
+                  {/* Public Website & Concierge Information */}
+                  <div className="space-y-3 lg:space-y-4 pt-4 border-t border-gray-100">
+                    <h3 className="font-medium text-amber-800 flex items-center gap-2">
+                      <span>Public Website & Showroom Timings</span>
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
+                      <Input 
+                        label="WhatsApp Concierge Number (with country code)" 
+                        value={businessSettings?.whatsapp_number || ''} 
+                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, whatsapp_number: e.target.value} : null)}
+                        placeholder="919106680191"
+                      />
+                      <Input 
+                        label="Landmark / Navigation Plus Code" 
+                        value={businessSettings?.landmark || ''} 
+                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, landmark: e.target.value} : null)}
+                        placeholder="Near Abhilasha Char Rasta"
+                      />
+                      <Input 
+                        label="Weekday Opening Hours" 
+                        value={businessSettings?.opening_hours_weekdays || ''} 
+                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, opening_hours_weekdays: e.target.value} : null)}
+                        placeholder="10:00 AM – 9:00 PM (Mon – Sat)"
+                      />
+                      <Input 
+                        label="Sunday Opening Hours" 
+                        value={businessSettings?.opening_hours_sunday || ''} 
+                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, opening_hours_sunday: e.target.value} : null)}
+                        placeholder="11:00 AM – 8:00 PM (Sun)"
+                      />
+                      <Input 
+                        label="Google Maps URL" 
+                        value={businessSettings?.google_maps_url || ''} 
+                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, google_maps_url: e.target.value} : null)}
+                        placeholder="https://maps.app.goo.gl/..."
+                      />
+                      <Input 
+                        label="Google Maps Embed Iframe Src" 
+                        value={businessSettings?.google_maps_embed_src || ''} 
+                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, google_maps_embed_src: e.target.value} : null)}
+                        placeholder="https://maps.google.com/maps?q=..."
+                      />
+                      <Input 
+                        label="Instagram URL" 
+                        value={businessSettings?.instagram_url || ''} 
+                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, instagram_url: e.target.value} : null)}
+                        placeholder="https://instagram.com/meghaniwatchco"
+                      />
+                      <Input 
+                        label="Facebook URL" 
+                        value={businessSettings?.facebook_url || ''} 
+                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, facebook_url: e.target.value} : null)}
+                        placeholder="https://facebook.com/meghaniwatchco"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Public Legal Policies */}
+                  <div className="space-y-3 lg:space-y-4 pt-4 border-t border-gray-100">
+                    <h3 className="font-medium text-gray-700">Public Website Policies</h3>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Terms & Conditions</label>
+                        <textarea
+                          rows={3}
+                          value={businessSettings?.terms_and_conditions || ''}
+                          onChange={(e) => setBusinessSettings(prev => prev ? {...prev, terms_and_conditions: e.target.value} : null)}
+                          className="w-full text-xs border border-gray-300 rounded-lg p-2.5 focus:border-amber-500 focus:outline-none"
+                          placeholder="Store terms, warranty policies, repair conditions..."
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Privacy Policy</label>
+                        <textarea
+                          rows={3}
+                          value={businessSettings?.privacy_policy || ''}
+                          onChange={(e) => setBusinessSettings(prev => prev ? {...prev, privacy_policy: e.target.value} : null)}
+                          className="w-full text-xs border border-gray-300 rounded-lg p-2.5 focus:border-amber-500 focus:outline-none"
+                          placeholder="Customer data confidentiality and privacy commitment..."
+                        />
+                      </div>
                     </div>
                   </div>
 

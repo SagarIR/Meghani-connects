@@ -30,6 +30,9 @@ class Product(models.Model):
     image = models.ImageField(upload_to='products/', blank=True, null=True)
     description = models.TextField(blank=True)
     warranty_months = models.PositiveIntegerField(default=0)
+    specifications = models.JSONField(default=dict, blank=True)
+    is_featured = models.BooleanField(default=False)
+    is_new_arrival = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -60,3 +63,60 @@ class Product(models.Model):
     def is_low_stock(self):
         from django.conf import settings
         return self.stock <= getattr(settings, 'LOW_STOCK_THRESHOLD', 5)
+
+
+class ProductImage(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='gallery_images')
+    image = models.ImageField(upload_to='products/gallery/', blank=True, null=True)
+    image_url = models.URLField(max_length=500, blank=True)
+    display_order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'product_images'
+        ordering = ['display_order', 'id']
+
+    def __str__(self):
+        return f"Image for {self.product.name}"
+
+
+class Brand(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=120, unique=True)
+    country = models.CharField(max_length=100, blank=True)
+    established = models.CharField(max_length=20, blank=True)
+    tagline = models.CharField(max_length=255, blank=True)
+    description = models.TextField(blank=True)
+    hero_image = models.URLField(max_length=500, blank=True)
+    is_featured = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    display_order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'brands'
+        ordering = ['display_order', 'name']
+
+    def __str__(self):
+        return self.name
+
+
+class Category(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=120, unique=True)
+    tagline = models.CharField(max_length=255, blank=True)
+    description = models.TextField(blank=True)
+    image_url = models.URLField(max_length=500, blank=True)
+    features = models.JSONField(default=list, blank=True)
+    is_active = models.BooleanField(default=True)
+    display_order = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'categories'
+        verbose_name_plural = 'categories'
+        ordering = ['display_order', 'name']
+
+    def __str__(self):
+        return self.name
+

@@ -1,10 +1,11 @@
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.db.models import Q, Sum
 from django.utils import timezone
-from .models import Customer
-from .serializers import CustomerSerializer, CustomerListSerializer, CustomerLoyaltySerializer
+from .models import Customer, Enquiry
+from .serializers import CustomerSerializer, CustomerListSerializer, CustomerLoyaltySerializer, EnquirySerializer
 
 
 class CustomerViewSet(viewsets.ModelViewSet):
@@ -119,3 +120,18 @@ class CustomerViewSet(viewsets.ModelViewSet):
         } for c in customers]
         
         return Response(data)
+
+
+class EnquiryViewSet(viewsets.ModelViewSet):
+    queryset = Enquiry.objects.all()
+    serializer_class = EnquirySerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'phone', 'email', 'product_name']
+    ordering_fields = ['created_at', 'status']
+    ordering = ['-created_at']
+
+    def get_permissions(self):
+        if self.action == 'create':
+            return [AllowAny()]
+        return [IsAuthenticated()]
+

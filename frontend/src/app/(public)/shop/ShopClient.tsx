@@ -17,12 +17,16 @@ import {
 import {
   PublicProduct,
   ProductCategory,
-  AvailabilityStatus
+  AvailabilityStatus,
+  BrandItem,
+  CategoryItem
 } from '@/types/public';
 import {
   PUBLIC_BRANDS,
   PUBLIC_CATEGORIES,
   getPublicProducts,
+  getPublicBrands,
+  getPublicCategories,
   ProductFilterParams
 } from '@/services/publicCatalogue';
 import ProductCard from '@/components/public/ProductCard';
@@ -58,6 +62,14 @@ function ShopContent() {
   const [products, setProducts] = useState<PublicProduct[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [brandsList, setBrandsList] = useState<BrandItem[]>(PUBLIC_BRANDS);
+  const [categoriesList, setCategoriesList] = useState<CategoryItem[]>(PUBLIC_CATEGORIES);
+
+  // Fetch dynamic brands and categories
+  useEffect(() => {
+    getPublicBrands().then((res) => { if (res && res.length) setBrandsList(res); });
+    getPublicCategories().then((res) => { if (res && res.length) setCategoriesList(res); });
+  }, []);
 
   // Sync state when URL params change
   useEffect(() => {
@@ -186,7 +198,7 @@ function ShopContent() {
                 setSearch(e.target.value);
                 setCurrentPage(1);
               }}
-              placeholder="Search by watch name, ref, or model..."
+              placeholder="Search by watch name, brand, or model..."
               className="w-full bg-[#171613] border border-[#2A261F] focus:border-[#C9A45C] rounded-xl pl-10 pr-4 py-2.5 text-xs text-[#F3EFE6] placeholder-[#8D8980]/60 focus:outline-none transition-colors"
             />
             {search && (
@@ -211,7 +223,7 @@ function ShopContent() {
                 }}
                 className="w-full sm:w-auto appearance-none bg-[#171613] border border-[#2A261F] text-[#F3EFE6] py-2.5 pl-4 pr-10 rounded-xl focus:border-[#C9A45C] focus:outline-none text-xs font-medium cursor-pointer"
               >
-                <option value="featured">Featured Curations</option>
+                <option value="featured">Featured Watches</option>
                 <option value="newest">Newest Arrivals</option>
                 <option value="price_asc">Price: Low to High</option>
                 <option value="price_desc">Price: High to Low</option>
@@ -317,7 +329,7 @@ function ShopContent() {
           <div className="flex items-center justify-between pb-4 border-b border-[#2A261F]">
             <span className="text-xs font-bold uppercase tracking-[0.2em] text-[#F3EFE6] flex items-center gap-2">
               <Filter className="w-3.5 h-3.5 text-[#C9A45C]" />
-              Refine Curations
+              Filter Watches
             </span>
             {hasActiveFilters && (
               <button
@@ -332,7 +344,7 @@ function ShopContent() {
           {/* Category Filter */}
           <div>
             <h4 className="text-xs font-bold text-[#F3EFE6] uppercase tracking-wider mb-3">
-              Timepiece Category
+              Watch Category
             </h4>
             <div className="space-y-1.5">
               <button
@@ -348,7 +360,7 @@ function ShopContent() {
               >
                 <span>All Categories</span>
               </button>
-              {PUBLIC_CATEGORIES.map((cat) => (
+              {categoriesList.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => {
@@ -371,7 +383,7 @@ function ShopContent() {
           {/* Brand Filter */}
           <div className="pt-4 border-t border-[#2A261F]">
             <h4 className="text-xs font-bold text-[#F3EFE6] uppercase tracking-wider mb-3">
-              Authorized Brands
+              Watch Brands
             </h4>
             <div className="space-y-1.5">
               <button
@@ -387,7 +399,7 @@ function ShopContent() {
               >
                 All Brands
               </button>
-              {PUBLIC_BRANDS.map((brand) => (
+              {brandsList.map((brand) => (
                 <button
                   key={brand.slug}
                   onClick={() => {
@@ -410,14 +422,14 @@ function ShopContent() {
           {/* Availability Filter */}
           <div className="pt-4 border-t border-[#2A261F]">
             <h4 className="text-xs font-bold text-[#F3EFE6] uppercase tracking-wider mb-3">
-              Availability Status
+              Availability
             </h4>
             <div className="space-y-1.5">
               {[
-                { label: 'All Allocations', value: '' },
+                { label: 'All Watches', value: '' },
                 { label: 'In Stock', value: 'in_stock' },
                 { label: 'Price on Request', value: 'on_request' },
-                { label: 'Awaiting Allocation', value: 'out_of_stock' },
+                { label: 'Out of Stock', value: 'out_of_stock' },
               ].map((item) => (
                 <button
                   key={item.value}
@@ -444,7 +456,7 @@ function ShopContent() {
           <div className="flex items-center justify-between text-xs text-[#8D8980] mb-6">
             <span>
               Showing <strong className="text-[#F3EFE6]">{products.length}</strong> of{' '}
-              <strong className="text-[#F3EFE6]">{totalCount}</strong> timepieces
+              <strong className="text-[#F3EFE6]">{totalCount}</strong> watches
             </span>
           </div>
 
@@ -472,7 +484,7 @@ function ShopContent() {
                 <Watch className="w-8 h-8" />
               </div>
               <h3 className="font-serif text-2xl font-normal text-[#F3EFE6]">
-                No matching timepieces found
+                No matching watches found
               </h3>
               <p className="text-xs sm:text-sm text-[#8D8980] max-w-md mx-auto mt-2 leading-relaxed">
                 We could not find any watches matching your selected filters. Try broadening your criteria or reset the search.
@@ -563,7 +575,7 @@ function ShopContent() {
               <div>
                 <div className="flex items-center justify-between pb-4 border-b border-[#2A261F]">
                   <h3 className="font-serif text-xl font-normal text-[#F3EFE6]">
-                    Filter Timepieces
+                    Filter Watches
                   </h3>
                   <button
                     onClick={() => setMobileFilterOpen(false)}
@@ -587,7 +599,7 @@ function ShopContent() {
                     >
                       All Categories
                     </button>
-                    {PUBLIC_CATEGORIES.map((c) => (
+                    {categoriesList.map((c) => (
                       <button
                         key={c.id}
                         onClick={() => setSelectedCategory(c.id)}
@@ -617,7 +629,7 @@ function ShopContent() {
                     >
                       All Brands
                     </button>
-                    {PUBLIC_BRANDS.map((b) => (
+                    {brandsList.map((b) => (
                       <button
                         key={b.slug}
                         onClick={() => setSelectedBrand(b.name)}

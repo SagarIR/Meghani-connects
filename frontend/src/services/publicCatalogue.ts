@@ -4,6 +4,7 @@ import {
   CategoryItem,
   OfferItem,
   GalleryItem,
+  MilestoneItem,
   BusinessStoreInfo,
   AvailabilityStatus,
   ProductCategory
@@ -15,7 +16,7 @@ export const MEGHANI_STORE_INFO: BusinessStoreInfo = {
   tagline: 'Timeless Style. Trusted Quality.',
   phone: '+91 91066 80191',
   whatsapp: '919106680191',
-  email: 'concierge@meghaniwatch.com',
+  email: 'contact@meghaniwatch.com',
   address: {
     line1: 'Cactus Park, 23, New Sama Rd',
     line2: 'Near Abhilasha Char Rasta, Prabhat Nagar, New Sama',
@@ -43,8 +44,8 @@ export const PUBLIC_BRANDS: BrandItem[] = [
     count: 8,
     country: 'India',
     established: '1984',
-    tagline: 'Crafting Timeless Sophistication',
-    description: "India's premier watchmaker blending contemporary artistry with precision quartz and automatic engineering. Known for the celebrated Edge, Raga, and Regalia series.",
+    tagline: 'Timeless Elegance & Reliable Quality',
+    description: "India's most trusted watch brand offering contemporary design and precision quartz and automatic watches. Known for the popular Edge, Raga, and Regalia collections.",
     heroImage: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=1200&q=80',
     is_featured: true,
   },
@@ -54,8 +55,8 @@ export const PUBLIC_BRANDS: BrandItem[] = [
     count: 6,
     country: 'Japan',
     established: '1946',
-    tagline: 'Pioneering Toughness and Digital Horology',
-    description: 'World-renowned Japanese precision engineering featuring iconic G-Shock durability, Edifice chronographs, and vintage digital designs.',
+    tagline: 'Tough, Reliable Digital & Sports Watches',
+    description: 'Renowned Japanese precision engineering featuring iconic G-Shock durability, Edifice chronographs, and vintage gold and silver digital watches.',
     heroImage: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80',
     is_featured: true,
   },
@@ -65,8 +66,8 @@ export const PUBLIC_BRANDS: BrandItem[] = [
     count: 5,
     country: 'United States',
     established: '1854',
-    tagline: 'True American Craftsmanship',
-    description: 'Over 170 years of legendary watchmaking heritage, renowned for robust automatic movements, Marlin heritage designs, and Indiglo illumination.',
+    tagline: 'Classic Heritage & Everyday Durability',
+    description: 'Over 170 years of watchmaking heritage, known for mechanical automatic movements, Marlin vintage models, and practical everyday styles.',
     heroImage: 'https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=1200&q=80',
     is_featured: true,
   },
@@ -76,8 +77,8 @@ export const PUBLIC_BRANDS: BrandItem[] = [
     count: 4,
     country: 'Japan',
     established: '1918',
-    tagline: 'Eco-Drive Innovation & Horological Purity',
-    description: 'A global leader in light-powered Eco-Drive movements, precision craftsmanship, titanium casing, and automatic dive masterpieces.',
+    tagline: 'Eco-Drive Light-Powered Innovation',
+    description: 'Global leader in light-powered Eco-Drive watches that never need a battery change, featuring durable stainless steel, titanium cases, and water resistance.',
     heroImage: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1200&q=80',
     is_featured: true,
   },
@@ -87,8 +88,8 @@ export const PUBLIC_BRANDS: BrandItem[] = [
     count: 4,
     country: 'India',
     established: '1998',
-    tagline: 'Bold, Expressive & Dynamic Style',
-    description: 'High-energy timepieces designed for the modern lifestyle, featuring avant-garde dials, sporty silicon straps, and smart capabilities.',
+    tagline: 'Youthful, Sporty & Trendy Watches',
+    description: 'Energetic watches designed for young professionals and students, featuring sporty dials, comfortable silicone straps, and trendy everyday styles.',
     heroImage: 'https://images.unsplash.com/photo-1533139502658-0198f920d8e8?auto=format&fit=crop&w=1200&q=80',
     is_featured: false,
   },
@@ -98,8 +99,8 @@ export const PUBLIC_BRANDS: BrandItem[] = [
     count: 3,
     country: 'India',
     established: '1997',
-    tagline: 'Authentic Everyday Elegance',
-    description: 'Classic analog designs with gold accents and genuine leather straps, offering trusted reliability for festive occasions and daily wear.',
+    tagline: 'Great Value Everyday Watches',
+    description: 'Classic analog watches with gold accents and genuine leather straps, offering great value and reliable performance for daily wear and festive occasions.',
     heroImage: 'https://images.unsplash.com/photo-1547996160-71dfabbce5ed?auto=format&fit=crop&w=1200&q=80',
     is_featured: false,
   },
@@ -109,8 +110,8 @@ export const PUBLIC_BRANDS: BrandItem[] = [
     count: 3,
     country: 'India',
     established: '1971',
-    tagline: 'Heritage Horology for the Living Space',
-    description: "Asia's foremost quartz wall clock artisan, crafting statement pendulum, wooden, and silent-sweep architectural clocks for homes and offices.",
+    tagline: 'Trusted Wall Clocks for Home & Office',
+    description: "India's trusted wall clock manufacturer, crafting wooden, pendulum, and silent-sweep quartz clocks for living rooms, bedrooms, and office spaces.",
     heroImage: 'https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?auto=format&fit=crop&w=1200&q=80',
     is_featured: false,
   }
@@ -119,87 +120,87 @@ export const PUBLIC_BRANDS: BrandItem[] = [
 export const PUBLIC_CATEGORIES: CategoryItem[] = [
   {
     id: 'analog',
-    name: 'Analog Timepieces',
+    name: 'Analog Watches',
     slug: 'analog',
-    tagline: 'The Pinnacle of Classical Horology',
-    description: 'Traditional mechanical, automatic, and quartz movements featuring sapphire crystals, hand-stitched leather straps, and solid stainless steel or gold-plated cases.',
+    tagline: 'Classic Style for Every Occasion',
+    description: 'Traditional quartz and automatic watches with clean dials, scratch-resistant glass, genuine leather straps, and stainless steel link bracelets.',
     imageUrl: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=800&q=80',
     count: 14,
-    features: ['Mechanical & Automatic Movements', 'Sapphire & Mineral Crystals', 'Chronograph & Date Complications', 'Genuine Leather & Solid Steel']
+    features: ['Quartz & Automatic Movements', 'Scratch-Resistant Glass', 'Date & Chronograph Displays', 'Genuine Leather & Solid Steel']
   },
   {
     id: 'digital',
     name: 'Digital Watches',
     slug: 'digital',
-    tagline: 'Utilitarian Precision & Iconic Retro Heritage',
-    description: 'High-precision digital displays with multi-function stopwatch, world time, solar battery backup, and shock-resistant architectures.',
+    tagline: 'Durable, Shock-Resistant & Sporty',
+    description: 'High-precision digital displays with stopwatches, alarms, world time, backlight illumination, and durable water-resistant cases.',
     imageUrl: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=800&q=80',
     count: 6,
-    features: ['Shock & Vibration Resistance', 'World Time & Multi-Alarms', 'EL Backlight & Solar Power', '100m – 200m Water Resistance']
+    features: ['Shock & Water Resistance', 'Stopwatch & Multi-Alarms', 'Bright Backlight & Solar Power', '100m – 200m Water Resistance']
   },
   {
     id: 'smart',
-    name: 'Smart & Hybrid',
+    name: 'Smartwatches',
     slug: 'smart',
-    tagline: 'Intelligent Technology in Luxury Enclosures',
-    description: 'Next-generation connected watches featuring AMOLED displays, health biometric sensors, call notifications, and premium metal finishes.',
+    tagline: 'Connected Style & Everyday Health Tracking',
+    description: 'Modern smartwatches featuring clear AMOLED displays, heart rate monitoring, step tracking, Bluetooth calling, and long battery life.',
     imageUrl: 'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=800&q=80',
     count: 5,
-    features: ['Vibrant AMOLED Displays', 'Comprehensive Health Sensors', 'Bluetooth Calling & Notifications', 'Up to 14 Days Battery Life']
+    features: ['Vibrant AMOLED Displays', 'Heart Rate & Fitness Tracking', 'Bluetooth Calling & Alerts', 'Up to 7 Days Battery Life']
   },
   {
     id: 'wall',
     name: 'Wall Clocks',
     slug: 'wall',
-    tagline: 'Sculptural Timepieces for Fine Interiors',
-    description: 'Architectural wall clocks combining silent quartz movements, carved wooden bezels, brass pendulums, and timeless dial artistry.',
+    tagline: 'Quality Clocks for Homes & Offices',
+    description: 'Decorative and functional wall clocks with silent-sweep quartz movements, wooden and metallic finishes, and clear, easy-to-read dials.',
     imageUrl: 'https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?auto=format&fit=crop&w=800&q=80',
     count: 5,
-    features: ['Silent Sweep Movement', 'Solid Wooden & Metallic Finishes', 'Harmonic Chime & Pendulums', 'High-Visibility Aesthetic Dials']
+    features: ['Silent Sweep Movement (No Ticking)', 'Solid Wooden & Metallic Finishes', 'Pendulum & Classic Designs', 'Clear & Easy-to-Read Dials']
   },
   {
     id: 'accessory',
-    name: 'Horology Accessories',
+    name: 'Watch Straps & Accessories',
     slug: 'accessory',
-    tagline: 'Care, Presentation & Personalization',
-    description: 'Artisan watch winders, Italian leather replacement straps, travel presentation cases, and professional watchmaker maintenance kits.',
+    tagline: 'Replacement Straps & Watch Care',
+    description: 'High-quality leather and metal replacement straps, travel cases, and watch care accessories fitted directly in our Vadodara showroom.',
     imageUrl: 'https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&w=800&q=80',
     count: 7,
-    features: ['Italian Full-Grain Leather Straps', 'Automatic Watch Winders', 'Handcrafted Travel Rolls', 'Demagnetizing & Cleaning Care']
+    features: ['Genuine Leather Replacement Straps', 'Stainless Steel Mesh & Link Straps', 'Tool-Free Quick Release Fitting', 'Travel Cases & Cleaning Care']
   }
 ];
 
 export const PUBLIC_OFFERS: OfferItem[] = [
   {
     id: 'offer-1',
-    title: 'Heritage Festive Privilege',
-    badge: 'Exclusive Privilege',
-    discount: 'Up to 20% Privilege Privilege',
-    description: 'Celebrate milestone occasions with privileged pricing on select Titan Edge, Timex Automatic, and Citizen Eco-Drive curations.',
+    title: 'Special Festive Offers',
+    badge: 'Festive Offer',
+    discount: 'Up to 20% Off',
+    description: 'Celebrate festivals and family milestones with special discounts on select Titan, Timex, and Citizen watches.',
     code: 'FESTIVE-HERITAGE',
     validity: 'Valid through this season',
-    terms: 'Applicable on select authorized boutique curations. Complimentary engraving included.',
+    terms: 'Applicable on select models in our Vadodara showroom. Free strap adjustment included.',
     bannerImage: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80',
     targetCategory: 'analog'
   },
   {
     id: 'offer-2',
-    title: 'The Wedding Connoisseur Suite',
-    badge: 'Curated Duo',
-    discount: 'Complimentary Horological Care Kit',
-    description: 'Acquire matching his & hers luxury timepieces and receive an artisan 2-slot travel presentation case plus a 3-year extended warranty certificate.',
+    title: 'Wedding Watch Gift Pairs',
+    badge: 'Couple Watches',
+    discount: 'Free Watch Gift Box',
+    description: 'Buy matching his & hers watches from Titan, Citizen, or Timex and receive a complimentary watch presentation box and warranty coverage.',
     validity: 'Ongoing Wedding Season',
-    terms: 'Valid on paired purchases of Titan, Citizen, or Timex timepieces above ₹10,000.',
+    terms: 'Valid on paired watch purchases above ₹10,000 at our Vadodara showroom.',
     bannerImage: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=1200&q=80',
   },
   {
     id: 'offer-3',
-    title: 'Complimentary Master Service Inspection',
-    badge: 'Boutique Service',
-    discount: '100% Complimentary',
-    description: 'Bring any vintage or modern timepiece into our Vadodara boutique for complete ultrasonic case sanitization, demagnetization, and precision timegrapher testing.',
+    title: 'Free Watch Inspection & Service Check',
+    badge: 'Showroom Service',
+    discount: '100% Free Service Check',
+    description: 'Bring any watch into our Vadodara showroom for a free battery check, strap fitting, and timekeeping accuracy inspection.',
     validity: 'Walk-in or Booked Appointment',
-    terms: 'Subject to master horologist availability. One timepiece per client per visit.',
+    terms: 'Available at our New Sama Road showroom. One watch per customer per visit.',
     bannerImage: 'https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=1200&q=80',
   }
 ];
@@ -207,51 +208,51 @@ export const PUBLIC_OFFERS: OfferItem[] = [
 export const PUBLIC_GALLERY: GalleryItem[] = [
   {
     id: 'gal-1',
-    title: 'Master Horologist At Work',
+    title: 'Expert Watchmaker at Work',
     category: 'craftsmanship',
     imageUrl: 'https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=1000&q=80',
-    caption: 'Precision assembly and escapement calibration under 10x magnification.',
-    details: 'Every mechanical timepiece entrusted to Meghani Watch Co. undergoes strict timegrapher balance testing.'
+    caption: 'Precision assembly and watch inspection under high magnification.',
+    details: 'Every watch serviced at Meghani Watch Co. undergoes strict accuracy and balance testing.'
   },
   {
     id: 'gal-2',
-    title: 'Titan Regalia Executive Chronograph',
+    title: 'Titan Regalia Executive Watch',
     category: 'timepieces',
     imageUrl: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=1000&q=80',
-    caption: 'Sunray dial with hand-applied gold indices and surgical stainless steel case.',
-    details: 'A signature statement timepiece in our curated catalog.'
+    caption: 'Classic champagne dial with gold accents and solid stainless steel case.',
+    details: 'One of the most popular dress watches in our Vadodara collection.'
   },
   {
     id: 'gal-3',
-    title: 'The Vadodara Boutique Salon',
+    title: 'Our Vadodara Watch Showroom',
     category: 'boutique',
     imageUrl: 'https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?auto=format&fit=crop&w=1000&q=80',
-    caption: 'Our prestigious salon at Cactus Park, New Sama Road, welcoming timepiece connoisseurs.',
-    details: 'Private viewing lounge with dedicated horological advisors.'
+    caption: 'Our showroom at Cactus Park, New Sama Road, Vadodara.',
+    details: 'Welcoming space with a friendly team to help you choose the right watch.'
   },
   {
     id: 'gal-4',
-    title: 'Vintage Escapement Restoration',
+    title: 'Watch Servicing & Repair',
     category: 'heritage',
     imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=80',
-    caption: 'Meticulous ultrasonic cleaning and genuine Swiss oil re-lubrication.',
-    details: 'Restoring family heirloom pocket watches and vintage wristwatches to within chronometer specs.'
+    caption: 'Ultrasonic cleaning, battery replacement, and mechanical watch servicing.',
+    details: 'Restoring family heirloom watches and daily wear timepieces to smooth working order.'
   },
   {
     id: 'gal-5',
-    title: 'Citizen Eco-Drive Solar Architecture',
+    title: 'Citizen Eco-Drive Solar Watch',
     category: 'timepieces',
     imageUrl: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1000&q=80',
-    caption: 'Light-absorbing photovoltaic ring hidden beneath an iridescent dial.',
-    details: 'Runs indefinitely in any light without ever needing a battery replacement.'
+    caption: 'Light-powered solar watch that never requires a battery change.',
+    details: 'Charges from indoor light or sunlight with months of continuous power.'
   },
   {
     id: 'gal-6',
-    title: 'Artisan Full-Grain Leather Strapping',
+    title: 'Genuine Leather Watch Straps',
     category: 'craftsmanship',
     imageUrl: 'https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&w=1000&q=80',
-    caption: 'Hand-burnished vegetable tanned leather straps tailored to each client.',
-    details: 'Equipped with quick-release spring bars and hypoallergenic 316L buckles.'
+    caption: 'Handpicked genuine leather straps fitted to size in our showroom.',
+    details: 'Available in black, brown, and tan with quick-release pins for easy replacement.'
   }
 ];
 
@@ -272,18 +273,18 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
       'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=900&q=80',
       'https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&w=900&q=80'
     ],
-    description: 'An understated icon of masculine refinement. Features an ivory dial framed by a polished stainless steel bezel, accented with rose gold hands and a genuine calfskin brown leather band.',
+    description: 'A classic men’s analog dress watch featuring an ivory dial, polished stainless steel case, rose gold hands, date display at 3 o’clock, and a genuine brown leather strap with 2 years Titan brand warranty.',
     warranty_months: 24,
     specifications: {
-      movement: 'High-Precision Quartz Calibre',
-      caseMaterial: '316L Surgical Stainless Steel',
+      movement: 'Precision Quartz Movement',
+      caseMaterial: 'Stainless Steel',
       caseDiameter: '41 mm',
-      dialColor: 'Sunburst Ivory',
-      glass: 'Scratch-Resistant Mineral Crystal',
+      dialColor: 'Ivory White',
+      glass: 'Scratch-Resistant Mineral Glass',
       waterResistance: '50 Meters (5 ATM)',
-      strapMaterial: 'Genuine Embossed Calfskin Leather',
+      strapMaterial: 'Genuine Leather',
       claspType: 'Pin Buckle',
-      functions: ['Hours', 'Minutes', 'Central Seconds', 'Date Window at 3 o\'clock']
+      functions: ['Hours', 'Minutes', 'Seconds', 'Date Display']
     },
     is_featured: true,
     is_new_arrival: false,
@@ -304,18 +305,18 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
       'https://images.unsplash.com/photo-1547996160-71dfabbce5ed?auto=format&fit=crop&w=900&q=80',
       'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=900&q=80'
     ],
-    description: 'Engineered for commanding presence. Rich champagne dial with polished gold Roman numerals, encased in 23k PVD gold plating with a solid multi-link gold bracelet.',
+    description: 'A distinguished executive gold watch with a rich champagne dial, polished gold Roman numerals, durable gold PVD finish, and a solid multi-link stainless steel bracelet.',
     warranty_months: 24,
     specifications: {
       movement: 'Japanese Precision Quartz',
-      caseMaterial: '23k Gold PVD Stainless Steel',
+      caseMaterial: 'Gold PVD Stainless Steel',
       caseDiameter: '42 mm',
       dialColor: 'Champagne Gold',
-      glass: 'Hardened Mineral Crystal with Anti-Reflective Coating',
+      glass: 'Mineral Glass',
       waterResistance: '50 Meters (5 ATM)',
-      strapMaterial: 'Solid Stainless Steel Link Bracelet (PVD Gold)',
-      claspType: 'Butterfly Deployant Clasp with Push Buttons',
-      functions: ['Hours', 'Minutes', 'Seconds', 'Day-Date Subdials']
+      strapMaterial: 'Stainless Steel Link Bracelet (Gold PVD)',
+      claspType: 'Fold-Over Clasp with Push Buttons',
+      functions: ['Hours', 'Minutes', 'Seconds', 'Day and Date Display']
     },
     is_featured: true,
     is_new_arrival: false,
@@ -335,18 +336,18 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
     galleryImages: [
       'https://images.unsplash.com/photo-1533139502658-0198f920d8e8?auto=format&fit=crop&w=900&q=80'
     ],
-    description: 'Dynamic sports chronograph with a high-contrast matte black dial, tachymeter scale, vibrant orange accent hands, and a durable sweat-resistant silicon strap.',
+    description: 'A dynamic sports chronograph watch featuring a matte black dial, tachymeter scale, bright orange accent hands, and a comfortable sweat-resistant silicone strap for active daily wear.',
     warranty_months: 12,
     specifications: {
-      movement: 'Multi-Function Quartz Chronograph',
-      caseMaterial: 'High-Impact Polycarbonate & Alloy',
+      movement: 'Quartz Chronograph',
+      caseMaterial: 'Polycarbonate and Alloy',
       caseDiameter: '45 mm',
-      dialColor: 'Matte Charcoal Black',
+      dialColor: 'Matte Black',
       glass: 'Mineral Glass',
       waterResistance: '50 Meters (5 ATM)',
-      strapMaterial: 'Ergonomic Textured Silicone',
-      claspType: 'Heavy-Duty Tang Buckle',
-      functions: ['1/10th Second Stopwatch', '60-Minute Counter', 'Split Timing', '24-Hour Display']
+      strapMaterial: 'Durable Silicone',
+      claspType: 'Buckle',
+      functions: ['Stopwatch', '60-Minute Counter', '24-Hour Display']
     },
     is_featured: false,
     is_new_arrival: true,
@@ -367,18 +368,18 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
       'https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=900&q=80',
       'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=900&q=80'
     ],
-    description: 'A tribute to the mid-century 1960s horological aesthetic. Features a domed acrylic crystal, exhibition caseback revealing the 21-jewel automatic movement, and a vintage black sunray dial.',
+    description: 'A classic 1960s vintage-style self-winding automatic watch with a domed crystal, clean black sunray dial, exhibition caseback showing the mechanical movement, and a genuine leather strap.',
     warranty_months: 24,
     specifications: {
       movement: '21-Jewel Automatic Mechanical (Self-Winding)',
-      caseMaterial: 'Polished 316L Stainless Steel',
+      caseMaterial: 'Stainless Steel',
       caseDiameter: '40 mm',
-      dialColor: 'Obsidian Sunray',
-      glass: 'Domed Vintage Acrylic Crystal',
+      dialColor: 'Black Sunray',
+      glass: 'Domed Acrylic Glass',
       waterResistance: '30 Meters (3 ATM)',
-      strapMaterial: 'Supple Italian Grain Leather',
-      claspType: 'Vintage Pin Buckle',
-      functions: ['Hours', 'Minutes', 'Sweep Seconds', 'Exhibition Caseback', 'Manual Wind Option']
+      strapMaterial: 'Genuine Leather Strap',
+      claspType: 'Pin Buckle',
+      functions: ['Hours', 'Minutes', 'Sweep Seconds', 'Exhibition Caseback']
     },
     is_featured: true,
     is_new_arrival: false,
@@ -395,16 +396,16 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
     stock: 40,
     barcode: 'SONATA-SLIM-01',
     image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80',
-    description: 'Clean, effortless elegance designed for everyday reliability. Ultra-thin profile that slides smoothly under any dress cuff.',
+    description: 'A clean, slim analog watch designed for dependable everyday wear. Features an easy-to-read white dial, lightweight polished case, and genuine black leather strap.',
     warranty_months: 12,
     specifications: {
-      movement: 'Slimline Japanese Quartz',
-      caseMaterial: 'Polished Brass with Steel Back',
+      movement: 'Japanese Quartz',
+      caseMaterial: 'Polished Alloy with Steel Back',
       caseDiameter: '38 mm',
-      dialColor: 'Clean Opal White',
-      glass: 'Scratch-Resistant Mineral Glass',
-      waterResistance: '30 Meters',
-      strapMaterial: 'Genuine Black Leather',
+      dialColor: 'Clean White',
+      glass: 'Mineral Glass',
+      waterResistance: '30 Meters (Splashproof)',
+      strapMaterial: 'Genuine Leather',
       claspType: 'Pin Buckle',
       functions: ['Hours', 'Minutes', 'Seconds']
     },
@@ -427,18 +428,18 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
       'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=900&q=80',
       'https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=900&q=80'
     ],
-    description: 'An exclusive Haute Horlogerie masterpiece crafted upon bespoke commission. Incorporates an open-heart 60-second flying tourbillon cage, hand-guilloché slate dial, and 18k solid gold bezel.',
+    description: 'An exclusive handcrafted mechanical watch featuring an open-heart 60-second flying tourbillon movement, hand-guilloché slate dial, and titanium-gold case. Available on request by showroom appointment.',
     warranty_months: 60,
     specifications: {
-      movement: 'Hand-Finished Manual-Wind Tourbillon Calibre (28,800 vph)',
-      caseMaterial: '18k Solid Rose Gold & Grade 5 Titanium',
+      movement: 'Manual-Wind Tourbillon Movement',
+      caseMaterial: '18k Rose Gold & Titanium',
       caseDiameter: '42.5 mm',
-      dialColor: 'Hand-Engineered Guilloché Slate Grey',
-      glass: 'Double Anti-Reflective Domed Sapphire Crystal',
+      dialColor: 'Slate Grey Guilloché',
+      glass: 'Scratch-Resistant Sapphire Crystal',
       waterResistance: '50 Meters (5 ATM)',
-      strapMaterial: 'Hand-Sewn Louisiana Alligator Leather',
-      claspType: '18k Rose Gold Deployant Buckle',
-      functions: ['Flying Tourbillon', '72-Hour Power Reserve Indicator', 'Sapphire Exhibition Back']
+      strapMaterial: 'Genuine Alligator Pattern Leather',
+      claspType: 'Deployant Clasp',
+      functions: ['Flying Tourbillon', '72-Hour Power Reserve', 'Exhibition Caseback']
     },
     is_featured: true,
     is_new_arrival: true,
@@ -455,18 +456,18 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
     stock: 20,
     barcode: 'CASIO-A168WG',
     image: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=900&q=80',
-    description: 'The definitive retro icon. Featuring a brilliant electro-luminescent backlight, gold-tone stainless steel adjustable bracelet, and unmistakable 1980s digital horology charm.',
+    description: 'The iconic retro digital watch from Casio. Features a bright electro-luminescent backlight, gold-tone adjustable stainless steel bracelet, stopwatch, daily alarm, and auto-calendar.',
     warranty_months: 24,
     specifications: {
-      movement: 'Japanese Digital Quartz Engine',
-      caseMaterial: 'Gold-Tone Resin & Stainless Steel Back',
+      movement: 'Digital Quartz Movement',
+      caseMaterial: 'Gold-Tone Resin with Stainless Steel Back',
       caseDiameter: '38.6 mm',
-      dialColor: 'Digital LCD with Gold Border',
+      dialColor: 'Digital LCD Display',
       glass: 'Resin Glass',
-      waterResistance: 'Water Resistant (Splashproof)',
-      strapMaterial: 'Gold Ion-Plated Stainless Steel Mesh Bracelet',
-      claspType: 'Sliding Adjustable Clasp',
-      functions: ['Electro-Luminescent Backlight', '1/100-Sec Stopwatch', 'Daily Alarm', 'Auto Calendar', '12/24 Hr Format']
+      waterResistance: 'Water Resistant (Daily Splashproof)',
+      strapMaterial: 'Gold-Tone Stainless Steel Bracelet',
+      claspType: 'Adjustable Sliding Clasp',
+      functions: ['EL Backlight', '1/100-Sec Stopwatch', 'Daily Alarm', 'Auto Calendar', '12/24 Hour Formats']
     },
     is_featured: true,
     is_new_arrival: false,
@@ -483,18 +484,18 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
     stock: 14,
     barcode: 'CASIO-GA2100-SOLAR',
     image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=900&q=80',
-    description: 'The legendary "CasiOak" with Carbon Core Guard structure. Slim, octagonal bezel with Bluetooth smartphone linking and solar charging for infinite autonomous power.',
+    description: 'The famous "CasiOak" G-Shock watch with Carbon Core Guard shock resistance, Tough Solar charging, Bluetooth smartphone connection, and 200m water resistance.',
     warranty_months: 24,
     specifications: {
-      movement: 'Tough Solar Ana-Digi Module with Bluetooth',
-      caseMaterial: 'Carbon-Reinforced Fine Resin',
+      movement: 'Tough Solar Analog-Digital with Bluetooth',
+      caseMaterial: 'Carbon Core Guard Reinforced Resin',
       caseDiameter: '45.4 mm',
-      dialColor: 'Stealth Black with Neo-Brite Luminous Hands',
-      glass: 'Scratch-Resistant Mineral Crystal',
-      waterResistance: '200 Meters (20 Bar Diver Grade)',
-      strapMaterial: 'Durable Bio-Based Resin Strap',
-      claspType: 'Heavy-Duty Buckle',
-      functions: ['Solar Charging', 'Phone Link Bluetooth', 'World Time (38 Cities)', '5 Daily Alarms', 'Double LED Super Illuminator']
+      dialColor: 'Stealth Black with Luminous Hands',
+      glass: 'Scratch-Resistant Mineral Glass',
+      waterResistance: '200 Meters (20 ATM Diver Grade)',
+      strapMaterial: 'Durable Resin Strap',
+      claspType: 'Buckle',
+      functions: ['Tough Solar Charging', 'Smartphone Link via Bluetooth', 'World Time (38 Cities)', '5 Daily Alarms', 'Double LED Light']
     },
     is_featured: true,
     is_new_arrival: true,
@@ -511,18 +512,18 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
     stock: 8,
     barcode: 'CITIZEN-ECO-PRO',
     image: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=900&q=80',
-    description: 'ISO-compliant professional diver timepiece powered by light. Features a unidirectional rotating elapsed-time bezel and high-intensity luminous markers for deep underwater visibility.',
+    description: 'An ISO-certified 200-meter diver watch powered continuously by light with Citizen Eco-Drive technology. Features a unidirectional rotating bezel and high-visibility luminous hands.',
     warranty_months: 36,
     specifications: {
-      movement: 'Citizen Eco-Drive Calibre E168 (Light Powered)',
-      caseMaterial: '316L Marine-Grade Stainless Steel',
+      movement: 'Citizen Eco-Drive Light-Powered Movement',
+      caseMaterial: 'Stainless Steel',
       caseDiameter: '44 mm',
-      dialColor: 'Ocean Deep Blue',
-      glass: 'Anti-Reflective Mineral Crystal',
+      dialColor: 'Deep Ocean Blue',
+      glass: 'Anti-Reflective Mineral Glass',
       waterResistance: '200 Meters (ISO 6425 Certified)',
-      strapMaterial: 'Polyurethane Diver Accordion Strap',
-      claspType: 'Tang Buckle',
-      functions: ['Screw-Down Crown', 'Unidirectional 60-Minute Bezel', 'Low-Charge Indicator']
+      strapMaterial: 'Durable Polyurethane Diver Strap',
+      claspType: 'Buckle',
+      functions: ['Screw-Down Crown', 'Rotating Elapsed-Time Bezel', 'Date Display', 'Low-Charge Warning']
     },
     is_featured: true,
     is_new_arrival: false,
@@ -539,18 +540,18 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
     stock: 18,
     barcode: 'NOISE-CFP-LUX',
     image: 'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=900&q=80',
-    description: 'A fusion of haute horology styling and modern intelligence. 1.85-inch AMOLED display encased in metallic stainless steel with magnetic Milanese loop strap.',
+    description: 'A stylish smartwatch with a vibrant 1.85-inch AMOLED display, stainless steel case, magnetic Milanese strap, Bluetooth calling, and 24/7 heart rate and fitness tracking.',
     warranty_months: 12,
     specifications: {
-      movement: 'Dual-Core Smart Engine with Real-Time OS',
-      caseMaterial: 'Zinc Alloy & Stainless Steel Polish',
+      movement: 'Smart Engine with Real-Time OS',
+      caseMaterial: 'Metallic Stainless Steel Finish',
       caseDiameter: '46 mm',
       dialColor: 'Customizable 100+ AMOLED Watch Faces',
-      glass: '2.5D Curved Tempered Glass',
-      waterResistance: 'IP68 Dust & Water Resistant',
-      strapMaterial: 'Magnetic Stainless Steel Milanese Mesh',
+      glass: 'Curved Tempered Glass',
+      waterResistance: 'IP68 Water & Dust Resistant',
+      strapMaterial: 'Magnetic Stainless Steel Mesh (Milanese)',
       claspType: 'Magnetic Clasp',
-      functions: ['Bluetooth Calling', 'SpO2 & Heart Rate 24/7', 'Sleep Tracking', '7-Day Battery']
+      functions: ['Bluetooth Calling', 'Heart Rate & SpO2 Monitoring', 'Sleep Tracking', 'Up to 7 Days Battery']
     },
     is_featured: false,
     is_new_arrival: true,
@@ -567,18 +568,18 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
     stock: 10,
     barcode: 'AJANTA-PEND-WOOD',
     image: 'https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?auto=format&fit=crop&w=900&q=80',
-    description: 'An architectural centerpiece for living spaces and executive suites. Crafted with warm mahogany-finish casing, glass viewing portal, and a harmonic swinging pendulum.',
+    description: 'A classic wooden pendulum wall clock with a rich mahogany finish, clear Roman numerals, glass front panel, and a smooth silent-sweep quartz movement with synchronized pendulum.',
     warranty_months: 18,
     specifications: {
       movement: 'Silent-Sweep Quartz Pendulum Mechanism',
-      caseMaterial: 'Engineered Wood with Mahogany Veneer',
+      caseMaterial: 'Engineered Wood with Mahogany Finish',
       caseDiameter: '600 mm x 280 mm',
-      dialColor: 'Classical Ivory with Roman Numerals',
-      glass: 'Flat Beveled Mineral Glass',
-      waterResistance: 'Indoor Indoor Grade',
+      dialColor: 'Classic Ivory with Roman Numerals',
+      glass: 'Flat Mineral Glass',
+      waterResistance: 'Indoor Wall Mount',
       strapMaterial: 'N/A',
       claspType: 'Wall Hanging Bracket',
-      functions: ['Precision Continuous Sweep Hand', 'Synchronized Mechanical Pendulum']
+      functions: ['Continuous Silent-Sweep Second Hand', 'Synchronized Pendulum Movement']
     },
     is_featured: false,
     is_new_arrival: false,
@@ -595,18 +596,18 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
     stock: 22,
     barcode: 'MGH-STRAP-ITL-20',
     image: 'https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&w=900&q=80',
-    description: 'Curated replacement strap set crafted from Tuscan vegetable-tanned leather. Includes quick-release spring bars and a hypoallergenic 316L brushed steel buckle.',
+    description: 'Premium replacement watch strap crafted from genuine leather. Features tool-free quick-release pins and a stainless steel buckle. Available in 20mm and 22mm widths.',
     warranty_months: 12,
     specifications: {
       movement: 'N/A',
       caseMaterial: 'N/A',
       caseDiameter: '20 mm / 22 mm Lug Widths',
-      dialColor: 'Cognac Brown with Waxed Stitching',
+      dialColor: 'Cognac Brown with Stitching',
       glass: 'N/A',
       waterResistance: 'Sweat & Moisture Resistant',
-      strapMaterial: '100% Genuine Italian Vegetable-Tanned Leather',
-      claspType: 'Solid 316L Stainless Steel Tang Buckle',
-      functions: ['Tool-Free Quick Release Spring Bars']
+      strapMaterial: '100% Genuine Leather',
+      claspType: 'Stainless Steel Pin Buckle',
+      functions: ['Tool-Free Quick Release Pins']
     },
     is_featured: false,
     is_new_arrival: true,
@@ -622,6 +623,7 @@ export interface ProductFilterParams {
   maxPrice?: number;
   search?: string;
   sort?: 'featured' | 'price_asc' | 'price_desc' | 'name_asc' | 'newest';
+  featured?: boolean;
   page?: number;
   pageSize?: number;
 }
@@ -652,6 +654,7 @@ export async function getPublicProducts(
     if (params.minPrice) query.append('min_price', params.minPrice.toString());
     if (params.maxPrice) query.append('max_price', params.maxPrice.toString());
     if (params.search) query.append('search', params.search);
+    if (params.featured) query.append('featured', 'true');
     if (params.sort) {
       if (params.sort === 'price_asc') query.append('ordering', 'selling_price');
       else if (params.sort === 'price_desc') query.append('ordering', '-selling_price');
@@ -663,7 +666,7 @@ export async function getPublicProducts(
 
     // Try fetching from Django public endpoint with 2.5s timeout
     const res = await axios.get(`${API_BASE}/products/public/?${query.toString()}`, {
-      timeout: 2500,
+      timeout: 5000,
     });
 
     if (res.data && (res.data.results || Array.isArray(res.data))) {
@@ -681,8 +684,14 @@ export async function getPublicProducts(
         stock: item.stock || 0,
         barcode: item.barcode || null,
         image: item.image || 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=800&q=80',
+        galleryImages: item.gallery_images || item.galleryImages || [
+          item.image || 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=800&q=80'
+        ],
         description: item.description || 'Authentic curated luxury watch from Meghani Watch Co.',
         warranty_months: item.warranty_months || 24,
+        specifications: item.specifications || undefined,
+        is_featured: Boolean(item.is_featured),
+        is_new_arrival: Boolean(item.is_new_arrival),
         created_at: item.created_at || new Date().toISOString()
       }));
 
@@ -769,7 +778,7 @@ export async function getPublicProductById(
 
   try {
     const res = await axios.get(`${API_BASE}/products/public/${numericId}/`, {
-      timeout: 2500,
+      timeout: 5000,
     });
     if (res.data) {
       const item = res.data;
@@ -785,7 +794,7 @@ export async function getPublicProductById(
         stock: item.stock || 0,
         barcode: item.barcode || null,
         image: item.image || 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=800&q=80',
-        galleryImages: item.galleryImages || [
+        galleryImages: item.gallery_images || item.galleryImages || [
           item.image || 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=800&q=80'
         ],
         description: item.description || '',
@@ -799,6 +808,8 @@ export async function getPublicProductById(
           strapMaterial: 'Genuine Leather Strap',
           claspType: 'Pin Buckle'
         },
+        is_featured: Boolean(item.is_featured),
+        is_new_arrival: Boolean(item.is_new_arrival),
         created_at: item.created_at || new Date().toISOString()
       };
     }
@@ -825,13 +836,184 @@ export function buildWhatsAppEnquiryUrl(
       ? `₹${product.price.toLocaleString('en-IN')}`
       : 'Price on Request';
 
-    text = `Hello Meghani Watch Co.,\n\nI am interested in acquiring this timepiece from your collection:\n\n*${product.name}*\n• Brand: ${product.brand}\n• Category: ${product.category}\n• Availability: ${product.availability.replace('_', ' ').toUpperCase()}\n• Price: ${priceText}\n${product.barcode ? `• Ref Code: ${product.barcode}\n` : ''}\nCould you please share availability details and assist me with a boutique viewing or order?\n\nThank you.`;
+    text = `Hello Meghani Watch Co.,\n\nI am interested in this watch from your collection:\n\n*${product.name}*\n• Brand: ${product.brand}\n• Category: ${product.category}\n• Availability: ${product.availability.replace('_', ' ').toUpperCase()}\n• Price: ${priceText}\n${product.barcode ? `• Reference Code: ${product.barcode}\n` : ''}\nPlease let me know if it is available in your Vadodara showroom and how I can see or purchase it.\n\nThank you.`;
   } else if (customMessage) {
-    text = `Hello Meghani Watch Co.,\n\n${customMessage}\n\nI look forward to your assistance.`;
+    text = `Hello Meghani Watch Co.,\n\n${customMessage}\n\nThank you.`;
   } else {
-    text = `Hello Meghani Watch Co.,\n\nI would like to inquire about your curated luxury watch collection and boutique consultation services.`;
+    text = `Hello Meghani Watch Co.,\n\nI would like to enquire about your watch collection and showroom in Vadodara.`;
   }
 
   return `https://wa.me/${phone}?text=${encodeURIComponent(text)}`;
 }
+
+/**
+ * Fetch public store business details dynamically from backend,
+ * falling back to MEGHANI_STORE_INFO if the backend is unreachable.
+ */
+export async function getStoreInfo(): Promise<BusinessStoreInfo> {
+  try {
+    const res = await axios.get(`${API_BASE}/settings/public/`, { timeout: 5000 });
+    if (res.data && res.data.business_name) {
+      const d = res.data;
+      return {
+        name: d.business_name || MEGHANI_STORE_INFO.name,
+        tagline: d.tagline || MEGHANI_STORE_INFO.tagline,
+        phone: d.phone || MEGHANI_STORE_INFO.phone,
+        whatsapp: d.whatsapp_number || MEGHANI_STORE_INFO.whatsapp,
+        email: d.email || MEGHANI_STORE_INFO.email,
+        address: {
+          line1: d.address_line1 || MEGHANI_STORE_INFO.address.line1,
+          line2: d.address_line2 || MEGHANI_STORE_INFO.address.line2,
+          city: d.city || MEGHANI_STORE_INFO.address.city,
+          state: d.state || MEGHANI_STORE_INFO.address.state,
+          pincode: d.pincode || MEGHANI_STORE_INFO.address.pincode,
+          landmark: d.landmark || MEGHANI_STORE_INFO.address.landmark,
+        },
+        hours: {
+          weekdays: d.opening_hours_weekdays || MEGHANI_STORE_INFO.hours.weekdays,
+          sunday: d.opening_hours_sunday || MEGHANI_STORE_INFO.hours.sunday,
+        },
+        googleMapsUrl: d.google_maps_url || MEGHANI_STORE_INFO.googleMapsUrl,
+        googleMapsEmbedSrc: d.google_maps_embed_src || MEGHANI_STORE_INFO.googleMapsEmbedSrc,
+        socials: {
+          instagram: d.instagram_url || MEGHANI_STORE_INFO.socials.instagram,
+          facebook: d.facebook_url || MEGHANI_STORE_INFO.socials.facebook,
+        },
+        terms_and_conditions: d.terms_and_conditions,
+        privacy_policy: d.privacy_policy,
+      };
+    }
+  } catch (err) {
+    // fallback
+  }
+  return MEGHANI_STORE_INFO;
+}
+
+/**
+ * Fetch authorized brand portfolio dynamically from backend.
+ */
+export async function getPublicBrands(): Promise<BrandItem[]> {
+  try {
+    const res = await axios.get(`${API_BASE}/brands/`, { timeout: 5000 });
+    const rawList = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+    if (rawList.length > 0) {
+      return rawList.map((b: any) => ({
+        name: b.name,
+        slug: b.slug,
+        count: b.count || 0,
+        country: b.country || 'International',
+        established: b.established || '',
+        tagline: b.tagline || '',
+        description: b.description || '',
+        heroImage: b.hero_image || 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80',
+        is_featured: Boolean(b.is_featured),
+      }));
+    }
+  } catch (err) {
+    // fallback
+  }
+  return PUBLIC_BRANDS;
+}
+
+/**
+ * Fetch horological categories dynamically from backend.
+ */
+export async function getPublicCategories(): Promise<CategoryItem[]> {
+  try {
+    const res = await axios.get(`${API_BASE}/categories/`, { timeout: 5000 });
+    const rawList = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+    if (rawList.length > 0) {
+      return rawList.map((c: any) => ({
+        id: (c.slug as ProductCategory) || 'analog',
+        name: c.name,
+        slug: c.slug,
+        tagline: c.tagline || '',
+        description: c.description || '',
+        imageUrl: c.image_url || 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=800&q=80',
+        count: c.count || 0,
+        features: c.features || [],
+      }));
+    }
+  } catch (err) {
+    // fallback
+  }
+  return PUBLIC_CATEGORIES;
+}
+
+/**
+ * Fetch active boutique offers and privileges dynamically from backend.
+ */
+export async function getPublicOffers(): Promise<OfferItem[]> {
+  try {
+    const res = await axios.get(`${API_BASE}/offers/`, { timeout: 5000 });
+    const rawList = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+    if (rawList.length > 0) {
+      return rawList.map((o: any) => ({
+        id: o.id.toString(),
+        title: o.title,
+        badge: o.badge,
+        discount: o.discount,
+        description: o.description,
+        code: o.code || undefined,
+        validity: o.validity,
+        terms: o.terms,
+        bannerImage: o.banner_image,
+        targetCategory: o.target_category || undefined,
+      }));
+    }
+  } catch (err) {
+    // fallback
+  }
+  return PUBLIC_OFFERS;
+}
+
+/**
+ * Fetch horological workshop gallery items dynamically from backend.
+ */
+export async function getPublicGallery(): Promise<GalleryItem[]> {
+  try {
+    const res = await axios.get(`${API_BASE}/gallery/`, { timeout: 5000 });
+    const rawList = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+    if (rawList.length > 0) {
+      return rawList.map((g: any) => ({
+        id: g.id.toString(),
+        title: g.title,
+        category: g.category,
+        imageUrl: g.image_url,
+        caption: g.caption,
+        details: g.details,
+      }));
+    }
+  } catch (err) {
+    // fallback
+  }
+  return PUBLIC_GALLERY;
+}
+
+/**
+ * Fetch heritage milestones dynamically from backend.
+ */
+export async function getPublicMilestones(): Promise<MilestoneItem[]> {
+  try {
+    const res = await axios.get(`${API_BASE}/milestones/`, { timeout: 5000 });
+    const rawList = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+    if (rawList.length > 0) {
+      return rawList.map((m: any) => ({
+        year: m.year,
+        title: m.title,
+        description: m.description,
+        display_order: m.display_order,
+      }));
+    }
+  } catch (err) {
+    // fallback
+  }
+  return [
+    { year: '1984', title: 'The Foundation in Vadodara', description: 'Meghani Watch Co. opens in Vadodara, offering mechanical wristwatches, pocket watches, and trusted watch repair services.' },
+    { year: '1995', title: 'Authorized Brand Partnerships', description: 'Became an authorized dealer for Titan, Citizen, and Casio, bringing genuine branded watches with official warranties to Vadodara families.' },
+    { year: '2010', title: 'Workshop Expansion', description: 'Expanded our in-house repair workshop with modern diagnostic equipment, pressure testers, and genuine spare parts.' },
+    { year: '2026', title: 'Four Decades of Trust', description: 'Celebrating 40+ years in Vadodara, having served over 50,000 satisfied customers with authentic watches and reliable servicing.' },
+  ];
+}
+
 

@@ -7,11 +7,15 @@ import { MEGHANI_STORE_INFO } from '@/services/publicCatalogue';
 
 const luxuryEase = [0.16, 1, 0.3, 1] as const;
 
-export default function WhatsAppButton() {
+interface WhatsAppButtonProps {
+  phone?: string;
+}
+
+export default function WhatsAppButton({ phone = MEGHANI_STORE_INFO.whatsapp }: WhatsAppButtonProps) {
   const [showTooltip, setShowTooltip] = useState(true);
 
-  const whatsappHref = `https://wa.me/${MEGHANI_STORE_INFO.whatsapp}?text=${encodeURIComponent(
-    'Hello Meghani Watch Co., I am browsing your website and would like to speak with a concierge.'
+  const whatsappHref = `https://wa.me/${phone}?text=${encodeURIComponent(
+    'Hello Meghani Watch Co., I am browsing your website and would like help with watches.'
   )}`;
 
   return (
@@ -27,7 +31,7 @@ export default function WhatsAppButton() {
             className="hidden sm:flex items-center gap-2 bg-[#171613] text-[#F3EFE6] text-xs py-2 px-3.5 rounded-full border border-[#C9A45C]/40 shadow-2xl shadow-black/80"
           >
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span className="font-medium">Need help finding a timepiece? Concierge is online</span>
+            <span className="font-medium">Need help choosing a watch? Chat with us on WhatsApp</span>
             <button
               onClick={() => setShowTooltip(false)}
               className="text-[#8D8980] hover:text-[#F3EFE6] ml-1 p-0.5 transition-colors"
@@ -46,7 +50,7 @@ export default function WhatsAppButton() {
         href={whatsappHref}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label="Chat with Meghani Watch Co. Concierge on WhatsApp"
+        aria-label="Chat with Meghani Watch Co. on WhatsApp"
         className="group relative w-14 h-14 rounded-full bg-gradient-to-br from-[#25D366] to-[#128C7E] text-white flex items-center justify-center shadow-2xl shadow-[#25D366]/30 ring-2 ring-white/20 hover:ring-[#C9A45C] transition-colors"
       >
         <span className="absolute -inset-1 rounded-full bg-[#25D366]/20 animate-pulse-soft -z-10" />

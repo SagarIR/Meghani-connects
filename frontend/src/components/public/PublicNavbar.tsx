@@ -21,8 +21,19 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { MEGHANI_STORE_INFO, PUBLIC_BRANDS, PUBLIC_CATEGORIES } from '@/services/publicCatalogue';
+import { BusinessStoreInfo, BrandItem, CategoryItem } from '@/types/public';
 
-export default function PublicNavbar() {
+interface PublicNavbarProps {
+  storeInfo?: BusinessStoreInfo;
+  brands?: BrandItem[];
+  categories?: CategoryItem[];
+}
+
+export default function PublicNavbar({
+  storeInfo = MEGHANI_STORE_INFO,
+  brands = PUBLIC_BRANDS,
+  categories = PUBLIC_CATEGORIES,
+}: PublicNavbarProps) {
   const pathname = usePathname();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -94,25 +105,25 @@ export default function PublicNavbar() {
           <div className="flex items-center gap-3 sm:gap-5">
             <span className="flex items-center gap-1.5 text-[#C9A45C] font-medium tracking-wider">
               <ShieldCheck className="w-3.5 h-3.5 text-[#C9A45C]" />
-              <span>100% Authorized Purveyor • Titan, Casio, Citizen, Timex</span>
+              <span>100% Original Watches • Titan, Casio, Citizen, Timex & More</span>
             </span>
             <span className="hidden lg:inline-block text-[#2A261F]">|</span>
             <span className="hidden lg:flex items-center gap-1.5 text-[#8D8980]">
               <Clock className="w-3.5 h-3.5 text-[#C9A45C]" />
-              <span>{MEGHANI_STORE_INFO.hours.weekdays}</span>
+              <span>{storeInfo.hours.weekdays}</span>
             </span>
           </div>
 
-          {/* Right: Concierge Hotline & Staff Link */}
+          {/* Right: Hotline & Staff Link */}
           <div className="flex items-center gap-3 sm:gap-4 ml-auto sm:ml-0">
             <a
-              href={`tel:${MEGHANI_STORE_INFO.phone}`}
+              href={`tel:${storeInfo.phone}`}
               className="flex items-center gap-1.5 text-[#A8A194] hover:text-[#E8D5A7] transition-colors"
             >
               <Phone className="w-3 h-3 text-[#C9A45C]" />
               <span className="tracking-wide">
-                <span className="hidden sm:inline text-[#6E6960]">Concierge: </span>
-                {MEGHANI_STORE_INFO.phone}
+                <span className="hidden sm:inline text-[#6E6960]">Call Us: </span>
+                {storeInfo.phone}
               </span>
             </a>
             <span className="text-[#2A261F]">|</span>
@@ -189,7 +200,7 @@ export default function PublicNavbar() {
                   : 'text-[#8D8980] hover:text-[#E8D5A7] hover:bg-white/[0.03]'
               }`}
             >
-              Catalogue
+              Shop Watches
               {pathname.startsWith('/shop') && (
                 <motion.span
                   layoutId="publicActiveNav"
@@ -251,7 +262,7 @@ export default function PublicNavbar() {
                           <div className="flex items-center gap-2">
                             <ShieldCheck className="w-4 h-4 text-[#C9A45C]" />
                             <span className="text-[11px] font-bold text-[#F3EFE6] uppercase tracking-[0.15em]">
-                              Authorized Purveyor Portfolio
+                              Our Watch Brands
                             </span>
                           </div>
                           <span className="text-[10px] text-[#8D8980] tracking-wider uppercase font-medium">
@@ -263,7 +274,7 @@ export default function PublicNavbar() {
                         <div className="grid grid-cols-12 gap-5">
                           {/* Brands Grid (7 cols) */}
                           <div className="col-span-7 grid grid-cols-2 gap-2">
-                            {PUBLIC_BRANDS.slice(0, 6).map((brand) => (
+                            {brands.slice(0, 6).map((brand) => (
                               <Link
                                 key={brand.slug}
                                 href={`/shop?brand=${brand.slug}`}
@@ -286,13 +297,13 @@ export default function PublicNavbar() {
                           <div className="col-span-5 bg-gradient-to-br from-[#171613] to-[#0F0E0C] border border-[#2A261F] rounded-xl p-4 flex flex-col justify-between">
                             <div>
                               <span className="text-[9px] font-semibold tracking-[0.2em] text-[#C9A45C] uppercase block mb-1.5 font-sans">
-                                Heritage Salon
+                                Vadodara Showroom
                               </span>
                               <h4 className="font-serif text-sm font-medium text-[#F3EFE6] leading-snug">
-                                Meghani Atelier & Rare Pieces
+                                Meghani Watch Co. Showroom
                               </h4>
                               <p className="text-[11px] text-[#8D8980] leading-relaxed mt-1.5 font-sans">
-                                Curating certified automatic tourbillons, limited editions, and full manufacturer warranties.
+                                Authorized retail partner for Titan, Casio, Citizen, Timex and more with official manufacturer warranty.
                               </p>
                             </div>
 
@@ -309,12 +320,12 @@ export default function PublicNavbar() {
 
                       {/* Bottom Strip */}
                       <div className="bg-[#0C0B0A] px-5 py-2.5 border-t border-[#221E17] flex items-center justify-between text-[11px]">
-                        <span className="text-[#8D8980]">All timepieces accompanied by official brand warranty</span>
+                        <span className="text-[#8D8980]">100% original watches with official brand warranty</span>
                         <Link
                           href="/shop"
                           className="text-[#C9A45C] hover:text-[#E8D5A7] font-semibold tracking-wider uppercase transition-colors"
                         >
-                          Browse Full Catalogue →
+                          Explore All Watches →
                         </Link>
                       </div>
                     </div>
@@ -337,7 +348,7 @@ export default function PublicNavbar() {
                     : 'text-[#8D8980] hover:text-[#E8D5A7] hover:bg-white/[0.03]'
                 }`}
               >
-                <span>Collections</span>
+                <span>Categories</span>
                 <ChevronDown
                   className={`w-3.5 h-3.5 transition-transform duration-200 ${
                     activeDropdown === 'categories' ? 'rotate-180 text-[#C9A45C]' : 'text-[#8D8980]'
@@ -375,11 +386,11 @@ export default function PublicNavbar() {
                           <div className="flex items-center gap-2">
                             <Sparkles className="w-4 h-4 text-[#C9A45C]" />
                             <span className="text-[11px] font-bold text-[#F3EFE6] uppercase tracking-[0.15em]">
-                              Curated Horological Categories
+                              Watch Categories
                             </span>
                           </div>
                           <span className="text-[10px] text-[#8D8980] tracking-wider uppercase font-medium">
-                            Mechanical • Quartz • Digital
+                            Analog • Digital • Smart • Clocks
                           </span>
                         </div>
 
@@ -387,7 +398,7 @@ export default function PublicNavbar() {
                         <div className="grid grid-cols-12 gap-5">
                           {/* Categories List (7 cols) */}
                           <div className="col-span-7 grid grid-cols-2 gap-2">
-                            {PUBLIC_CATEGORIES.map((cat) => (
+                            {categories.map((cat) => (
                               <Link
                                 key={cat.id}
                                 href={`/shop?category=${cat.id}`}
@@ -410,13 +421,13 @@ export default function PublicNavbar() {
                           <div className="col-span-5 bg-gradient-to-br from-[#171613] to-[#0F0E0C] border border-[#2A261F] rounded-xl p-4 flex flex-col justify-between">
                             <div>
                               <span className="text-[9px] font-semibold tracking-[0.2em] text-[#C9A45C] uppercase block mb-1.5 font-sans">
-                                Master Atelier
+                                Watch Service & Repair
                               </span>
                               <h4 className="font-serif text-sm font-medium text-[#F3EFE6] leading-snug">
-                                Mechanical Calibre Verification
+                                Expert Watch Repair Workshop
                               </h4>
                               <p className="text-[11px] text-[#8D8980] leading-relaxed mt-1.5 font-sans">
-                                Every mechanical and automatic timepiece undergoes strict timegrapher rate and water-resistance testing.
+                                Complete watch servicing, battery replacement, movement inspection, and water resistance testing by experienced technicians.
                               </p>
                             </div>
 
@@ -433,12 +444,12 @@ export default function PublicNavbar() {
 
                       {/* Bottom Strip */}
                       <div className="bg-[#0C0B0A] px-5 py-2.5 border-t border-[#221E17] flex items-center justify-between text-[11px]">
-                        <span className="text-[#8D8980]">Complimentary lifetime bracelet sizing & demagnetization</span>
+                        <span className="text-[#8D8980]">Free watch strap sizing and battery replacement service</span>
                         <Link
                           href="/categories"
                           className="text-[#C9A45C] hover:text-[#E8D5A7] font-semibold tracking-wider uppercase transition-colors"
                         >
-                          Explore Horology Guide →
+                          Explore All Categories →
                         </Link>
                       </div>
                     </div>
@@ -494,7 +505,7 @@ export default function PublicNavbar() {
                   : 'text-[#8D8980] hover:text-[#E8D5A7] hover:bg-white/[0.03]'
               }`}
             >
-              Heritage
+              About Us
               {pathname === '/about' && (
                 <motion.span
                   layoutId="publicActiveNav"
@@ -513,7 +524,7 @@ export default function PublicNavbar() {
                   : 'text-[#8D8980] hover:text-[#E8D5A7] hover:bg-white/[0.03]'
               }`}
             >
-              Boutique
+              Showroom & Contact
               {pathname === '/contact' && (
                 <motion.span
                   layoutId="publicActiveNav"
@@ -530,8 +541,8 @@ export default function PublicNavbar() {
             <button
               onClick={() => setSearchOpen(!searchOpen)}
               className="flex items-center gap-2 px-3.5 py-2 rounded-full text-[#8D8980] hover:text-[#C9A45C] hover:bg-white/[0.04] border border-[#2A261F] hover:border-[#C9A45C]/50 transition-all active:scale-95"
-              aria-label="Search Collection"
-              title="Search Timepieces"
+              aria-label="Search Watches"
+              title="Search Watches"
             >
               <Search className="w-4 h-4 text-[#C9A45C]" />
               <span className="text-xs font-medium tracking-[0.1em] uppercase text-[#F3EFE6]">
@@ -567,7 +578,7 @@ export default function PublicNavbar() {
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by timepiece name, brand (Titan, Casio, Citizen...), model or calibre..."
+                    placeholder="Search watches by brand (Titan, Casio, Citizen...), category, or model..."
                     className="w-full bg-transparent border-none text-[#F3EFE6] placeholder-[#8D8980] text-xs sm:text-sm focus:outline-none"
                     autoFocus
                   />
@@ -669,13 +680,13 @@ export default function PublicNavbar() {
                 <div className="py-6 space-y-1.5">
                   {[
                     { label: 'Home', href: '/' },
-                    { label: 'Shop / Catalogue', href: '/shop' },
-                    { label: 'Brands Showcase', href: '/brands' },
-                    { label: 'Horological Collections', href: '/categories' },
-                    { label: 'Exclusive Offers', href: '/offers' },
-                    { label: 'Visual Gallery', href: '/gallery' },
-                    { label: 'Heritage & Story', href: '/about' },
-                    { label: 'Boutique & Contact', href: '/contact' },
+                    { label: 'Shop All Watches', href: '/shop' },
+                    { label: 'Our Watch Brands', href: '/brands' },
+                    { label: 'Watch Categories', href: '/categories' },
+                    { label: 'Special Offers', href: '/offers' },
+                    { label: 'Watch Gallery', href: '/gallery' },
+                    { label: 'About Us', href: '/about' },
+                    { label: 'Showroom & Contact', href: '/contact' },
                   ].map((item, idx) => (
                     <motion.div
                       key={item.href}
@@ -707,15 +718,15 @@ export default function PublicNavbar() {
                 </div>
 
                 <a
-                  href={`https://wa.me/${MEGHANI_STORE_INFO.whatsapp}?text=${encodeURIComponent(
-                    'Hello Meghani Watch Co., I am inquiring from your mobile website.'
+                  href={`https://wa.me/${storeInfo.whatsapp}?text=${encodeURIComponent(
+                    'Hello Meghani Watch Co., I am inquiring from your website about watches.'
                   )}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full py-3 rounded-xl flex items-center justify-center gap-2 bg-[#C9A04F] hover:bg-[#DFC17B] text-[#101010] font-bold uppercase tracking-wider shadow-lg transition-colors active:scale-95"
                 >
                   <MessageCircle className="w-4 h-4 text-[#101010]" />
-                  <span>WhatsApp Concierge</span>
+                  <span>Enquire on WhatsApp</span>
                 </a>
 
                 <Link

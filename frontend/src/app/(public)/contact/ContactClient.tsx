@@ -15,11 +15,16 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { MEGHANI_STORE_INFO } from '@/services/publicCatalogue';
+import { BusinessStoreInfo } from '@/types/public';
 import Breadcrumbs from '@/components/public/Breadcrumbs';
 
 const luxuryEase = [0.16, 1, 0.3, 1] as const;
 
-export default function ContactClient() {
+interface ContactClientProps {
+  storeInfo?: BusinessStoreInfo;
+}
+
+export default function ContactClient({ storeInfo = MEGHANI_STORE_INFO }: ContactClientProps) {
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
@@ -65,18 +70,18 @@ export default function ContactClient() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
-      <Breadcrumbs items={[{ label: 'Boutique Visit & Contact' }]} />
+      <Breadcrumbs items={[{ label: 'Showroom & Contact' }]} />
 
       {/* Header */}
       <div className="py-8 border-b border-[#2A261F] max-w-3xl">
         <span className="text-xs text-[#C9A45C] font-semibold uppercase tracking-[0.25em] block mb-2">
-          Concierge & Boutique Information
+          Showroom & Contact Information
         </span>
         <h1 className="font-serif text-3xl sm:text-5xl font-normal text-[#F3EFE6] leading-tight">
-          Connect with Meghani Watch Co.
+          Contact Meghani Watch Co.
         </h1>
         <p className="text-xs sm:text-sm text-[#8D8980] mt-3 leading-relaxed">
-          We welcome you to visit our boutique salon on New Sama Road, Vadodara or connect with our horological concierge for personal recommendations, private viewings, or service inquiries.
+          We welcome you to visit our watch showroom on New Sama Road, Vadodara, or reach out to our team for watch enquiries, pricing, or watch repair services.
         </p>
       </div>
 
@@ -93,24 +98,24 @@ export default function ContactClient() {
             <div className="flex items-center gap-3 text-[#C9A45C]">
               <MapPin className="w-5 h-5 shrink-0" />
               <h3 className="font-serif text-base font-medium text-[#F3EFE6] uppercase tracking-wider">
-                Boutique Address
+                Showroom Address
               </h3>
             </div>
             <p className="text-xs text-[#8D8980] leading-relaxed pl-8">
-              {MEGHANI_STORE_INFO.address.line1}<br />
-              {MEGHANI_STORE_INFO.address.line2}<br />
-              {MEGHANI_STORE_INFO.address.city}, {MEGHANI_STORE_INFO.address.state} – {MEGHANI_STORE_INFO.address.pincode}<br />
-              <span className="text-[#8D8980]/80 mt-1 block">Landmark: {MEGHANI_STORE_INFO.address.landmark}</span>
+              {storeInfo.address.line1}<br />
+              {storeInfo.address.line2}<br />
+              {storeInfo.address.city}, {storeInfo.address.state} – {storeInfo.address.pincode}<br />
+              <span className="text-[#8D8980]/80 mt-1 block">Landmark: {storeInfo.address.landmark}</span>
             </p>
 
             <div className="pl-8 pt-2">
               <a
-                href={MEGHANI_STORE_INFO.googleMapsUrl}
+                href={storeInfo.googleMapsUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-xs text-[#C9A45C] hover:text-[#E8D5A7] font-semibold flex items-center gap-1.5 transition-colors"
               >
-                <span>Get Driving Directions on Google Maps</span>
+                <span>Get Directions on Google Maps</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </a>
             </div>
@@ -121,15 +126,15 @@ export default function ContactClient() {
             <div className="flex items-center gap-3 text-[#C9A45C]">
               <Clock className="w-5 h-5 shrink-0" />
               <h3 className="font-serif text-base font-medium text-[#F3EFE6] uppercase tracking-wider">
-                Salon Timings
+                Showroom Timings
               </h3>
             </div>
             <div className="text-xs text-[#8D8980] space-y-1.5 pl-8">
               <p>
-                <strong className="text-[#F3EFE6]">Monday through Saturday:</strong> {MEGHANI_STORE_INFO.hours.weekdays}
+                <strong className="text-[#F3EFE6]">Monday through Saturday:</strong> {storeInfo.hours.weekdays}
               </p>
               <p>
-                <strong className="text-[#F3EFE6]">Sunday:</strong> {MEGHANI_STORE_INFO.hours.sunday}
+                <strong className="text-[#F3EFE6]">Sunday:</strong> {storeInfo.hours.sunday}
               </p>
             </div>
           </div>
@@ -139,29 +144,29 @@ export default function ContactClient() {
             <div className="flex items-center gap-3 text-[#C9A45C]">
               <Phone className="w-5 h-5 shrink-0" />
               <h3 className="font-serif text-base font-medium text-[#F3EFE6] uppercase tracking-wider">
-                Direct Telephony & WhatsApp
+                Phone & WhatsApp
               </h3>
             </div>
             <div className="text-xs text-[#8D8980] space-y-2 pl-8">
               <p>
-                Telephone: <a href={`tel:${MEGHANI_STORE_INFO.phone}`} className="text-[#F3EFE6] hover:text-[#C9A45C] font-semibold transition-colors">{MEGHANI_STORE_INFO.phone}</a>
+                Call Us: <a href={`tel:${storeInfo.phone}`} className="text-[#F3EFE6] hover:text-[#C9A45C] font-semibold transition-colors">{storeInfo.phone}</a>
               </p>
               <p>
-                Email: <a href={`mailto:${MEGHANI_STORE_INFO.email}`} className="text-[#F3EFE6] hover:text-[#C9A45C] font-semibold transition-colors">{MEGHANI_STORE_INFO.email}</a>
+                Email: <a href={`mailto:${storeInfo.email}`} className="text-[#F3EFE6] hover:text-[#C9A45C] font-semibold transition-colors">{storeInfo.email}</a>
               </p>
             </div>
 
             <div className="pl-8 pt-2">
               <a
-                href={`https://wa.me/${MEGHANI_STORE_INFO.whatsapp}?text=${encodeURIComponent(
-                  'Hello Meghani Watch Co., I am inquiring from your contact page.'
+                href={`https://wa.me/${storeInfo.whatsapp}?text=${encodeURIComponent(
+                  'Hello Meghani Watch Co., I am inquiring from your website about watches.'
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-full py-2.5 px-4 rounded-xl bg-[#0B0B0A] border border-[#C9A45C]/40 text-[#E8D5A7] hover:bg-[#C9A45C] hover:text-[#0B0B0A] text-xs font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-2"
               >
                 <MessageCircle className="w-4 h-4" />
-                <span>Instant WhatsApp Concierge</span>
+                <span>Chat on WhatsApp</span>
               </a>
             </div>
           </div>
@@ -176,23 +181,23 @@ export default function ContactClient() {
         >
           <div className="p-8 sm:p-10 rounded-2xl bg-[#171613] border border-[#2A261F] shadow-2xl">
             <span className="text-xs text-[#C9A45C] font-semibold uppercase tracking-[0.25em] block mb-2">
-              Personalized Consultation
+              Quick Enquiry
             </span>
             <h2 className="font-serif text-2xl sm:text-3xl font-normal text-[#F3EFE6]">
-              Schedule Viewing or Inquire
+              Enquire or Schedule a Visit
             </h2>
             <p className="text-xs sm:text-sm text-[#8D8980] mt-2 mb-8 leading-relaxed">
-              Fill in your details below. Our horological concierge will prepare your request and connect with you on WhatsApp or phone immediately.
+              Fill in your details below. Our team will review your enquiry and respond to you promptly via WhatsApp or phone.
             </p>
 
             {submitted ? (
               <div className="py-12 text-center space-y-4 bg-[#0B0B0A] rounded-xl border border-emerald-500/30 p-6">
                 <CheckCircle2 className="w-14 h-14 text-emerald-400 mx-auto" />
                 <h3 className="font-serif text-xl font-normal text-[#F3EFE6]">
-                  Consultation Request Dispatched
+                  Enquiry Prepared
                 </h3>
                 <p className="text-xs sm:text-sm text-[#8D8980] max-w-md mx-auto leading-relaxed">
-                  Thank you, <strong className="text-[#F3EFE6]">{name}</strong>. Your consultation details have been transmitted to our Vadodara boutique concierge. WhatsApp has opened to assist you immediately.
+                  Thank you, <strong className="text-[#F3EFE6]">{name}</strong>. Your details have been prepared and WhatsApp is opening now so our team can assist you directly.
                 </p>
                 <div className="pt-4">
                   <button
@@ -215,14 +220,14 @@ export default function ContactClient() {
                 {/* Purpose Selector */}
                 <div>
                   <label className="block text-[#F3EFE6] font-semibold uppercase tracking-wider mb-2">
-                    Nature of Consultation *
+                    Enquiry Type *
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {[
-                      { id: 'viewing', label: 'Private Viewing' },
+                      { id: 'viewing', label: 'Showroom Visit' },
                       { id: 'product', label: 'Watch Enquiry' },
-                      { id: 'service', label: 'Service / Repair' },
-                      { id: 'general', label: 'General Concierge' },
+                      { id: 'service', label: 'Watch Repair' },
+                      { id: 'general', label: 'General Question' },
                     ].map((t) => (
                       <button
                         type="button"
@@ -300,7 +305,7 @@ export default function ContactClient() {
 
                 <div>
                   <label className="block text-[#F3EFE6] font-medium mb-1.5">
-                    Your Message / Specific Timepiece of Interest
+                    Your Message or Watch of Interest
                   </label>
                   <textarea
                     rows={4}
@@ -319,7 +324,7 @@ export default function ContactClient() {
                   className="w-full py-4 rounded-xl bg-[#C9A45C] hover:bg-[#E8D5A7] text-[#0B0B0A] font-bold text-xs uppercase tracking-[0.18em] transition-colors flex items-center justify-center gap-2 shadow-xl shadow-[#C9A45C]/10 disabled:opacity-50"
                 >
                   <Send className="w-4 h-4" />
-                  <span>{submitting ? 'Preparing Request...' : 'Send Request & Open WhatsApp'}</span>
+                  <span>{submitting ? 'Preparing Request...' : 'Send Message via WhatsApp'}</span>
                 </motion.button>
               </form>
             )}
@@ -331,16 +336,16 @@ export default function ContactClient() {
       <div className="py-8">
         <div className="text-center mb-6">
           <span className="text-xs text-[#C9A45C] font-semibold uppercase tracking-[0.25em] block mb-1">
-            Boutique Map Location
+            Find Us on Google Maps
           </span>
           <h3 className="font-serif text-2xl font-normal text-[#F3EFE6]">
-            Vadodara Boutique Salon
+            Our Vadodara Watch Showroom
           </h3>
         </div>
 
         <div className="aspect-[16/9] sm:aspect-[21/9] w-full rounded-2xl overflow-hidden border border-[#2A261F] shadow-2xl">
           <iframe
-            src={MEGHANI_STORE_INFO.googleMapsEmbedSrc}
+            src={storeInfo.googleMapsEmbedSrc}
             width="100%"
             height="100%"
             style={{ border: 0, filter: 'grayscale(0.6) invert(0.9) contrast(1.2)' }}

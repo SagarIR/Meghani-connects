@@ -7,7 +7,7 @@ import * as yup from 'yup'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Plus, Search, Wrench, Eye, CheckCircle, XCircle, Download, Clock, 
-  Phone, User, Calendar, AlertTriangle, Package, DollarSign, ArrowRight,
+  Phone, User, Calendar, AlertTriangle, Package, IndianRupee, ArrowRight,
   Filter, MoreHorizontal, Timer, Truck, LayoutGrid, List
 } from 'lucide-react'
 import { api } from '@/services/api'
@@ -758,11 +758,11 @@ export default function RepairsPage() {
           {/* Charges */}
           <div>
             <h4 className="font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
-              <DollarSign className="w-4 h-4 text-gray-500" /> Charges & Schedule
+              <IndianRupee className="w-4 h-4 text-gray-500" /> Charges & Schedule
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-              <Input label="Estimated Cost" type="number" {...register('estimated_cost')} icon={<DollarSign className="w-4 h-4" />} />
-              <Input label="Advance Paid" type="number" {...register('advance_paid')} icon={<DollarSign className="w-4 h-4" />} />
+              <Input label="Estimated Cost (INR)" type="number" {...register('estimated_cost')} icon={<IndianRupee className="w-4 h-4" />} />
+              <Input label="Advance Paid (INR)" type="number" {...register('advance_paid')} icon={<IndianRupee className="w-4 h-4" />} />
               <Input label="Expected Delivery" type="date" {...register('expected_delivery')} icon={<Calendar className="w-4 h-4" />} />
             </div>
           </div>
@@ -893,11 +893,11 @@ export default function RepairsPage() {
 
           {(newStatus === 'ready' || newStatus === 'delivered') && (
             <Input
-              label="Final Repair Charge"
+              label="Final Repair Charge (INR)"
               type="number"
               value={repairCharge}
               onChange={(e) => setRepairCharge(e.target.value)}
-              icon={<DollarSign className="w-4 h-4" />}
+              icon={<IndianRupee className="w-4 h-4" />}
               placeholder="Enter final charge"
             />
           )}

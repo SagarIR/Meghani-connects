@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import {
   getPublicProductById,
+  getPublicProducts,
   SEED_PUBLIC_PRODUCTS,
   buildWhatsAppEnquiryUrl,
   MEGHANI_STORE_INFO
@@ -46,16 +47,16 @@ export async function generateMetadata({
 
   if (!product) {
     return {
-      title: 'Timepiece Not Found',
+      title: 'Watch Not Found',
       robots: { index: false, follow: false },
     };
   }
 
-  const title = `${product.name} — ${product.brand} Timepiece`;
+  const title = `${product.name} — ${product.brand} Watches`;
   const description = `${product.name} by ${product.brand}. ${product.description.slice(
     0,
     140
-  )}... Official manufacturer warranty and certified authentication from Meghani Watch Co. Vadodara.`;
+  )}... 100% genuine with official brand warranty from Meghani Watch Co. Vadodara.`;
   const canonicalUrl = `${SITE_URL}/shop/${product.id}`;
   const ogImageUrl =
     product.image ||
@@ -79,7 +80,7 @@ export async function generateMetadata({
           url: ogImageUrl,
           width: 1200,
           height: 630,
-          alt: `${product.brand} ${product.name} - Luxury Timepiece`,
+          alt: `${product.brand} ${product.name} - Watch | Meghani Watch Co.`,
         },
       ],
     },
@@ -102,10 +103,14 @@ export default async function ProductDetailPage({
     notFound();
   }
 
-  // Related products from same brand or category
-  const relatedProducts = SEED_PUBLIC_PRODUCTS.filter(
-    (p) => p.id !== product.id && (p.brand === product.brand || p.category === product.category)
-  ).slice(0, 3);
+  // Related products from same category or brand fetched dynamically
+  const relatedResult = await getPublicProducts({ category: product.category, pageSize: 4 });
+  let relatedProducts = relatedResult.results.filter((p) => p.id !== product.id).slice(0, 3);
+  if (relatedProducts.length === 0) {
+    relatedProducts = SEED_PUBLIC_PRODUCTS.filter(
+      (p) => p.id !== product.id && (p.brand === product.brand || p.category === product.category)
+    ).slice(0, 3);
+  }
 
   // CRITICAL: Structured JSON-LD Data for Product
   // Strictly enforce omitting price when price_visible is false
@@ -120,7 +125,7 @@ export default async function ProductDetailPage({
       '@type': 'Brand',
       name: product.brand,
     },
-    category: `${product.category} Timepiece`,
+    category: `${product.category} Watch`,
     itemCondition: 'https://schema.org/NewCondition',
     sku: product.barcode || `MGH-${product.id}`,
   };
@@ -171,7 +176,7 @@ export default async function ProductDetailPage({
         {/* Breadcrumb Trail */}
         <Breadcrumbs
           items={[
-            { label: 'Catalogue', href: '/shop' },
+            { label: 'Shop Watches', href: '/shop' },
             { label: product.brand, href: `/shop?brand=${encodeURIComponent(product.brand)}` },
             { label: product.name },
           ]}
@@ -186,10 +191,10 @@ export default async function ProductDetailPage({
             <div className="flex items-center justify-between mb-8">
               <div>
                 <span className="text-xs text-[#C9A45C] font-semibold uppercase tracking-[0.25em] block mb-2">
-                  Complimentary Curations
+                  Similar Watches
                 </span>
                 <h3 className="font-serif text-2xl sm:text-4xl font-normal text-[#F3EFE6]">
-                  More Timepieces You May Admire
+                  Related Watches You May Like
                 </h3>
               </div>
 
@@ -197,7 +202,7 @@ export default async function ProductDetailPage({
                 href="/shop"
                 className="text-xs font-semibold text-[#C9A45C] hover:text-[#E8D5A7] uppercase tracking-[0.15em] inline-flex items-center gap-1.5 transition-colors"
               >
-                <span>View Catalogue</span>
+                <span>View All Watches</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </div>

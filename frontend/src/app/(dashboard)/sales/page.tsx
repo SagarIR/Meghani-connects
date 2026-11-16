@@ -100,7 +100,7 @@ export default function POSPage() {
       setCart([...cart, { product, quantity: 1, unit_price: product.selling_price }])
     }
     
-    toast.success(`${product.name} added`, { duration: 1500, icon: '🛒' })
+    toast.success(`${product.name} added`, { duration: 1500 })
     setSearch('')
     setProducts([])
   }

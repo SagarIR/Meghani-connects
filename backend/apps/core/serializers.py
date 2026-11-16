@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import AuditLog
+from .models import AuditLog, Offer, GalleryItem, Milestone
 from .settings_models import BusinessSettings, UserPreferences
 
 
@@ -24,10 +24,12 @@ class BusinessSettingsSerializer(serializers.ModelSerializer):
         model = BusinessSettings
         fields = [
             'id', 'business_name', 'tagline', 'logo', 'logo_url',
-            'phone', 'alternate_phone', 'email', 'website',
-            'address_line1', 'address_line2', 'city', 'state', 'pincode',
+            'phone', 'alternate_phone', 'whatsapp_number', 'email', 'website',
+            'address_line1', 'address_line2', 'city', 'state', 'pincode', 'landmark',
+            'opening_hours_weekdays', 'opening_hours_sunday', 'google_maps_url', 'google_maps_embed_src',
+            'instagram_url', 'facebook_url',
             'gst_number', 'pan_number',
-            'invoice_prefix', 'repair_prefix', 'invoice_footer', 'terms_and_conditions',
+            'invoice_prefix', 'repair_prefix', 'invoice_footer', 'terms_and_conditions', 'privacy_policy',
             'loyalty_points_per_100', 'loyalty_redemption_rate', 'low_stock_threshold',
             'enable_whatsapp', 'enable_sms', 'enable_email',
             'updated_at'
@@ -41,6 +43,55 @@ class BusinessSettingsSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.logo.url)
             return obj.logo.url
         return None
+
+
+class PublicBusinessSettingsSerializer(serializers.ModelSerializer):
+    """Public store details for frontend navbar, footer, contact, and legal pages"""
+    logo_url = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = BusinessSettings
+        fields = [
+            'business_name', 'tagline', 'logo_url',
+            'phone', 'alternate_phone', 'whatsapp_number', 'email', 'website',
+            'address_line1', 'address_line2', 'city', 'state', 'pincode', 'landmark',
+            'opening_hours_weekdays', 'opening_hours_sunday',
+            'google_maps_url', 'google_maps_embed_src',
+            'instagram_url', 'facebook_url',
+            'terms_and_conditions', 'privacy_policy'
+        ]
+
+    def get_logo_url(self, obj):
+        if obj.logo:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.logo.url)
+            return obj.logo.url
+        return None
+
+
+class OfferSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Offer
+        fields = [
+            'id', 'title', 'badge', 'discount', 'description', 'code',
+            'validity', 'terms', 'banner_image', 'target_category', 'is_active', 'display_order'
+        ]
+
+
+class GalleryItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = GalleryItem
+        fields = [
+            'id', 'title', 'category', 'image_url', 'caption', 'details', 'is_active', 'display_order'
+        ]
+
+
+class MilestoneSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Milestone
+        fields = ['id', 'year', 'title', 'description', 'display_order']
+
 
 
 class UserPreferencesSerializer(serializers.ModelSerializer):

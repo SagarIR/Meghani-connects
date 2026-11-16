@@ -18,6 +18,7 @@ class BusinessSettings(models.Model):
     # Contact Information
     phone = models.CharField(max_length=20, blank=True)
     alternate_phone = models.CharField(max_length=20, blank=True)
+    whatsapp_number = models.CharField(max_length=20, blank=True, default='919106680191')
     email = models.EmailField(blank=True)
     website = models.URLField(blank=True)
     
@@ -27,6 +28,16 @@ class BusinessSettings(models.Model):
     city = models.CharField(max_length=100, blank=True)
     state = models.CharField(max_length=100, blank=True)
     pincode = models.CharField(max_length=10, blank=True)
+    landmark = models.CharField(max_length=255, blank=True, default='Near Abhilasha Char Rasta (Plus Code: 85RP+R5 Vadodara)')
+    
+    # Store Hours & Digital Presence
+    opening_hours_weekdays = models.CharField(max_length=150, blank=True, default='10:00 AM – 9:00 PM (Mon – Sat)')
+    opening_hours_sunday = models.CharField(max_length=150, blank=True, default='11:00 AM – 8:00 PM (Sun)')
+    google_maps_url = models.URLField(max_length=500, blank=True, default='https://maps.app.goo.gl/XctrXf3yChPNyg3a9')
+    google_maps_embed_src = models.TextField(blank=True, default='https://maps.google.com/maps?q=85RP%2BR5+Vadodara,+Gujarat&t=&z=16&ie=UTF8&iwloc=&output=embed')
+    instagram_url = models.URLField(max_length=500, blank=True, default='https://instagram.com/meghaniwatchco')
+    facebook_url = models.URLField(max_length=500, blank=True, default='https://facebook.com/meghaniwatchco')
+    privacy_policy = models.TextField(blank=True)
     
     # Tax Information
     gst_number = models.CharField(max_length=20, blank=True, verbose_name='GSTIN')

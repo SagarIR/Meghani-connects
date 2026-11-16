@@ -4,7 +4,8 @@ from .views import (
     AuditLogListView, AuditLogStatsView,
     BusinessSettingsView, UserPreferencesView,
     BackupListView, BackupDownloadView, BackupRestoreView, BackupDeleteView, BackupCleanupView,
-    ImageUploadView
+    ImageUploadView,
+    PublicBusinessSettingsView, PublicOfferView, PublicGalleryView, PublicMilestoneView
 )
 
 urlpatterns = [
@@ -17,8 +18,9 @@ urlpatterns = [
     path('audit-logs/', AuditLogListView.as_view(), name='audit-log-list'),
     path('audit-logs/stats/', AuditLogStatsView.as_view(), name='audit-log-stats'),
     
-    # Settings
+    # Settings & Public Store Info
     path('settings/business/', BusinessSettingsView.as_view(), name='business-settings'),
+    path('settings/public/', PublicBusinessSettingsView.as_view(), name='public-business-settings'),
     path('settings/preferences/', UserPreferencesView.as_view(), name='user-preferences'),
     
     # Backup

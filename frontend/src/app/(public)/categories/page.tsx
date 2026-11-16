@@ -1,32 +1,36 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Watch, ArrowRight, CheckCircle2 } from 'lucide-react';
-import { PUBLIC_CATEGORIES } from '@/services/publicCatalogue';
+import { PUBLIC_CATEGORIES, getPublicCategories } from '@/services/publicCatalogue';
 import Breadcrumbs from '@/components/public/Breadcrumbs';
 import { buildPageMetadata, getItemListSchema } from '@/utils/seo';
 
 export const metadata = buildPageMetadata({
-  title: 'Horological Categories — Analogs, Automatics, Digitals & Clocks',
+  title: 'Watch Categories — Horological Categories, Analogs, Digitals, Smartwatches & Clocks | Meghani Watch Co.',
   description:
-    'Explore timepieces by horological category at Meghani Watch Co. in Vadodara: classical analog automatics, durable Japanese digitals, premium smartwatches, fine pendulum wall clocks, and handcrafted straps.',
+    'Explore watches by category at Meghani Watch Co. in Vadodara: analog watches, digital watches, smartwatches, wall clocks, and genuine watch straps.',
   path: '/categories',
   keywords: [
     'watch categories Vadodara',
-    'automatic watches Vadodara',
-    'analog quartz watches',
+    'buy analog watches Vadodara',
     'digital watches Gujarat',
-    'luxury smartwatches',
-    'pendulum wall clocks Vadodara',
-    'leather watch straps'
+    'smartwatches in Vadodara',
+    'wall clocks Vadodara',
+    'leather watch straps',
+    'men watches Vadodara',
+    'women watches Vadodara'
   ],
   ogImage: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=1200&q=80',
 });
 
-export default function CategoriesPage() {
+export default async function CategoriesPage() {
+  const categories = await getPublicCategories();
+  const categoriesList = categories.length > 0 ? categories : PUBLIC_CATEGORIES;
+
   const categoriesSchema = getItemListSchema(
-    'Meghani Watch Co. Horological Categories',
-    'Explore curated timepiece categories spanning mechanical automatics, high-impact digital tools, smartwatches, and wall clocks.',
-    PUBLIC_CATEGORIES.map((category, idx) => ({
+    'Meghani Watch Co. Watch Categories',
+    'Explore watch categories including analog watches, digital watches, smartwatches, and wall clocks in Vadodara.',
+    categoriesList.map((category, idx) => ({
       name: category.name,
       url: `/shop?category=${encodeURIComponent(category.id)}`,
       image: category.imageUrl,
@@ -40,24 +44,24 @@ export default function CategoriesPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(categoriesSchema) }}
       />
-      <Breadcrumbs items={[{ label: 'Categories' }]} />
+      <Breadcrumbs items={[{ label: 'Watch Categories' }]} />
 
       {/* Header */}
       <div className="py-8 border-b border-[#2A261F] max-w-3xl">
         <span className="text-xs text-[#C9A45C] font-semibold uppercase tracking-[0.25em] block mb-2">
-          Horology Across Form & Function
+          Explore by Type
         </span>
         <h1 className="font-serif text-3xl sm:text-5xl font-normal text-[#F3EFE6] leading-tight">
-          Timepiece Categories
+          Shop Watches by Category
         </h1>
         <p className="text-xs sm:text-sm text-[#8D8980] mt-3 leading-relaxed">
-          Whether seeking an automatic dress watch for black-tie gatherings, a high-impact digital tool watch, an intelligent health tracker, or a heritage pendulum clock for your estate, our curations embody precision and enduring beauty.
+          From everyday formal analog watches and tough digital sports watches to modern smartwatches and decorative wall clocks for your home, browse our handpicked collections.
         </p>
       </div>
 
       {/* Categories Grid */}
       <div className="py-12 space-y-12">
-        {PUBLIC_CATEGORIES.map((category) => (
+        {categoriesList.map((category) => (
           <div
             key={category.id}
             className="p-6 sm:p-10 rounded-2xl bg-[#171613] border border-[#2A261F] hover:border-[#C9A45C]/40 transition-all shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center"
@@ -66,7 +70,7 @@ export default function CategoriesPage() {
             <div className="lg:col-span-5 relative aspect-[4/3] rounded-xl overflow-hidden border border-[#2A261F] bg-[#0B0B0A]">
               <Image
                 src={category.imageUrl}
-                alt={`${category.name} - Luxury Horological Category | Meghani Watch Co.`}
+                alt={`${category.name} - Watch Category | Meghani Watch Co.`}
                 fill
                 sizes="(max-width: 1024px) 100vw, 40vw"
                 className="object-cover object-center"
@@ -74,7 +78,7 @@ export default function CategoriesPage() {
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
               <div className="absolute bottom-4 left-4">
                 <span className="px-3 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-[#0B0B0A]/90 text-[#C9A45C] border border-[#C9A45C]/30 backdrop-blur-md">
-                  {category.count}+ Curated Models
+                  {category.count}+ Watches Available
                 </span>
               </div>
             </div>
@@ -97,7 +101,7 @@ export default function CategoriesPage() {
               {/* Notable Attributes */}
               <div className="pt-2">
                 <h3 className="text-[11px] uppercase tracking-wider text-[#F3EFE6] font-semibold mb-2">
-                  Category Hallmarks
+                  Key Features
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   {category.features.map((feature, idx) => (
@@ -117,7 +121,7 @@ export default function CategoriesPage() {
                   href={`/shop?category=${category.id}`}
                   className="px-6 py-3 rounded-xl bg-[#C9A45C] hover:bg-[#E8D5A7] text-[#0B0B0A] font-bold text-xs uppercase tracking-[0.18em] transition-colors inline-flex items-center gap-2"
                 >
-                  <span>Explore {category.name} Collection</span>
+                  <span>Explore {category.name}</span>
                   <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>

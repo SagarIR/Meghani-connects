@@ -10,14 +10,23 @@ import {
   Clock
 } from 'lucide-react';
 import { PUBLIC_OFFERS, MEGHANI_STORE_INFO } from '@/services/publicCatalogue';
+import { OfferItem, BusinessStoreInfo } from '@/types/public';
 import Breadcrumbs from '@/components/public/Breadcrumbs';
 
 const luxuryEase = [0.16, 1, 0.3, 1] as const;
 
-export default function OffersClient() {
+interface OffersClientProps {
+  initialOffers?: OfferItem[];
+  storeInfo?: BusinessStoreInfo;
+}
+
+export default function OffersClient({
+  initialOffers = PUBLIC_OFFERS,
+  storeInfo = MEGHANI_STORE_INFO
+}: OffersClientProps) {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
-      <Breadcrumbs items={[{ label: 'Exclusive Offers' }]} />
+      <Breadcrumbs items={[{ label: 'Special Offers' }]} />
 
       {/* Header */}
       <motion.div
@@ -27,20 +36,20 @@ export default function OffersClient() {
         className="py-8 border-b border-[#2A261F] max-w-3xl"
       >
         <span className="text-xs text-[#C9A45C] font-semibold uppercase tracking-[0.25em] block mb-2">
-          Curated Privileges
+          Exclusive Deals & Privileges
         </span>
         <h1 className="font-serif text-3xl sm:text-5xl font-normal text-[#F3EFE6] leading-tight">
-          Boutique Offers & Privileges
+          Special Offers & Promotions
         </h1>
         <p className="text-xs sm:text-sm text-[#8D8980] mt-3 leading-relaxed">
-          In honor of festive milestones, weddings, and generational patronage, Meghani Watch Co. presents exclusive seasonal advantages on select luxury timepieces and atelier servicing.
+          Enjoy festive savings, wedding pair specials, and free watch inspection services at Meghani Watch Co. in Vadodara.
         </p>
       </motion.div>
 
       {/* Offers Cards */}
       <div className="py-12 space-y-8">
-        {PUBLIC_OFFERS.map((offer, idx) => {
-          const whatsappClaimUrl = `https://wa.me/${MEGHANI_STORE_INFO.whatsapp}?text=${encodeURIComponent(
+        {initialOffers.map((offer, idx) => {
+          const whatsappClaimUrl = `https://wa.me/${storeInfo.whatsapp}?text=${encodeURIComponent(
             `Hello Meghani Watch Co., I would like to inquire about and claim the "${offer.title}" offer${
               offer.code ? ` (Code: ${offer.code})` : ''
             }. Please assist me.`
@@ -111,7 +120,7 @@ export default function OffersClient() {
                     className="px-6 py-3 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white font-bold text-xs uppercase tracking-wider transition-colors inline-flex items-center gap-2 shadow-lg shadow-[#25D366]/20"
                   >
                     <MessageCircle className="w-4 h-4" />
-                    <span>Claim via Boutique WhatsApp</span>
+                    <span>Claim Offer on WhatsApp</span>
                   </motion.a>
 
                   {offer.targetCategory && (
@@ -120,7 +129,7 @@ export default function OffersClient() {
                         href={`/shop?category=${offer.targetCategory}`}
                         className="px-5 py-3 rounded-xl bg-[#0B0B0A] border border-[#2A261F] hover:border-[#C9A45C]/50 text-xs font-semibold text-[#F3EFE6] inline-flex items-center gap-2 transition-colors"
                       >
-                        <span>Explore Applicable Timepieces</span>
+                        <span>Explore Eligible Watches</span>
                         <ArrowRight className="w-4 h-4" />
                       </Link>
                     </motion.div>

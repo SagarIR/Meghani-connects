@@ -73,12 +73,32 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
     }
   };
 
-  const handleViewingSubmit = (e: React.FormEvent) => {
+  const handleViewingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clientName || !clientPhone) return;
 
+    // Persist lead to database via Next.js BFF /api/enquiry
+    try {
+      await fetch('/api/enquiry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: clientName,
+          phone: clientPhone,
+          enquiryType: 'viewing',
+          productId: product.id,
+          productName: product.name,
+          productBrand: product.brand,
+          preferredDate: preferredDate || 'Earliest Available',
+          message: `In-store showroom viewing request for ${product.name} (Ref: ${product.barcode || product.id})`,
+        }),
+      });
+    } catch (err) {
+      // Graceful fallback
+    }
+
     // Launch WhatsApp with prefilled viewing appointment
-    const appointmentText = `Hello Meghani Watch Co.,\n\nI would like to request an in-store private viewing at your Vadodara boutique for:\n\n*${product.name}* (Ref: ${product.barcode || product.id})\n• Name: ${clientName}\n• Phone: ${clientPhone}\n• Preferred Date/Time: ${preferredDate || 'Earliest Available'}\n\nPlease let me know when your horological advisor can receive me.`;
+    const appointmentText = `Hello Meghani Watch Co.,\n\nI would like to schedule a visit to your Vadodara showroom to see:\n\n*${product.name}* (Ref: ${product.barcode || product.id})\n• Name: ${clientName}\n• Phone: ${clientPhone}\n• Preferred Date/Time: ${preferredDate || 'Earliest Available'}\n\nPlease let me know your showroom availability.`;
 
     const customWhatsAppUrl = `https://wa.me/${MEGHANI_STORE_INFO.whatsapp}?text=${encodeURIComponent(appointmentText)}`;
     window.open(customWhatsAppUrl, '_blank');
@@ -99,26 +119,26 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-emerald-950/80 text-emerald-400 border border-emerald-500/30">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            In Stock — Available at Boutique
+            In Stock — Available at Showroom
           </span>
         );
       case 'on_request':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-[#171613] text-[#E8D5A7] border border-[#C9A45C]/40">
             <Clock className="w-3.5 h-3.5 text-[#C9A45C]" />
-            Bespoke Order / Price on Request
+            Price on Request
           </span>
         );
       case 'out_of_stock':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-rose-950/70 text-rose-300 border border-rose-500/30">
-            Awaiting Next Allocation
+            Out of Stock
           </span>
         );
       case 'discontinued':
         return (
           <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-zinc-900 text-zinc-400 border border-zinc-700">
-            Archived Historic Piece
+            Discontinued Model
           </span>
         );
     }
@@ -178,7 +198,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
             <div className="absolute bottom-4 right-4 z-10 pointer-events-none">
               <div className="px-2.5 py-1 rounded-full bg-[#0B0B0A]/80 backdrop-blur-md border border-[#2A261F] text-[10px] text-[#8D8980] flex items-center gap-1.5 opacity-80 group-hover:opacity-100 transition-opacity">
                 <ZoomIn className="w-3 h-3 text-[#C9A45C]" />
-                <span>{isZoomed ? 'Loupe 1.45x Active' : 'Hover to Inspect Dial'}</span>
+                <span>{isZoomed ? 'Zoom 1.45x Active' : 'Hover to Inspect Watch'}</span>
               </div>
             </div>
           </div>
@@ -220,15 +240,15 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           <div className="p-4 rounded-xl bg-[#171613] border border-[#2A261F] grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs text-[#8D8980]">
             <div className="flex items-center gap-2.5">
               <ShieldCheck className="w-5 h-5 text-[#C9A45C] shrink-0" />
-              <span className="text-[#F3EFE6]/90">100% Genuine Authenticated</span>
+              <span className="text-[#F3EFE6]/90">100% Original & Genuine</span>
             </div>
             <div className="flex items-center gap-2.5">
               <Award className="w-5 h-5 text-[#C9A45C] shrink-0" />
-              <span className="text-[#F3EFE6]/90">{product.warranty_months} Months Official Warranty</span>
+              <span className="text-[#F3EFE6]/90">{product.warranty_months} Months Brand Warranty</span>
             </div>
             <div className="flex items-center gap-2.5">
               <Truck className="w-5 h-5 text-[#C9A45C] shrink-0" />
-              <span className="text-[#F3EFE6]/90">Insured Transit & Boutique Pickup</span>
+              <span className="text-[#F3EFE6]/90">Insured Delivery & Showroom Pickup</span>
             </div>
           </div>
         </motion.div>
@@ -284,7 +304,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           {/* Pricing Box — Respects price_visible strictly */}
           <div className="p-6 rounded-2xl bg-[#171613] border border-[#2A261F]">
             <span className="text-[11px] text-[#8D8980] uppercase tracking-widest block font-medium">
-              Investment / Acquisition
+              Price
             </span>
 
             {isPriceHidden ? (
@@ -293,7 +313,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   Price Available on Request
                 </span>
                 <p className="text-xs text-[#8D8980] mt-1.5 leading-relaxed">
-                  Due to brand discretion and exclusive allocation, pricing for this timepiece is provided directly via our concierge.
+                  Pricing for this watch is available upon direct enquiry via WhatsApp.
                 </p>
               </div>
             ) : (
@@ -302,7 +322,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                   ₹{product.price!.toLocaleString('en-IN')}
                 </span>
                 <span className="text-[11px] text-[#8D8980] block mt-1">
-                  Inclusive of all taxes & official manufacturer warranty
+                  Inclusive of all taxes & official brand warranty
                 </span>
               </div>
             )}
@@ -330,7 +350,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 className="w-full py-3.5 rounded-xl bg-[#0B0B0A] text-[#F3EFE6] border border-[#2A261F] hover:border-[#C9A45C] hover:text-[#C9A45C] font-semibold text-xs uppercase tracking-[0.18em] transition-colors flex items-center justify-center gap-2"
               >
                 <Calendar className="w-4 h-4 text-[#C9A45C]" />
-                <span>Book In-Store Viewing</span>
+                <span>Schedule Showroom Visit</span>
               </motion.button>
             </div>
           </div>
@@ -338,7 +358,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           {/* Description */}
           <div className="space-y-2">
             <h3 className="text-xs font-bold text-[#F3EFE6] uppercase tracking-[0.15em]">
-              Horological Overview
+              Product Description
             </h3>
             <p className="text-xs sm:text-sm text-[#8D8980] leading-relaxed">
               {product.description}
@@ -374,7 +394,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     : 'text-[#8D8980] hover:text-[#F3EFE6]'
                 }`}
               >
-                Maintenance & Service
+                Care & Maintenance
                 {activeTab === 'care' && (
                   <motion.span
                     layoutId="productDetailActiveTab"
@@ -392,7 +412,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                     : 'text-[#8D8980] hover:text-[#F3EFE6]'
                 }`}
               >
-                Delivery & Assurance
+                Delivery & Warranty
                 {activeTab === 'delivery' && (
                   <motion.span
                     layoutId="productDetailActiveTab"
@@ -418,7 +438,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                       <>
                         {product.specifications.movement && (
                           <div className="py-2.5 flex justify-between">
-                            <span className="text-[#8D8980]">Movement Calibre</span>
+                            <span className="text-[#8D8980]">Movement</span>
                             <span className="text-[#F3EFE6] font-medium text-right">{product.specifications.movement}</span>
                           </div>
                         )}
@@ -436,13 +456,13 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                         )}
                         {product.specifications.dialColor && (
                           <div className="py-2.5 flex justify-between">
-                            <span className="text-[#8D8980]">Dial Aesthetics</span>
+                            <span className="text-[#8D8980]">Dial Color</span>
                             <span className="text-[#F3EFE6] font-medium text-right">{product.specifications.dialColor}</span>
                           </div>
                         )}
                         {product.specifications.glass && (
                           <div className="py-2.5 flex justify-between">
-                            <span className="text-[#8D8980]">Crystal Glass</span>
+                            <span className="text-[#8D8980]">Glass</span>
                             <span className="text-[#F3EFE6] font-medium text-right">{product.specifications.glass}</span>
                           </div>
                         )}
@@ -454,7 +474,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                         )}
                         {product.specifications.strapMaterial && (
                           <div className="py-2.5 flex justify-between">
-                            <span className="text-[#8D8980]">Band / Strap</span>
+                            <span className="text-[#8D8980]">Strap Material</span>
                             <span className="text-[#F3EFE6] font-medium text-right">{product.specifications.strapMaterial}</span>
                           </div>
                         )}
@@ -477,10 +497,10 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 {activeTab === 'care' && (
                   <div className="space-y-3 text-[#8D8980] leading-relaxed">
                     <p>
-                      Every timepiece acquired through Meghani Watch Co. includes complimentary lifetime strap sizing and annual demagnetization testing in our Vadodara atelier.
+                      Every watch purchased from Meghani Watch Co. includes complimentary strap sizing and basic inspection at our Vadodara showroom.
                     </p>
                     <p>
-                      For automatic models, we recommend a movement service every 3 to 5 years. For quartz models, battery replacements include complete gasket re-sealing and 5-bar pressure testing.
+                      For automatic watches, we recommend regular servicing every 3 to 5 years. For quartz models, battery replacement includes complete water resistance check.
                     </p>
                   </div>
                 )}
@@ -488,10 +508,10 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 {activeTab === 'delivery' && (
                   <div className="space-y-3 text-[#8D8980] leading-relaxed">
                     <p>
-                      <strong className="text-[#F3EFE6]">Boutique Collection:</strong> Reserve online and experience private fitting at our Vadodara salon.
+                      <strong className="text-[#F3EFE6]">Showroom Collection:</strong> Visit our Vadodara showroom to try on the watch in person.
                     </p>
                     <p>
-                      <strong className="text-[#F3EFE6]">Insured Shipping:</strong> Dispatched via temperature-controlled, insured couriers with tamper-evident security seals across India within 2-4 business days.
+                      <strong className="text-[#F3EFE6]">Insured Delivery:</strong> Safely packed and delivered across India within 3-5 business days.
                     </p>
                   </div>
                 )}
@@ -527,13 +547,13 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
 
               <div className="text-center mb-6">
                 <span className="text-[10px] text-[#C9A45C] font-bold uppercase tracking-[0.25em] block mb-1">
-                  Vadodara Boutique
+                  Vadodara Showroom
                 </span>
                 <h3 className="font-serif text-xl sm:text-2xl font-normal text-[#F3EFE6]">
-                  Schedule In-Store Viewing
+                  Schedule Showroom Visit
                 </h3>
                 <p className="text-xs text-[#8D8980] mt-1">
-                  Reserve a private viewing for: <br />
+                  Plan a visit to our showroom for: <br />
                   <strong className="text-[#E8D5A7] font-medium">{product.name}</strong>
                 </p>
               </div>
@@ -542,7 +562,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                 <div className="py-8 text-center space-y-2">
                   <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto" />
                   <h4 className="text-sm font-semibold text-[#F3EFE6]">Viewing Request Prepared</h4>
-                  <p className="text-xs text-[#8D8980]">Opening WhatsApp concierge to confirm your appointment...</p>
+                  <p className="text-xs text-[#8D8980]">Opening WhatsApp to confirm your visit...</p>
                 </div>
               ) : (
                 <form onSubmit={handleViewingSubmit} className="space-y-4 text-xs">
@@ -595,12 +615,12 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                       className="w-full py-3.5 rounded-xl bg-[#C9A45C] hover:bg-[#E8D5A7] text-[#0B0B0A] font-bold text-xs uppercase tracking-[0.18em] transition-colors flex items-center justify-center gap-2"
                     >
                       <MessageCircle className="w-4 h-4" />
-                      <span>Confirm via WhatsApp Concierge</span>
+                      <span>Confirm on WhatsApp</span>
                     </motion.button>
                   </div>
 
                   <p className="text-[10px] text-[#8D8980] text-center">
-                    Boutique hours: {MEGHANI_STORE_INFO.hours.weekdays}
+                    Showroom timings: {MEGHANI_STORE_INFO.hours.weekdays}
                   </p>
                 </form>
               )}

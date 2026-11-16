@@ -18,12 +18,18 @@ export interface Product {
   category: string
   cost_price: number
   selling_price: number
+  price_visible?: boolean
+  availability?: string
   stock: number
   barcode: string | null
   supplier_name: string
   image: string | null
+  gallery_images?: Array<{ id: number; url: string; display_order: number }>
   description: string
+  specifications?: Record<string, string>
   warranty_months: number
+  is_featured?: boolean
+  is_new_arrival?: boolean
   is_active: boolean
   profit_margin: number
   profit_percentage: number
@@ -85,6 +91,7 @@ export interface Repair {
   item_type: string
   brand: string
   model_number: string
+  serial_number?: string
   issue_description: string
   estimated_cost: number | null
   repair_charge: number | null
@@ -93,6 +100,7 @@ export interface Repair {
   status: 'received' | 'in_repair' | 'ready' | 'delivered' | 'cancelled'
   received_date: string
   expected_delivery: string | null
+  delivered_date?: string | null
   days_in_repair: number
   notes: string
 }

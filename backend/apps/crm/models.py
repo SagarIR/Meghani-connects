@@ -58,3 +58,45 @@ class Customer(models.Model):
     @property
     def purchase_count(self):
         return self.sales.count()
+
+
+class Enquiry(models.Model):
+    ENQUIRY_TYPE_CHOICES = [
+        ('viewing', 'Private Boutique Viewing'),
+        ('product', 'Product Inquiry'),
+        ('service', 'Watchmaker Service / Repair'),
+        ('general', 'General Inquiry'),
+    ]
+
+    STATUS_CHOICES = [
+        ('new', 'New'),
+        ('contacted', 'Contacted'),
+        ('converted', 'Converted'),
+        ('closed', 'Closed'),
+    ]
+
+    name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=20)
+    email = models.EmailField(blank=True)
+    enquiry_type = models.CharField(max_length=20, choices=ENQUIRY_TYPE_CHOICES, default='viewing')
+    preferred_date = models.CharField(max_length=100, blank=True)
+    product = models.ForeignKey('products.Product', on_delete=models.SET_NULL, null=True, blank=True, related_name='enquiries')
+    product_name = models.CharField(max_length=200, blank=True)
+    message = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = 'enquiries'
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['phone']),
+            models.Index(fields=['status']),
+            models.Index(fields=['created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.name} - {self.get_enquiry_type_display()} ({self.status})"
+

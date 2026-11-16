@@ -36,14 +36,22 @@ export function buildPageMetadata({
     description,
     keywords: keywords || [
       'Meghani Watch Co',
-      'luxury watches Vadodara',
-      'authorized watch dealer Vadodara',
+      'watch shop in Vadodara',
+      'watch showroom in Vadodara',
+      'watches in Vadodara',
+      'branded watches in Vadodara',
+      'buy watches in Vadodara',
+      'watch store in Gujarat',
+      'buy watches online in India',
+      'branded watches online',
+      'men watches',
+      'women watches',
       'Titan watch dealer Vadodara',
-      'Casio watches Gujarat',
+      'Casio watches Vadodara',
       'Citizen Eco Drive',
       'Timex automatic watches',
       'watch repair Vadodara',
-      'premium wall clocks',
+      'wall clocks Vadodara',
       'New Sama Road watch showroom'
     ],
     alternates: {
@@ -108,7 +116,7 @@ export function getOrganizationSchema() {
       },
     ],
     description:
-      'Premier authorized luxury watch retailer, horological salon, and master watchmaker atelier in Vadodara since 1984.',
+      'Premier authorized watch retailer and watch repair workshop in Vadodara since 1984. Selling genuine watches from Titan, Casio, Timex, Citizen, and more with official warranty.',
     telephone: MEGHANI_STORE_INFO.phone,
     email: MEGHANI_STORE_INFO.email,
     address: {
@@ -138,7 +146,7 @@ export function getWebSiteSchema() {
     url: SITE_URL,
     name: 'Meghani Watch Co.',
     description:
-      'Authorized luxury watch salon purveying Titan, Casio, Timex, and Citizen timepieces in Vadodara since 1984.',
+      'Authorized watch retailer offering Titan, Casio, Timex, Citizen, and more watches and wall clocks in Vadodara since 1984.',
     publisher: {
       '@id': `${SITE_URL}/#organization`,
     },
@@ -215,7 +223,7 @@ export function getBreadcrumbListSchema(
     {
       '@type': 'ListItem',
       position: 1,
-      name: 'Boutique Home',
+      name: 'Home',
       item: SITE_URL,
     },
     ...items.map((item, index) => ({

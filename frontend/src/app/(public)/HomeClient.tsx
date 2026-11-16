@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion, useScroll, useTransform } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Watch,
   ArrowRight,
@@ -23,59 +23,47 @@ import {
   PUBLIC_GALLERY,
   MEGHANI_STORE_INFO
 } from '@/services/publicCatalogue';
-import { PublicProduct } from '@/types/public';
+import { PublicProduct, BrandItem, CategoryItem, BusinessStoreInfo } from '@/types/public';
 import ProductCard from '@/components/public/ProductCard';
 
 interface HomeClientProps {
   featuredProducts: PublicProduct[];
   generalWhatsAppUrl: string;
+  brands?: BrandItem[];
+  categories?: CategoryItem[];
+  storeInfo?: BusinessStoreInfo;
 }
 
 const luxuryEase = [0.16, 1, 0.3, 1] as const;
 
-export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: HomeClientProps) {
-  const heroRef = useRef<HTMLElement>(null);
-  const { scrollYProgress: heroScroll } = useScroll({
-    target: heroRef,
-    offset: ['start start', 'end start']
-  });
-
-  const heroImageScale = useTransform(heroScroll, [0, 1], [1.08, 1.18]);
-  const heroImageY = useTransform(heroScroll, [0, 1], ['0%', '15%']);
-  const heroOpacity = useTransform(heroScroll, [0, 0.75], [1, 0]);
-
+export default function HomeClient({
+  featuredProducts,
+  generalWhatsAppUrl,
+  brands = PUBLIC_BRANDS,
+  categories = PUBLIC_CATEGORIES,
+  storeInfo = MEGHANI_STORE_INFO
+}: HomeClientProps) {
   return (
     <>
       {/* Hero Section */}
       <section
-        ref={heroRef}
         className="relative min-h-[85vh] sm:min-h-[90vh] flex items-center justify-center overflow-hidden bg-[#0B0B0A] border-b border-[#1C1A15]"
       >
-        {/* Background Atmosphere with Parallax & Slow Kinetic Breathe */}
-        <motion.div
-          style={{ y: heroImageY, scale: heroImageScale }}
-          className="absolute inset-0 z-0 will-change-transform"
-        >
+        {/* Background Atmosphere */}
+        <div className="absolute inset-0 z-0">
           <Image
             src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=2000&q=80"
-            alt="Meghani Watch Co. Horological Craftsmanship"
+            alt="Meghani Watch Co. Watch Craftsmanship"
             fill
             priority
             sizes="100vw"
             className="object-cover object-center opacity-20"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0B0B0A] via-[#0B0B0A]/85 to-[#0B0B0A]/70" />
-          <motion.div
-            animate={{ opacity: [0.35, 0.65, 0.35] }}
-            transition={{ duration: 7, repeat: Infinity, ease: 'easeInOut' }}
-            className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#C9A45C]/15 via-transparent to-transparent pointer-events-none"
-          />
-        </motion.div>
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#C9A45C]/15 via-transparent to-transparent pointer-events-none" />
+        </div>
 
-        <motion.div
-          style={{ opacity: heroOpacity }}
-          className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 py-24 sm:py-32 text-center flex flex-col items-center"
-        >
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-8 py-24 sm:py-32 text-center flex flex-col items-center">
           {/* Heritage Tagline Pill */}
           <motion.div
             initial={{ opacity: 0, y: -16, scale: 0.95 }}
@@ -84,7 +72,7 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-[#171613] border border-[#2A261F] text-[#E8D5A7] text-xs font-medium uppercase tracking-[0.2em] mb-8 shadow-xl"
           >
             <Sparkles className="w-3.5 h-3.5 text-[#C9A45C]" />
-            <span>Authorized Luxury Timepiece Purveyor • Est. 1984</span>
+            <span>Trusted Watch Store in Vadodara • Since 1984</span>
           </motion.div>
 
           {/* Main Title */}
@@ -101,7 +89,7 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
               transition={{ duration: 1.8, delay: 0.4, ease: luxuryEase }}
               className="italic text-transparent bg-clip-text bg-gradient-to-r from-[#C9A45C] via-[#F3EFE6] to-[#C9A45C] inline-block"
             >
-              Timeless Artistry.
+              Timeless Style.
             </motion.span>
           </motion.h1>
 
@@ -112,7 +100,7 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
             transition={{ duration: 0.85, delay: 0.3, ease: luxuryEase }}
             className="mt-6 text-sm sm:text-base lg:text-lg text-[#8D8980] max-w-2xl leading-relaxed font-sans"
           >
-            Curating legendary horological creations from Titan, Casio, Timex, and Citizen. Discover handcrafted mechanical wristwatches, precision wall clocks, and master watchmaker care in Vadodara, Gujarat.
+            Explore authentic watches from Titan, Casio, Timex, Citizen, and more. Visit our Vadodara showroom for men&apos;s watches, women&apos;s watches, smartwatches, and expert watch repair.
           </motion.p>
 
           {/* Action CTAs */}
@@ -127,7 +115,7 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
                 href="/shop"
                 className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#C9A45C] hover:bg-[#E8D5A7] text-[#0B0B0A] font-semibold text-xs uppercase tracking-widest shadow-xl shadow-[#C9A45C]/15 transition-colors flex items-center justify-center gap-2 font-sans"
               >
-                <span>Explore Timepieces</span>
+                <span>Explore Watches</span>
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </motion.div>
@@ -140,7 +128,7 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
                 className="w-full sm:w-auto px-8 py-4 rounded-xl bg-[#171613] text-[#F3EFE6] border border-[#2A261F] hover:border-[#C9A45C] hover:text-[#C9A45C] font-medium text-xs uppercase tracking-widest transition-colors flex items-center justify-center gap-2 shadow-lg font-sans"
               >
                 <MessageCircle className="w-4 h-4 text-[#C9A45C]" />
-                <span>Personal Consultation</span>
+                <span>Enquire on WhatsApp</span>
               </a>
             </motion.div>
           </motion.div>
@@ -165,7 +153,7 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
                 100%
               </span>
               <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block mt-1 font-sans">
-                Authenticity Guaranteed
+                Genuine Watches
               </span>
             </div>
             <div>
@@ -173,7 +161,7 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
                 50,000+
               </span>
               <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block mt-1 font-sans">
-                Clients Purveyed
+                Happy Customers
               </span>
             </div>
             <div>
@@ -181,11 +169,11 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
                 Official
               </span>
               <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block mt-1 font-sans">
-                Warranty Partner
+                Brand Warranty
               </span>
             </div>
           </motion.div>
-        </motion.div>
+        </div>
       </section>
 
       {/* Featured Watches Section */}
@@ -200,10 +188,10 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
           <div>
             <div className="inline-flex items-center gap-1.5 text-xs text-[#C9A04F] font-semibold uppercase tracking-[0.2em] mb-2">
               <Watch className="w-4 h-4" />
-              Curated Selection
+              Handpicked Watches
             </div>
             <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#F5F0E6]">
-              Featured Timepieces
+              Featured Watches
             </h2>
             <motion.div
               initial={{ scaleX: 0 }}
@@ -213,7 +201,7 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
               className="h-0.5 w-24 bg-gradient-to-r from-[#C9A45C] to-transparent origin-left mt-2.5"
             />
             <p className="text-xs sm:text-sm text-[#8E877A] mt-2 max-w-xl">
-              Hand-selected wristwatches embodying mechanical integrity, artistic dial finishings, and authentic warranty.
+              Handpicked wristwatches with trusted accuracy, durable build, timeless design, and official manufacturer warranty.
             </p>
           </div>
 
@@ -221,7 +209,7 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
             href="/shop"
             className="inline-flex items-center gap-2 text-xs font-semibold text-[#C9A04F] hover:text-[#DFC17B] uppercase tracking-wider group"
           >
-            <span>View Complete Catalogue</span>
+            <span>Explore All Watches</span>
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1.5 transition-transform duration-300" />
           </Link>
         </motion.div>
@@ -244,10 +232,10 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
             className="text-center max-w-2xl mx-auto mb-16"
           >
             <span className="text-xs text-[#C9A45C] font-medium uppercase tracking-[0.2em] block mb-2 font-sans">
-              Horological Horizons
+              Popular Categories
             </span>
             <h2 className="font-serif text-3xl sm:text-4xl font-medium text-[#F3EFE6]">
-              Explore by Category
+              Shop Watches by Category
             </h2>
             <div className="flex justify-center mt-2.5">
               <motion.div
@@ -259,12 +247,12 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
               />
             </div>
             <p className="text-xs sm:text-sm text-[#8D8980] mt-3 font-sans">
-              From traditional automatic calibres to iconic digital chronographs and fine pendulum clocks.
+              Explore classic analog watches, sporty digitals, connected smartwatches, and decorative wall clocks.
             </p>
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
-            {PUBLIC_CATEGORIES.map((cat, idx) => (
+            {categories.map((cat, idx) => (
               <motion.div
                 key={cat.id}
                 initial={{ opacity: 0, y: 24 }}
@@ -288,7 +276,7 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
 
                   <div className="relative z-10">
                     <span className="text-[10px] text-[#C9A45C] uppercase tracking-widest font-medium block mb-1 font-sans">
-                      {cat.count}+ Timepieces
+                      {cat.count}+ Watches
                     </span>
                     <h3 className="font-serif text-lg font-medium text-[#F3EFE6] group-hover:text-[#E8D5A7] transition-colors leading-snug">
                       {cat.name}
@@ -297,7 +285,7 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
                       {cat.tagline}
                     </p>
                     <span className="inline-flex items-center gap-1 text-[11px] text-[#C9A45C] font-medium mt-3 group-hover:translate-x-1.5 transition-transform duration-300 font-sans">
-                      <span>Discover</span>
+                      <span>Explore Watches</span>
                       <ChevronRight className="w-3.5 h-3.5" />
                     </span>
                   </div>
@@ -318,10 +306,10 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
           className="text-center max-w-2xl mx-auto mb-16"
         >
           <span className="text-xs text-[#C9A45C] font-medium uppercase tracking-[0.2em] block mb-2 font-sans">
-            Purveyors of Heritage
+            Trusted Brands
           </span>
           <h2 className="font-serif text-3xl sm:text-4xl font-medium text-[#F3EFE6]">
-            Authorized Brand Partners
+            Our Watch Brands
           </h2>
           <div className="flex justify-center mt-2.5">
             <motion.div
@@ -333,12 +321,12 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
             />
           </div>
           <p className="text-xs sm:text-sm text-[#8D8980] mt-3 font-sans">
-            Every watch in our collection is backed by direct authorized brand credentials and manufacturer warranty.
+            Every watch in our collection is 100% original, backed by official brand warranty and manufacturer support.
           </p>
         </motion.div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-          {PUBLIC_BRANDS.map((brand, idx) => (
+          {brands.map((brand, idx) => (
             <motion.div
               key={brand.slug}
               initial={{ opacity: 0, y: 20 }}
@@ -358,7 +346,7 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
                   {brand.name}
                 </h4>
                 <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block mt-1 font-sans">
-                  {brand.country} • {brand.established}
+                  {brand.country} • Est. {brand.established}
                 </span>
               </Link>
             </motion.div>
@@ -380,7 +368,7 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
             >
               <Image
                 src="https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=1200&q=80"
-                alt="Meghani Watch Co. Watchmaker Atelier"
+                alt="Meghani Watch Co. Watchmaker Workshop in Vadodara"
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 className="object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out will-change-transform"
@@ -391,10 +379,10 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
                   <Award className="w-6 h-6 text-[#C9A45C] shrink-0" />
                   <div>
                     <span className="text-xs font-semibold text-[#F3EFE6] block">
-                      Certified Master Watchmaker Atelier
+                      Expert Watch Repair Workshop
                     </span>
                     <span className="text-[11px] text-[#8D8980] block font-sans">
-                      Swiss & Japanese movement diagnostic equipment in-house
+                      Complete diagnostic, battery replacement, and pressure testing equipment
                     </span>
                   </div>
                 </div>
@@ -411,30 +399,30 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
             >
               <div className="inline-flex items-center gap-2 text-xs font-medium text-[#C9A45C] uppercase tracking-[0.2em] font-sans">
                 <Clock className="w-4 h-4" />
-                The Meghani Philosophy
+                Why Choose Us
               </div>
 
               <h2 className="font-serif text-3xl sm:text-4xl font-medium text-[#F3EFE6] leading-tight">
-                Four Decades of Horological Passion & Trust
+                40+ Years of Quality & Trust in Vadodara
               </h2>
 
               <p className="text-xs sm:text-sm text-[#8D8980] leading-relaxed font-sans">
-                Founded in 1984 in Gujarat, Meghani Watch Co. began with a single promise: to treat every timepiece as a monument of personal achievement, family legacy, and mechanical beauty.
+                Founded in 1984 in Vadodara, Gujarat, Meghani Watch Co. began with a clear purpose: to offer genuine brand watches with honest advice, fair prices, and reliable after-sales support.
               </p>
 
               <div className="space-y-3.5 pt-2 font-sans">
                 {[
                   {
-                    strong: '100% Genuine Authorized Sourcing:',
-                    text: 'All timepieces carry official company warranty certificates and factory seals.'
+                    strong: '100% Genuine Brand Watches:',
+                    text: 'All watches come with official company warranty cards, tax invoices, and manufacturer packaging.'
                   },
                   {
-                    strong: 'Timegrapher Precision Regulation:',
-                    text: 'Mechanical and automatic movements are checked for rate, amplitude, and beat error prior to delivery.'
+                    strong: 'Expert Watch Repair & Servicing:',
+                    text: 'In-house battery changes, strap replacement, ultrasonic cleaning, and mechanical servicing.'
                   },
                   {
-                    strong: 'Dedicated WhatsApp Concierge:',
-                    text: 'Direct personal assistance for bespoke curations, wedding gifts, and after-sales support.'
+                    strong: 'Friendly Customer Support:',
+                    text: 'Personal assistance on WhatsApp and in our showroom to help you choose the right watch.'
                   }
                 ].map((item, idx) => (
                   <motion.div
@@ -459,7 +447,7 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
                     href="/about"
                     className="px-6 py-3 rounded-xl bg-[#201D17] border border-[#2A261F] hover:border-[#C9A45C]/40 text-[#E8D5A7] hover:bg-[#C9A45C] hover:text-[#0B0B0A] text-xs font-semibold uppercase tracking-wider transition-colors inline-flex items-center gap-2 font-sans"
                   >
-                    <span>Read Our Complete Story</span>
+                    <span>Read Our Story</span>
                     <ArrowRight className="w-4 h-4" />
                   </Link>
                 </motion.div>
@@ -468,7 +456,7 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
                   href="/contact"
                   className="text-xs text-[#8D8980] hover:text-[#F3EFE6] transition-colors font-sans"
                 >
-                  Visit Vadodara Boutique →
+                  Visit Vadodara Showroom →
                 </Link>
               </div>
             </motion.div>
@@ -489,7 +477,7 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
 
           <div className="relative z-10 max-w-2xl">
             <span className="px-3.5 py-1 rounded-full text-[10px] font-semibold uppercase tracking-widest bg-[#201D17] text-[#E8D5A7] border border-[#C9A45C]/30 inline-block mb-4 font-sans">
-              Seasonal Privilege
+              Special Offers
             </span>
 
             <h3 className="font-serif text-2xl sm:text-4xl font-medium text-[#F3EFE6]">
@@ -506,7 +494,7 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
                   href="/offers"
                   className="px-6 py-3.5 rounded-xl bg-[#C9A45C] hover:bg-[#E8D5A7] text-[#0B0B0A] font-semibold text-xs uppercase tracking-wider transition-colors font-sans shadow-lg shadow-[#C9A45C]/10 inline-block"
                 >
-                  View All Exclusive Offers
+                  View All Special Offers
                 </Link>
               </motion.div>
 
@@ -530,10 +518,10 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
           >
             <div>
               <span className="text-xs text-[#C9A45C] font-medium uppercase tracking-[0.2em] block mb-2 font-sans">
-                Art of Horology
+                Showroom & Workshop
               </span>
               <h2 className="font-serif text-3xl sm:text-4xl font-medium text-[#F3EFE6]">
-                Horological Gallery
+                Watch Gallery
               </h2>
             </div>
             <Link
@@ -585,39 +573,39 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
           >
             <div className="inline-flex items-center gap-2 text-xs font-medium text-[#C9A45C] uppercase tracking-[0.2em] mb-3 font-sans">
               <MapPin className="w-4 h-4" />
-              Visit The Boutique
+              Visit Our Showroom
             </div>
 
             <h2 className="font-serif text-3xl sm:text-4xl font-medium text-[#F3EFE6] leading-tight">
-              An Immersive Timepiece Salon in Vadodara
+              Visit Our Watch Showroom in Vadodara
             </h2>
 
             <p className="text-xs sm:text-sm text-[#8D8980] mt-4 leading-relaxed font-sans">
-              Step into our boutique on New Sama Road for a private viewing experience. Our horological advisors will present curated pieces tailored to your style and milestone celebrations.
+              Step into our showroom on New Sama Road for a friendly, unhurried watch shopping experience. Our team is here to help you select the ideal watch or service your existing timepieces.
             </p>
 
             <div className="mt-8 space-y-4 border-l-2 border-[#C9A45C]/40 pl-4 text-xs font-sans">
               <div>
-                <span className="text-[#F3EFE6] font-medium block text-sm">Boutique Address</span>
+                <span className="text-[#F3EFE6] font-medium block text-sm">Showroom Address</span>
                 <p className="text-[#8D8980] mt-1 leading-relaxed">
-                  {MEGHANI_STORE_INFO.address.line1}<br />
-                  {MEGHANI_STORE_INFO.address.line2}, {MEGHANI_STORE_INFO.address.city} – {MEGHANI_STORE_INFO.address.pincode}
+                  {storeInfo.address.line1}<br />
+                  {storeInfo.address.line2}, {storeInfo.address.city} – {storeInfo.address.pincode}
                 </p>
               </div>
 
               <div>
-                <span className="text-[#F3EFE6] font-medium block text-sm">Operating Hours</span>
+                <span className="text-[#F3EFE6] font-medium block text-sm">Showroom Timings</span>
                 <p className="text-[#8D8980] mt-1">
-                  {MEGHANI_STORE_INFO.hours.weekdays}<br />
-                  {MEGHANI_STORE_INFO.hours.sunday}
+                  {storeInfo.hours.weekdays}<br />
+                  {storeInfo.hours.sunday}
                 </p>
               </div>
 
               <div>
                 <span className="text-[#F3EFE6] font-medium block text-sm">Direct Contact</span>
                 <p className="text-[#8D8980] mt-1">
-                  Telephone: {MEGHANI_STORE_INFO.phone}<br />
-                  Email: {MEGHANI_STORE_INFO.email}
+                  Telephone: {storeInfo.phone}<br />
+                  Email: {storeInfo.email}
                 </p>
               </div>
             </div>
@@ -628,18 +616,18 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
                   href="/contact"
                   className="px-6 py-3.5 rounded-xl bg-[#C9A45C] hover:bg-[#E8D5A7] text-[#0B0B0A] font-semibold text-xs uppercase tracking-wider transition-colors shadow-lg shadow-[#C9A45C]/20 font-sans inline-block"
                 >
-                  Schedule Private Viewing
+                  Contact Us & Visit Store
                 </Link>
               </motion.div>
 
               <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <a
-                  href={MEGHANI_STORE_INFO.googleMapsUrl}
+                  href={storeInfo.googleMapsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="px-6 py-3.5 rounded-xl bg-[#171613] text-[#F3EFE6] border border-[#2A261F] hover:border-[#C9A45C] text-xs font-medium uppercase tracking-wider transition-colors font-sans inline-block"
                 >
-                  Open Google Maps
+                  Get Directions on Google Maps
                 </a>
               </motion.div>
             </div>
@@ -654,14 +642,14 @@ export default function HomeClient({ featuredProducts, generalWhatsAppUrl }: Hom
             className="aspect-[4/3] rounded-2xl overflow-hidden border border-[#2A261F] shadow-2xl relative bg-[#171613]"
           >
             <iframe
-              src={MEGHANI_STORE_INFO.googleMapsEmbedSrc}
+              src={storeInfo.googleMapsEmbedSrc}
               width="100%"
               height="100%"
               style={{ border: 0, filter: 'grayscale(0.6) invert(0.9) contrast(1.2)' }}
               allowFullScreen={false}
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
-              title="Meghani Watch Co. Store Location"
+              title="Meghani Watch Co. Store Location in Vadodara"
             />
           </motion.div>
         </div>

@@ -10,21 +10,25 @@ import Breadcrumbs from '@/components/public/Breadcrumbs';
 
 const luxuryEase = [0.16, 1, 0.3, 1] as const;
 
-export default function GalleryClient() {
+interface GalleryClientProps {
+  initialItems?: GalleryItem[];
+}
+
+export default function GalleryClient({ initialItems = PUBLIC_GALLERY }: GalleryClientProps) {
   const [selectedFilter, setSelectedFilter] = useState<string>('all');
   const [activeLightboxItem, setActiveLightboxItem] = useState<GalleryItem | null>(null);
 
   const filters = [
-    { label: 'All Visuals', value: 'all' },
-    { label: 'Craftsmanship & Movements', value: 'craftsmanship' },
-    { label: 'Iconic Timepieces', value: 'timepieces' },
-    { label: 'Horological Heritage', value: 'heritage' },
-    { label: 'The Vadodara Boutique', value: 'boutique' },
+    { label: 'All Photos', value: 'all' },
+    { label: 'Watch Repair & Workshop', value: 'craftsmanship' },
+    { label: 'Watches', value: 'timepieces' },
+    { label: 'Our Heritage', value: 'heritage' },
+    { label: 'Vadodara Showroom', value: 'boutique' },
   ];
 
   const filteredItems = selectedFilter === 'all'
-    ? PUBLIC_GALLERY
-    : PUBLIC_GALLERY.filter((item) => item.category === selectedFilter);
+    ? initialItems
+    : initialItems.filter((item) => item.category === selectedFilter);
 
   // Lightbox keyboard navigation
   const currentIndex = activeLightboxItem
@@ -56,7 +60,7 @@ export default function GalleryClient() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-8 py-8">
-      <Breadcrumbs items={[{ label: 'Horology Gallery' }]} />
+      <Breadcrumbs items={[{ label: 'Watch Gallery' }]} />
 
       {/* Header */}
       <motion.div
@@ -66,13 +70,13 @@ export default function GalleryClient() {
         className="py-8 border-b border-[#2A261F] max-w-3xl"
       >
         <span className="text-xs text-[#C9A45C] font-semibold uppercase tracking-[0.25em] block mb-2">
-          Visual Heritage & Atelier Moments
+          Our Showroom & Workshop in Photos
         </span>
         <h1 className="font-serif text-3xl sm:text-5xl font-normal text-[#F3EFE6] leading-tight">
-          Horological Gallery
+          Watch Gallery
         </h1>
         <p className="text-xs sm:text-sm text-[#8D8980] mt-3 leading-relaxed">
-          Glimpse into the world of Meghani Watch Co. From microscopic escapement regulation and hand-burnished leatherwork to our prestigious Vadodara boutique salon.
+          Take a look inside Meghani Watch Co. in Vadodara: see our watch showroom, expert repair workshop, and popular watch models.
         </p>
 
         {/* Filter Tabs with Gliding Active Pill */}
@@ -140,7 +144,7 @@ export default function GalleryClient() {
                 </p>
                 <div className="mt-3 inline-flex items-center gap-1.5 text-xs text-[#E8D5A7] font-semibold">
                   <Eye className="w-3.5 h-3.5" />
-                  <span>Inspect Visual</span>
+                  <span>View Full Photo</span>
                 </div>
               </div>
             </motion.div>
