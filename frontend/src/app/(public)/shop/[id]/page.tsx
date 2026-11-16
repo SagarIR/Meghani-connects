@@ -25,9 +25,17 @@ import {
 import ProductCard from '@/components/public/ProductCard';
 import Breadcrumbs from '@/components/public/Breadcrumbs';
 import ProductDetailClient from './ProductDetailClient';
+import { SITE_URL } from '@/utils/seo';
 
 interface ProductDetailPageProps {
   params: { id: string };
+}
+
+// Statically prerender all seed public products for ultra-fast LCP & SEO indexing
+export async function generateStaticParams() {
+  return SEED_PUBLIC_PRODUCTS.map((product) => ({
+    id: product.id.toString(),
+  }));
 }
 
 // Generate dynamic metadata respecting price visibility
@@ -38,35 +46,49 @@ export async function generateMetadata({
 
   if (!product) {
     return {
-      title: 'Timepiece Not Found — Meghani Watch Co.',
+      title: 'Timepiece Not Found',
+      robots: { index: false, follow: false },
     };
   }
 
-  // Price visibility check: never include price in meta title or description if hidden
-  const priceSnippet =
-    product.price_visible && product.price
-      ? `₹${product.price.toLocaleString('en-IN')}`
-      : 'Price on Request';
+  const title = `${product.name} — ${product.brand} Timepiece`;
+  const description = `${product.name} by ${product.brand}. ${product.description.slice(
+    0,
+    140
+  )}... Official manufacturer warranty and certified authentication from Meghani Watch Co. Vadodara.`;
+  const canonicalUrl = `${SITE_URL}/shop/${product.id}`;
+  const ogImageUrl =
+    product.image ||
+    'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=1200&q=80';
 
   return {
-    title: `${product.name} | ${product.brand} — Meghani Watch Co.`,
-    description: `${product.name} by ${product.brand}. ${product.description.slice(
-      0,
-      140
-    )}... Official warranty and authenticated timepiece.`,
+    title,
+    description,
+    alternates: {
+      canonical: canonicalUrl,
+    },
     openGraph: {
-      title: `${product.name} | ${product.brand} — Meghani Watch Co.`,
-      description: `${product.name}. Available at Meghani Watch Co. Ahmedabad.`,
+      title: `${title} | Meghani Watch Co.`,
+      description,
+      url: canonicalUrl,
+      siteName: 'Meghani Watch Co.',
+      locale: 'en_IN',
+      type: 'website',
       images: [
         {
-          url:
-            product.image ||
-            'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=1200&q=80',
-          width: 800,
-          height: 600,
-          alt: product.name,
+          url: ogImageUrl,
+          width: 1200,
+          height: 630,
+          alt: `${product.brand} ${product.name} - Luxury Timepiece`,
         },
       ],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${title} | Meghani Watch Co.`,
+      description,
+      images: [ogImageUrl],
+      creator: '@meghaniwatchco',
     },
   };
 }
@@ -90,6 +112,7 @@ export default async function ProductDetailPage({
   const jsonLd: Record<string, any> = {
     '@context': 'https://schema.org',
     '@type': 'Product',
+    '@id': `${SITE_URL}/shop/${product.id}#product`,
     name: product.name,
     image: product.image,
     description: product.description,
@@ -97,6 +120,8 @@ export default async function ProductDetailPage({
       '@type': 'Brand',
       name: product.brand,
     },
+    category: `${product.category} Timepiece`,
+    itemCondition: 'https://schema.org/NewCondition',
     sku: product.barcode || `MGH-${product.id}`,
   };
 
@@ -104,9 +129,10 @@ export default async function ProductDetailPage({
   if (product.price_visible && product.price !== null) {
     jsonLd.offers = {
       '@type': 'Offer',
-      url: `https://meghaniwatch.com/shop/${product.id}`,
+      url: `${SITE_URL}/shop/${product.id}`,
       priceCurrency: 'INR',
       price: product.price,
+      itemCondition: 'https://schema.org/NewCondition',
       availability:
         product.availability === 'in_stock'
           ? 'https://schema.org/InStock'
@@ -120,8 +146,9 @@ export default async function ProductDetailPage({
     // When price is hidden or on request, provide an inquiry offer WITHOUT price
     jsonLd.offers = {
       '@type': 'Offer',
-      url: `https://meghaniwatch.com/shop/${product.id}`,
+      url: `${SITE_URL}/shop/${product.id}`,
       availability: 'https://schema.org/PreOrder',
+      itemCondition: 'https://schema.org/NewCondition',
       priceSpecification: {
         '@type': 'PriceSpecification',
         description: 'Price Available on Request',
@@ -144,8 +171,8 @@ export default async function ProductDetailPage({
         {/* Breadcrumb Trail */}
         <Breadcrumbs
           items={[
-            { label: 'Shop / Catalogue', href: '/shop' },
-            { label: product.brand, href: `/shop?brand=${product.brand}` },
+            { label: 'Catalogue', href: '/shop' },
+            { label: product.brand, href: `/shop?brand=${encodeURIComponent(product.brand)}` },
             { label: product.name },
           ]}
         />
@@ -155,20 +182,20 @@ export default async function ProductDetailPage({
 
         {/* Related Curations */}
         {relatedProducts.length > 0 && (
-          <div className="mt-24 pt-12 border-t border-[#221F18]">
+          <div className="mt-24 pt-12 border-t border-[#2A261F]">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <span className="text-xs text-[#C9A04F] font-semibold uppercase tracking-[0.2em] block mb-1">
+                <span className="text-xs text-[#C9A45C] font-semibold uppercase tracking-[0.25em] block mb-2">
                   Complimentary Curations
                 </span>
-                <h3 className="font-serif text-2xl sm:text-3xl font-bold text-[#F5F0E6]">
+                <h3 className="font-serif text-2xl sm:text-4xl font-normal text-[#F3EFE6]">
                   More Timepieces You May Admire
                 </h3>
               </div>
 
               <Link
                 href="/shop"
-                className="text-xs font-semibold text-[#C9A04F] hover:text-[#DFC17B] uppercase tracking-wider inline-flex items-center gap-1.5"
+                className="text-xs font-semibold text-[#C9A45C] hover:text-[#E8D5A7] uppercase tracking-[0.15em] inline-flex items-center gap-1.5 transition-colors"
               >
                 <span>View Catalogue</span>
                 <ArrowRight className="w-4 h-4" />
@@ -186,4 +213,3 @@ export default async function ProductDetailPage({
     </>
   );
 }
-

@@ -2,24 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Cinzel:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
-  --card: #ffffff;
-  --card-foreground: #0f172a;
-  --primary: #4f46e5;
-  --primary-foreground: #ffffff;
-  --secondary: #f1f5f9;
-  --secondary-foreground: #475569;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #e0e7ff;
-  --accent-foreground: #3730a3;
+  --background: #0B0B0A;
+  --foreground: #F3EFE6;
+  --card: #171613;
+  --card-foreground: #F3EFE6;
+  --primary: #C9A45C;
+  --primary-foreground: #0B0B0A;
+  --secondary: #171613;
+  --secondary-foreground: #8D8980;
+  --muted: #171613;
+  --muted-foreground: #8D8980;
+  --accent: #E8D5A7;
+  --accent-foreground: #0B0B0A;
   --destructive: #ef4444;
-  --border: #e2e8f0;
-  --ring: #4f46e5;
+  --border: #2A261F;
+  --ring: #C9A45C;
   --radius: 0.75rem;
 }
 
@@ -342,6 +342,18 @@ body {
 
 .page-enter-active {
   @apply opacity-100 translate-y-0 transition-all duration-300 ease-out;
+}
+
+/* ========== ACCESSIBILITY / REDUCED MOTION ========== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 /* ========== RESPONSIVE ========== */

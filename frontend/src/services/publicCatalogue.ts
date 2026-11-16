@@ -197,7 +197,7 @@ export const PUBLIC_OFFERS: OfferItem[] = [
     title: 'Complimentary Master Service Inspection',
     badge: 'Boutique Service',
     discount: '100% Complimentary',
-    description: 'Bring any vintage or modern timepiece into our Ahmedabad boutique for complete ultrasonic case sanitization, demagnetization, and precision timegrapher testing.',
+    description: 'Bring any vintage or modern timepiece into our Vadodara boutique for complete ultrasonic case sanitization, demagnetization, and precision timegrapher testing.',
     validity: 'Walk-in or Booked Appointment',
     terms: 'Subject to master horologist availability. One timepiece per client per visit.',
     bannerImage: 'https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=1200&q=80',
@@ -223,10 +223,10 @@ export const PUBLIC_GALLERY: GalleryItem[] = [
   },
   {
     id: 'gal-3',
-    title: 'The Ahmedabad Boutique Salon',
+    title: 'The Vadodara Boutique Salon',
     category: 'boutique',
     imageUrl: 'https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?auto=format&fit=crop&w=1000&q=80',
-    caption: 'Our historic salon on Relief Road, welcoming timepiece connoisseurs since decades.',
+    caption: 'Our prestigious salon at Cactus Park, New Sama Road, welcoming timepiece connoisseurs.',
     details: 'Private viewing lounge with dedicated horological advisors.'
   },
   {

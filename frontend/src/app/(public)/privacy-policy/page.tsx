@@ -1,28 +1,36 @@
 import Breadcrumbs from '@/components/public/Breadcrumbs';
+import { buildPageMetadata } from '@/utils/seo';
 
-export const metadata = {
-  title: 'Privacy Policy — Meghani Watch Co.',
-  description: 'Privacy Policy and client data protection practices at Meghani Watch Co.',
-};
+export const metadata = buildPageMetadata({
+  title: 'Client Privacy Policy & Data Protection',
+  description:
+    'Learn about client data confidentiality, personal information security, and privacy governance at Meghani Watch Co. in Vadodara.',
+  path: '/privacy-policy',
+  keywords: [
+    'Meghani Watch Co privacy policy',
+    'client data confidentiality',
+    'watch purchase privacy'
+  ],
+});
 
 export default function PrivacyPolicyPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-8 py-8">
       <Breadcrumbs items={[{ label: 'Privacy Policy' }]} />
 
-      <div className="py-8 border-b border-[#221F18]">
-        <span className="text-xs text-[#C9A04F] font-semibold uppercase tracking-[0.2em] block mb-2">
+      <div className="py-8 border-b border-[#2A261F]">
+        <span className="text-xs text-[#C9A45C] font-semibold uppercase tracking-[0.25em] block mb-2">
           Legal & Data Governance
         </span>
-        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#F5F0E6]">
+        <h1 className="font-serif text-3xl sm:text-4xl font-normal text-[#F3EFE6]">
           Privacy Policy
         </h1>
-        <p className="text-xs text-[#8E877A] mt-2">
-          Effective Date: January 1, 2026 • Meghani Watch Co. Ahmedabad
+        <p className="text-xs text-[#8D8980] mt-2">
+          Effective Date: January 1, 2026 • Meghani Watch Co. Vadodara
         </p>
       </div>
 
-      <div className="py-10 space-y-8 text-xs sm:text-sm text-[#A8A194] leading-relaxed">
+      <div className="py-10 space-y-8 text-xs sm:text-sm text-[#8D8980] leading-relaxed">
         <section className="space-y-3">
           <h2 className="font-serif text-lg font-bold text-[#F5F0E6]">
             1. Our Commitment to Client Confidentiality
@@ -48,36 +56,36 @@ export default function PrivacyPolicyPage() {
 
         <section className="space-y-3">
           <h2 className="font-serif text-lg font-bold text-[#F5F0E6]">
-            3. Use of WhatsApp Concierge
+            3. How We Use Client Information
           </h2>
           <p>
-            When utilizing our WhatsApp consultation feature, communications occur via WhatsApp&apos;s encrypted platform. We use these interactions solely to answer product queries, provide quotation details, and schedule boutique visits. We will never sell, rent, or lease your contact information to third-party telemarketers.
+            Client records are used strictly for:
+          </p>
+          <ul className="list-disc pl-5 space-y-1.5 text-[#C0B9AC]">
+            <li>Personalized concierge communications regarding timepiece availability, allocations, and service progress.</li>
+            <li>Registration of official brand warranties with Titan, Casio, Citizen, and Timex.</li>
+            <li>Maintaining archival service logs for watches submitted to our master atelier.</li>
+          </ul>
+        </section>
+
+        <section className="space-y-3">
+          <h2 className="font-serif text-lg font-bold text-[#F5F0E6]">
+            4. Absolute Non-Disclosure & Third-Party Protection
+          </h2>
+          <p>
+            We never sell, rent, lease, or monetize client data under any circumstances. Personal records are accessed solely by authorized boutique staff and our in-house horological management system (Meghani Connect 360).
           </p>
         </section>
 
         <section className="space-y-3">
           <h2 className="font-serif text-lg font-bold text-[#F5F0E6]">
-            4. Data Security & Storage
+            5. Contacting Our Data Concierge
           </h2>
           <p>
-            All client data collected through digital forms is stored in secure, encrypted databases with restricted access granted only to authorized horological staff.
-          </p>
-        </section>
-
-        <section className="space-y-3">
-          <h2 className="font-serif text-lg font-bold text-[#F5F0E6]">
-            5. Contact Us Regarding Your Data
-          </h2>
-          <p>
-            Should you wish to review, update, or request deletion of your consultation records, please contact our data concierge at{' '}
-            <a href="mailto:concierge@meghaniwatch.com" className="text-[#C9A04F] underline">
-              concierge@meghaniwatch.com
-            </a>{' '}
-            or write to Meghani Watch Co., Cactus Park, 23, New Sama Rd, Vadodara, Gujarat 390008.
+            If you wish to review, update, or remove your personal information from our consultation records, please contact our concierge at <a href="mailto:concierge@meghaniwatch.com" className="text-[#C9A45C] underline">concierge@meghaniwatch.com</a> or call +91 91066 80191.
           </p>
         </section>
       </div>
     </div>
   );
 }
-

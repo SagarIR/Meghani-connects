@@ -1,30 +1,38 @@
 import Breadcrumbs from '@/components/public/Breadcrumbs';
+import { buildPageMetadata } from '@/utils/seo';
 
-export const metadata = {
-  title: 'Terms & Conditions — Meghani Watch Co.',
-  description: 'Terms of service, warranty policy, and in-store viewing conditions at Meghani Watch Co.',
-};
+export const metadata = buildPageMetadata({
+  title: 'Terms of Service, Warranty & Atelier Conditions',
+  description:
+    'Review client purchase terms, manufacturer warranty coverage, in-store viewing policies, and atelier repair terms at Meghani Watch Co. in Vadodara.',
+  path: '/terms',
+  keywords: [
+    'Meghani Watch Co terms',
+    'watch warranty policy Vadodara',
+    'atelier repair terms'
+  ],
+});
 
 export default function TermsPage() {
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-8 py-8">
       <Breadcrumbs items={[{ label: 'Terms & Conditions' }]} />
 
-      <div className="py-8 border-b border-[#221F18]">
-        <span className="text-xs text-[#C9A04F] font-semibold uppercase tracking-[0.2em] block mb-2">
+      <div className="py-8 border-b border-[#2A261F]">
+        <span className="text-xs text-[#C9A45C] font-semibold uppercase tracking-[0.25em] block mb-2">
           Client Agreement & Warranties
         </span>
-        <h1 className="font-serif text-3xl sm:text-4xl font-bold text-[#F5F0E6]">
+        <h1 className="font-serif text-3xl sm:text-4xl font-normal text-[#F3EFE6]">
           Terms & Conditions
         </h1>
-        <p className="text-xs text-[#8E877A] mt-2">
-          Effective Date: January 1, 2026 • Meghani Watch Co. Ahmedabad
+        <p className="text-xs text-[#8D8980] mt-2">
+          Effective Date: January 1, 2026 • Meghani Watch Co. Vadodara
         </p>
       </div>
 
-      <div className="py-10 space-y-8 text-xs sm:text-sm text-[#A8A194] leading-relaxed">
+      <div className="py-10 space-y-8 text-xs sm:text-sm text-[#8D8980] leading-relaxed">
         <section className="space-y-3">
-          <h2 className="font-serif text-lg font-bold text-[#F5F0E6]">
+          <h2 className="font-serif text-lg font-medium text-[#F3EFE6]">
             1. Authorized Retailer Authenticity Guarantee
           </h2>
           <p>
@@ -33,7 +41,7 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="font-serif text-lg font-bold text-[#F5F0E6]">
+          <h2 className="font-serif text-lg font-medium text-[#F3EFE6]">
             2. Catalogue Pricing & Price on Request
           </h2>
           <p>
@@ -42,7 +50,7 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="font-serif text-lg font-bold text-[#F5F0E6]">
+          <h2 className="font-serif text-lg font-medium text-[#F3EFE6]">
             3. Warranty Coverage & Atelier Servicing
           </h2>
           <p>
@@ -51,24 +59,14 @@ export default function TermsPage() {
         </section>
 
         <section className="space-y-3">
-          <h2 className="font-serif text-lg font-bold text-[#F5F0E6]">
-            4. In-Store Private Viewings
+          <h2 className="font-serif text-lg font-medium text-[#F3EFE6]">
+            4. Boutique Reservations & Consultations
           </h2>
           <p>
-            Scheduling an in-store private viewing does not obligate the client to acquire the timepiece. We hold requested timepieces for up to 24 hours from the agreed appointment time, after which they may be re-allocated to general salon inventory.
-          </p>
-        </section>
-
-        <section className="space-y-3">
-          <h2 className="font-serif text-lg font-bold text-[#F5F0E6]">
-            5. Governing Law & Jurisdiction
-          </h2>
-          <p>
-            Any disputes arising from purchases or servicing through Meghani Watch Co. shall be governed by the laws of India and subject to the exclusive jurisdiction of the competent courts in Ahmedabad, Gujarat.
+            Private salon viewings and appointments scheduled through our digital portal or WhatsApp concierge are complimentary. Allocated timepieces can be reserved for up to 48 hours upon confirmation by our concierge team.
           </p>
         </section>
       </div>
     </div>
   );
 }
-
