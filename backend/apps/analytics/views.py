@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from apps.users.permissions import CanViewReports
 from django.db.models import Sum, Count, Avg
 from django.db.models.functions import TruncDate, TruncMonth
 from django.utils import timezone
@@ -56,15 +57,16 @@ class DashboardStatsView(APIView):
             count=Count('id')
         )
         
+        is_admin = request.user.is_superuser or getattr(request.user, 'role', '') in ['admin', 'manager']
         return Response({
             'today': {
                 'sales': today_summary['total'] or 0,
-                'profit': today_summary['profit'] or 0,
+                'profit': (today_summary['profit'] or 0) if is_admin else None,
                 'transactions': today_summary['count'] or 0,
             },
             'month': {
                 'sales': month_summary['total'] or 0,
-                'profit': month_summary['profit'] or 0,
+                'profit': (month_summary['profit'] or 0) if is_admin else None,
                 'transactions': month_summary['count'] or 0,
             },
             'alerts': {
@@ -243,6 +245,7 @@ class SalesReportView(APIView):
 
 class ProfitReportView(APIView):
     """Profit report with expense deductions"""
+    permission_classes = [CanViewReports]
     
     def get(self, request):
         start_date = request.query_params.get('start_date')
@@ -325,6 +328,7 @@ class RepairIncomeView(APIView):
 
 class ExpenseReportView(APIView):
     """Expense report"""
+    permission_classes = [CanViewReports]
     
     def get(self, request):
         start_date = request.query_params.get('start_date')
@@ -356,6 +360,7 @@ class InventoryReportView(APIView):
 
 class ReportExportView(APIView):
     """Export reports to different formats"""
+    permission_classes = [CanViewReports]
     
     def get(self, request, report_type, format_type):
         start_date = request.query_params.get('start_date')
@@ -485,6 +490,7 @@ class SmartAlertsView(APIView):
 
 class ProfitPredictionView(APIView):
     """Profit prediction and trend analysis"""
+    permission_classes = [CanViewReports]
     
     def get(self, request):
         predictor = ProfitPredictor()

@@ -17,6 +17,8 @@ class UserCreateSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'name', 'email', 'phone', 'role', 'language', 'password']
 
     def create(self, validated_data):
+        if validated_data.get('role') == 'admin':
+            validated_data['is_staff'] = True
         return User.objects.create_user(**validated_data)
 
 
@@ -27,5 +29,11 @@ class UserUpdateSerializer(serializers.ModelSerializer):
 
 
 class ChangePasswordSerializer(serializers.Serializer):
-    old_password = serializers.CharField(required=True)
+    old_password = serializers.CharField(required=False)
+    current_password = serializers.CharField(required=False)
     new_password = serializers.CharField(required=True, min_length=6)
+
+    def validate(self, data):
+        if not data.get('old_password') and not data.get('current_password'):
+            raise serializers.ValidationError({'current_password': 'Current password is required.'})
+        return data

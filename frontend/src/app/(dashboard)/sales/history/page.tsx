@@ -230,9 +230,22 @@ export default function SalesHistoryPage() {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Payment Mode</p>
-                <Badge variant={paymentBadges[selectedSale.payment_mode]}>
-                  {selectedSale.payment_mode.toUpperCase()}
-                </Badge>
+                <div className="flex flex-col gap-1">
+                  <Badge variant={paymentBadges[selectedSale.payment_mode]}>
+                    {selectedSale.payment_mode.toUpperCase()}
+                  </Badge>
+                  {selectedSale.payment_mode === 'mixed' && (selectedSale as any).payment_details && (
+                    <div className="text-xs text-gray-600 flex flex-wrap gap-1 mt-0.5">
+                      {Object.entries((selectedSale as any).payment_details)
+                        .filter(([_, amt]) => Number(amt) > 0)
+                        .map(([method, amt]) => (
+                          <span key={method} className="bg-gray-100 px-1.5 py-0.5 rounded font-mono text-[11px] border border-gray-200">
+                            {method.toUpperCase()}: ₹{Number(amt).toLocaleString('en-IN')}
+                          </span>
+                        ))}
+                    </div>
+                  )}
+                </div>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Created By</p>

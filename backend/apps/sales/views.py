@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from apps.users.permissions import CanManageSales
 from django.db.models import Sum, Count
 from django.db.models.functions import TruncDate
 from django.utils import timezone
@@ -17,9 +18,23 @@ from .invoice import generate_invoice_pdf
 class SaleViewSet(viewsets.ModelViewSet):
     queryset = Sale.objects.all()
     serializer_class = SaleSerializer
+    permission_classes = [CanManageSales]
+    http_method_names = ['get', 'post', 'head', 'options']
     filter_backends = [filters.OrderingFilter]
     ordering_fields = ['sale_date', 'total_amount']
     ordering = ['-sale_date']
+
+    def destroy(self, request, *args, **kwargs):
+        return Response(
+            {'error': 'Sales records cannot be deleted. Voiding or returns must be recorded as an adjustment.'},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED
+        )
+
+    def create(self, request, *args, **kwargs):
+        serializer = SaleCreateSerializer(data=request.data, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        sale = serializer.save()
+        return Response(SaleSerializer(sale, context={'request': request}).data, status=status.HTTP_201_CREATED)
 
     def get_serializer_class(self):
         if self.action == 'list':
@@ -115,18 +130,32 @@ class SaleViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'])
     def invoice(self, request, pk=None):
-        """Get invoice data for printing/PDF"""
+        """Get invoice data for printing/PDF with dynamic BusinessSettings"""
         sale = self.get_object()
-        serializer = SaleSerializer(sale)
+        serializer = SaleSerializer(sale, context={'request': request})
         
-        # Add business info for invoice
+        # Add dynamic business info for invoice
         data = serializer.data
-        data['business'] = {
-            'name': 'Meghani Watch Co.',
-            'address': 'Your Business Address',
-            'phone': '+91 XXXXXXXXXX',
-            'gst': 'GSTIN: XXXXXXXXXXXXXXX',
-        }
+        try:
+            from apps.core.settings_models import BusinessSettings
+            biz = BusinessSettings.get_settings()
+            addr_parts = [biz.address_line1, biz.address_line2, f"{biz.city} - {biz.pincode}" if biz.city else ""]
+            clean_addr = ", ".join([p for p in addr_parts if p])
+            data['business'] = {
+                'name': biz.business_name or 'Meghani Watch Co.',
+                'address': clean_addr or 'Cactus Park, New Sama Rd, Vadodara, Gujarat - 390008',
+                'phone': biz.phone or '+91 91066 80191',
+                'gst': biz.gst_number or 'GSTIN: 24AAAAA0000A1Z5',
+                'footer': biz.invoice_footer or 'Thank you for your purchase!',
+            }
+        except Exception:
+            data['business'] = {
+                'name': 'Meghani Watch Co.',
+                'address': 'Cactus Park, New Sama Rd, Vadodara, Gujarat - 390008',
+                'phone': '+91 91066 80191',
+                'gst': 'GSTIN: 24AAAAA0000A1Z5',
+                'footer': 'Thank you for your purchase!',
+            }
         
         return Response(data)
 

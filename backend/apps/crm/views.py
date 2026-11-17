@@ -21,6 +21,15 @@ class CustomerViewSet(viewsets.ModelViewSet):
             return CustomerListSerializer
         return CustomerSerializer
 
+    def destroy(self, request, *args, **kwargs):
+        is_admin = request.user.is_superuser or getattr(request.user, 'role', '') in ['admin', 'manager']
+        if not is_admin:
+            return Response(
+                {'error': 'Only administrators and managers are authorized to delete customer records.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().destroy(request, *args, **kwargs)
+
     @action(detail=False, methods=['get'])
     def search(self, request):
         """Quick search by phone or name"""
@@ -134,4 +143,28 @@ class EnquiryViewSet(viewsets.ModelViewSet):
         if self.action == 'create':
             return [AllowAny()]
         return [IsAuthenticated()]
+
+    @action(detail=True, methods=['post'])
+    def convert_to_customer(self, request, pk=None):
+        """Convert a web enquiry into a CRM Customer record."""
+        enquiry = self.get_object()
+        
+        customer, created = Customer.objects.get_or_create(
+            phone=enquiry.phone,
+            defaults={
+                'name': enquiry.name,
+                'email': enquiry.email or '',
+                'notes': f"Converted from Web Enquiry #{enquiry.id}: {enquiry.message or enquiry.enquiry_type}",
+            }
+        )
+        
+        enquiry.status = 'converted'
+        enquiry.save()
+        
+        return Response({
+            'message': 'Customer record successfully created' if created else 'Existing customer record linked',
+            'customer_id': customer.id,
+            'customer_name': customer.name,
+            'created': created
+        })
 

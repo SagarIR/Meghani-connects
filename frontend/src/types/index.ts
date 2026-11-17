@@ -74,6 +74,7 @@ export interface Sale {
   discount: number
   tax: number
   payment_mode: 'cash' | 'upi' | 'card' | 'mixed'
+  payment_details?: Record<string, number>
   profit: number
   notes: string
   sale_date: string

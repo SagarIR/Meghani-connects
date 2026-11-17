@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Search, Plus, Minus, Trash2, User, CreditCard, Wallet, Smartphone, 
   ShoppingCart, Package, Barcode, Receipt, X, Check, ChevronRight, Camera,
-  Gift, Star, ChevronUp
+  Gift, Star, ChevronUp, Split
 } from 'lucide-react'
 import { api } from '@/services/api'
 import { Product, CartItem, Customer } from '@/types'
@@ -25,7 +25,12 @@ export default function POSPage() {
   const [customerResults, setCustomerResults] = useState<Customer[]>([])
   const [discount, setDiscount] = useState(0)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [paymentMode, setPaymentMode] = useState<'cash' | 'upi' | 'card'>('cash')
+  const [paymentMode, setPaymentMode] = useState<'cash' | 'upi' | 'card' | 'mixed'>('cash')
+  const [splitPayments, setSplitPayments] = useState<{ cash: number; upi: number; card: number }>({
+    cash: 0,
+    upi: 0,
+    card: 0,
+  })
   const [isProcessing, setIsProcessing] = useState(false)
   const [showCustomerSearch, setShowCustomerSearch] = useState(false)
   const [showScanner, setShowScanner] = useState(false)
@@ -33,6 +38,21 @@ export default function POSPage() {
   const [showInvoice, setShowInvoice] = useState(false)
   const [invoiceData, setInvoiceData] = useState<any>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // Keyboard shortcut listener (/ for search, F4 for payment modal)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '/' && document.activeElement !== searchInputRef.current) {
+        e.preventDefault()
+        searchInputRef.current?.focus()
+      } else if (e.key === 'F4' && cart.length > 0) {
+        e.preventDefault()
+        setShowPaymentModal(true)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [cart.length])
 
   // Handle barcode scan
   const handleBarcodeScan = async (barcode: string) => {
@@ -133,7 +153,9 @@ export default function POSPage() {
   }
 
   const subtotal = cart.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0)
-  const total = subtotal - discount
+  const total = Math.max(0, subtotal - discount)
+  const splitTotal = Math.round(((Number(splitPayments.cash) || 0) + (Number(splitPayments.upi) || 0) + (Number(splitPayments.card) || 0)) * 100) / 100
+  const remainingToPay = Math.round((total - splitTotal) * 100) / 100
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -149,9 +171,21 @@ export default function POSPage() {
       return
     }
 
+    if (paymentMode === 'mixed') {
+      const activeMethods = Object.entries(splitPayments).filter(([_, v]) => Number(v) > 0)
+      if (activeMethods.length < 2) {
+        toast.error('Split payment requires at least two payment methods with non-zero amounts')
+        return
+      }
+      if (Math.abs(remainingToPay) > 0.01) {
+        toast.error(`Split tender must equal total payable amount. Remaining: ${formatCurrency(remainingToPay)}`)
+        return
+      }
+    }
+
     setIsProcessing(true)
     try {
-      const payload = {
+      const payload: any = {
         customer_id: customer?.id || null,
         items: cart.map(item => ({
           product_id: item.product.id,
@@ -160,6 +194,14 @@ export default function POSPage() {
         })),
         discount,
         payment_mode: paymentMode,
+      }
+
+      if (paymentMode === 'mixed') {
+        payload.payment_details = {
+          cash: Number(splitPayments.cash) || 0,
+          upi: Number(splitPayments.upi) || 0,
+          card: Number(splitPayments.card) || 0,
+        }
       }
 
       const response = await api.post('/sales/', payload)
@@ -181,6 +223,7 @@ export default function POSPage() {
         tax: 0,
         total: total,
         payment_mode: paymentMode,
+        payment_details: response.data.payment_details || (paymentMode === 'mixed' ? payload.payment_details : null),
       }
       
       setInvoiceData(invoice)
@@ -190,10 +233,16 @@ export default function POSPage() {
       setCart([])
       setCustomer(null)
       setDiscount(0)
+      setSplitPayments({ cash: 0, upi: 0, card: 0 })
       setShowPaymentModal(false)
       setShowMobileCart(false)
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to complete sale')
+      const errMsg = error.response?.data?.error || 
+                     (typeof error.response?.data?.payment_details === 'string' ? error.response.data.payment_details : null) ||
+                     (Array.isArray(error.response?.data?.payment_details) ? error.response.data.payment_details[0] : null) ||
+                     (Array.isArray(error.response?.data?.items) ? error.response.data.items[0] : null) ||
+                     'Failed to complete sale'
+      toast.error(errMsg)
     } finally {
       setIsProcessing(false)
     }
@@ -220,9 +269,32 @@ export default function POSPage() {
             <input
               ref={searchInputRef}
               type="text"
-              placeholder="Search products..."
+              placeholder="Search by name, brand or scan barcode (Enter)..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={async (e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  const trimmed = search.trim()
+                  if (!trimmed) return
+                  try {
+                    const res = await api.get(`/products/barcode/${trimmed}/`)
+                    if (res.data) {
+                      addToCart(res.data)
+                      setSearch('')
+                      setProducts([])
+                      return
+                    }
+                  } catch {
+                    if (products.length === 1) {
+                      addToCart(products[0])
+                      setSearch('')
+                      setProducts([])
+                      return
+                    }
+                  }
+                }
+              }}
               className="w-full pl-10 lg:pl-12 pr-20 lg:pr-24 py-3 lg:py-4 bg-gray-50 border-0 rounded-lg lg:rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm lg:text-lg text-gray-900 placeholder-gray-400"
               autoFocus
             />
@@ -666,43 +738,45 @@ export default function POSPage() {
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
         title="Complete Payment"
-        size="md"
+        size="lg"
       >
         <div className="space-y-4 lg:space-y-6">
           {/* Payment Methods */}
           <div>
             <p className="text-sm font-medium text-gray-700 mb-2 lg:mb-3">Payment Method</p>
-            <div className="grid grid-cols-3 gap-2 lg:gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 lg:gap-3">
               {[
                 { mode: 'cash', label: 'Cash', icon: Wallet, color: 'from-green-500 to-emerald-600' },
                 { mode: 'upi', label: 'UPI', icon: Smartphone, color: 'from-purple-500 to-violet-600' },
                 { mode: 'card', label: 'Card', icon: CreditCard, color: 'from-blue-500 to-indigo-600' },
+                { mode: 'mixed', label: 'Split / Mixed', icon: Split, color: 'from-amber-500 to-orange-600' },
               ].map(({ mode, label, icon: Icon, color }) => (
                 <button
                   key={mode}
-                  onClick={() => setPaymentMode(mode as 'cash' | 'upi' | 'card')}
+                  type="button"
+                  onClick={() => setPaymentMode(mode as 'cash' | 'upi' | 'card' | 'mixed')}
                   className={clsx(
-                    'relative p-3 lg:p-5 border-2 rounded-lg lg:rounded-xl flex flex-col items-center gap-2 lg:gap-3 transition-all',
+                    'relative p-3 lg:p-4 border-2 rounded-lg lg:rounded-xl flex flex-col items-center gap-2 transition-all',
                     paymentMode === mode
-                      ? 'border-primary-500 bg-primary-50 shadow-lg scale-105'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-primary-500 bg-primary-50 shadow-md scale-102'
+                      : 'border-gray-200 hover:border-gray-300 bg-white'
                   )}
                 >
                   <div className={clsx(
-                    'w-10 h-10 lg:w-12 lg:h-12 rounded-lg lg:rounded-xl flex items-center justify-center',
+                    'w-9 h-9 lg:w-11 lg:h-11 rounded-lg lg:rounded-xl flex items-center justify-center',
                     paymentMode === mode ? `bg-gradient-to-br ${color}` : 'bg-gray-100'
                   )}>
-                    <Icon className={clsx('w-5 h-5 lg:w-6 lg:h-6', paymentMode === mode ? 'text-white' : 'text-gray-500')} />
+                    <Icon className={clsx('w-4 h-4 lg:w-5 lg:h-5', paymentMode === mode ? 'text-white' : 'text-gray-500')} />
                   </div>
-                  <span className={clsx('font-medium text-xs lg:text-sm', paymentMode === mode ? 'text-primary-700' : 'text-gray-700')}>
+                  <span className={clsx('font-medium text-xs lg:text-sm text-center', paymentMode === mode ? 'text-primary-700 font-semibold' : 'text-gray-700')}>
                     {label}
                   </span>
                   {paymentMode === mode && (
                     <motion.div
                       layoutId="payment-check"
-                      className="absolute top-1.5 lg:top-2 right-1.5 lg:right-2 w-4 h-4 lg:w-5 lg:h-5 bg-primary-500 rounded-full flex items-center justify-center"
+                      className="absolute top-1.5 right-1.5 w-4 h-4 bg-primary-500 rounded-full flex items-center justify-center"
                     >
-                      <Check className="w-2.5 h-2.5 lg:w-3 lg:h-3 text-white" />
+                      <Check className="w-2.5 h-2.5 text-white" />
                     </motion.div>
                   )}
                 </button>
@@ -710,38 +784,171 @@ export default function POSPage() {
             </div>
           </div>
 
+          {/* Split Payment Breakdown Inputs */}
+          {paymentMode === 'mixed' && (
+            <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-3.5 space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
+                  <Split className="w-3.5 h-3.5" /> Split Tender Breakdown
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSplitPayments({ cash: 0, upi: 0, card: 0 })}
+                  className="text-xs text-amber-700 hover:text-amber-900 font-semibold underline"
+                >
+                  Clear Split
+                </button>
+              </div>
+
+              {/* Cash Input */}
+              <div className="flex items-center gap-2">
+                <div className="w-20 text-xs font-semibold text-gray-700 flex items-center gap-1">
+                  <Wallet className="w-3.5 h-3.5 text-green-600" /> Cash:
+                </div>
+                <div className="relative flex-1">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-semibold">₹</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={splitPayments.cash || ''}
+                    onChange={(e) => setSplitPayments({ ...splitPayments, cash: Math.max(0, parseFloat(e.target.value) || 0) })}
+                    placeholder="0.00"
+                    className="w-full pl-6 pr-2 py-1.5 text-sm bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-right font-mono"
+                  />
+                </div>
+                {remainingToPay > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSplitPayments({ ...splitPayments, cash: (splitPayments.cash || 0) + remainingToPay })}
+                    className="px-2 py-1 text-xs bg-white border border-amber-300 text-amber-800 rounded hover:bg-amber-100 whitespace-nowrap font-medium"
+                  >
+                    +₹{remainingToPay}
+                  </button>
+                )}
+              </div>
+
+              {/* UPI Input */}
+              <div className="flex items-center gap-2">
+                <div className="w-20 text-xs font-semibold text-gray-700 flex items-center gap-1">
+                  <Smartphone className="w-3.5 h-3.5 text-purple-600" /> UPI:
+                </div>
+                <div className="relative flex-1">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-semibold">₹</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={splitPayments.upi || ''}
+                    onChange={(e) => setSplitPayments({ ...splitPayments, upi: Math.max(0, parseFloat(e.target.value) || 0) })}
+                    placeholder="0.00"
+                    className="w-full pl-6 pr-2 py-1.5 text-sm bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-right font-mono"
+                  />
+                </div>
+                {remainingToPay > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSplitPayments({ ...splitPayments, upi: (splitPayments.upi || 0) + remainingToPay })}
+                    className="px-2 py-1 text-xs bg-white border border-amber-300 text-amber-800 rounded hover:bg-amber-100 whitespace-nowrap font-medium"
+                  >
+                    +₹{remainingToPay}
+                  </button>
+                )}
+              </div>
+
+              {/* Card Input */}
+              <div className="flex items-center gap-2">
+                <div className="w-20 text-xs font-semibold text-gray-700 flex items-center gap-1">
+                  <CreditCard className="w-3.5 h-3.5 text-blue-600" /> Card:
+                </div>
+                <div className="relative flex-1">
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-semibold">₹</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="any"
+                    value={splitPayments.card || ''}
+                    onChange={(e) => setSplitPayments({ ...splitPayments, card: Math.max(0, parseFloat(e.target.value) || 0) })}
+                    placeholder="0.00"
+                    className="w-full pl-6 pr-2 py-1.5 text-sm bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-right font-mono"
+                  />
+                </div>
+                {remainingToPay > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSplitPayments({ ...splitPayments, card: (splitPayments.card || 0) + remainingToPay })}
+                    className="px-2 py-1 text-xs bg-white border border-amber-300 text-amber-800 rounded hover:bg-amber-100 whitespace-nowrap font-medium"
+                  >
+                    +₹{remainingToPay}
+                  </button>
+                )}
+              </div>
+
+              {/* Balance Summary Row */}
+              <div className="pt-2 border-t border-amber-200 flex items-center justify-between text-xs">
+                <span className="text-gray-600 font-medium">Allocated: <b className="text-gray-900 font-mono">{formatCurrency(splitTotal)}</b></span>
+                {remainingToPay === 0 ? (
+                  <span className="text-emerald-700 font-bold flex items-center gap-1 bg-emerald-100 px-2 py-0.5 rounded">
+                    <Check className="w-3 h-3" /> Exact Match (₹0.00)
+                  </span>
+                ) : remainingToPay > 0 ? (
+                  <span className="text-rose-700 font-bold bg-rose-100 px-2 py-0.5 rounded">
+                    Remaining: {formatCurrency(remainingToPay)}
+                  </span>
+                ) : (
+                  <span className="text-amber-800 font-bold bg-amber-100 px-2 py-0.5 rounded">
+                    Overallocated: +{formatCurrency(Math.abs(remainingToPay))}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* Order Summary */}
-          <div className="p-3 lg:p-5 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg lg:rounded-xl space-y-2 lg:space-y-3">
-            <div className="flex justify-between text-sm lg:text-base text-gray-600">
+          <div className="p-3 lg:p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg lg:rounded-xl space-y-2">
+            <div className="flex justify-between text-sm text-gray-600">
               <span>Items ({cart.length})</span>
               <span>{formatCurrency(subtotal)}</span>
             </div>
             {discount > 0 && (
-              <div className="flex justify-between text-sm lg:text-base text-green-600">
+              <div className="flex justify-between text-sm text-green-600">
                 <span>Discount</span>
                 <span>-{formatCurrency(discount)}</span>
               </div>
             )}
             {customer && (
-              <div className="flex justify-between text-sm lg:text-base text-gray-600">
+              <div className="flex justify-between text-sm text-gray-600">
                 <span>Customer</span>
                 <span>{customer.name}</span>
               </div>
             )}
-            <div className="pt-2 lg:pt-3 border-t border-gray-200 flex justify-between items-center">
-              <span className="text-base lg:text-lg font-semibold text-gray-900">Total Amount</span>
-              <span className="text-2xl lg:text-3xl font-bold text-primary-600">{formatCurrency(total)}</span>
+            <div className="pt-2 border-t border-gray-200 flex justify-between items-center">
+              <span className="text-base font-semibold text-gray-900">Total Payable</span>
+              <span className="text-2xl font-bold text-primary-600">{formatCurrency(total)}</span>
             </div>
           </div>
 
-          <Button
-            className="w-full py-3 lg:py-4 text-base lg:text-lg"
-            onClick={handleCheckout}
-            loading={isProcessing}
-          >
-            <Check className="w-4 h-4 lg:w-5 lg:h-5 mr-2" />
-            Complete Sale
-          </Button>
+          <div className="space-y-1.5">
+            <Button
+              className="w-full py-3 lg:py-4 text-base lg:text-lg"
+              onClick={handleCheckout}
+              loading={isProcessing}
+              disabled={paymentMode === 'mixed' && (remainingToPay !== 0 || Object.values(splitPayments).filter(v => Number(v) > 0).length < 2)}
+            >
+              <Check className="w-4 h-4 lg:w-5 lg:h-5 mr-2" />
+              Complete Sale
+            </Button>
+            {paymentMode === 'mixed' && remainingToPay !== 0 && (
+              <p className="text-xs text-center text-amber-700 font-medium">
+                Split tender must match the total payable amount exactly before completing the sale.
+              </p>
+            )}
+            {paymentMode === 'mixed' && remainingToPay === 0 && Object.values(splitPayments).filter(v => Number(v) > 0).length < 2 && (
+              <p className="text-xs text-center text-amber-700 font-medium">
+                Please allocate funds across at least two payment methods for a split transaction.
+              </p>
+            )}
+          </div>
         </div>
       </Modal>
 

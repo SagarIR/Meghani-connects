@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Globe, MessageSquare, Tag, FolderTree, Gift, Image as ImageIcon, 
   Milestone, Plus, Search, Edit2, Trash2, CheckCircle2, XCircle, 
-  Clock, Phone, Mail, Calendar, Eye, ExternalLink, RefreshCw, Star, AlertCircle, Upload
+  Clock, Phone, Mail, Calendar, Eye, ExternalLink, RefreshCw, Star, AlertCircle, Upload, UserPlus
 } from 'lucide-react'
 import api from '@/services/api'
 import Button from '@/components/ui/Button'
@@ -191,6 +191,17 @@ export default function WebsiteCMSPage() {
       setEnquiries(prev => prev.map(e => e.id === id ? { ...e, status: newStatus, ...(notes !== undefined ? { notes } : {}) } : e))
     } catch (err) {
       toast.error('Failed to update enquiry')
+    }
+  }
+
+  // Quick Action to convert a Web Enquiry to a CRM Customer
+  const handleConvertToCustomer = async (item: Enquiry) => {
+    try {
+      const res = await api.post(`/enquiries/${item.id}/convert_to_customer/`)
+      toast.success(res.data?.message || 'Converted to Customer!')
+      setEnquiries(prev => prev.map(e => e.id === item.id ? { ...e, status: 'converted' } : e))
+    } catch (err: any) {
+      toast.error(err.response?.data?.error || 'Failed to convert enquiry to customer')
     }
   }
 
@@ -460,6 +471,17 @@ export default function WebsiteCMSPage() {
                               <MessageSquare className="w-3.5 h-3.5" />
                               <span>WhatsApp</span>
                             </a>
+
+                            {item.status !== 'converted' && (
+                              <button
+                                onClick={() => handleConvertToCustomer(item)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 shadow-2xs transition"
+                                title="Create CRM Customer record"
+                              >
+                                <UserPlus className="w-3.5 h-3.5" />
+                                <span>Add Customer</span>
+                              </button>
+                            )}
 
                             <button
                               onClick={() => {

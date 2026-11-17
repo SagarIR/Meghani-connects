@@ -338,9 +338,9 @@ class ImageUploadView(APIView):
     """
     Secure Image Upload endpoint.
     Handles upload to Cloudinary (or local media storage fallback).
-    Never exposes API secrets to client code.
+    Requires staff authentication to prevent unauthenticated flooding and DoS.
     """
-    permission_classes = [AllowAny]
+    permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser]
 
     def post(self, request):
@@ -360,7 +360,12 @@ class ImageUploadView(APIView):
 
         from .cloudinary_service import CloudinaryMediaService
         service = CloudinaryMediaService()
-        folder = request.data.get('folder', 'meghani-watches')
+        
+        # Whitelist allowed upload folders
+        allowed_folders = {'meghani-watches', 'meghani-cms', 'receipts', 'products'}
+        requested_folder = request.data.get('folder', 'meghani-watches')
+        folder = requested_folder if requested_folder in allowed_folders else 'meghani-watches'
+        
         result = service.upload_image(file_obj, folder=folder)
 
         if result.get('success'):

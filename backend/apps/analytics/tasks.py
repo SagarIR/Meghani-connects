@@ -24,8 +24,7 @@ def check_and_send_birthday_wishes():
         
         Notification.objects.create(
             customer=customer,
-            notification_type='whatsapp',
-            template_name='birthday_wish',
+            type='whatsapp',
             message=message,
             status='pending'
         )
@@ -59,8 +58,7 @@ def check_warranty_expiry_notifications():
         
         Notification.objects.create(
             customer=warranty.customer,
-            notification_type='whatsapp',
-            template_name='warranty_expiry',
+            type='whatsapp',
             message=message,
             status='pending'
         )

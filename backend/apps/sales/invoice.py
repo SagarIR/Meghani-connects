@@ -45,12 +45,26 @@ def generate_invoice_pdf(sale):
     elements = []
     
     # Header - Business Info
-    business_name = Paragraph("<b>MEGHANI WATCH CO.</b>", styles['InvoiceTitle'])
+    try:
+        from apps.core.settings_models import BusinessSettings
+        biz = BusinessSettings.get_settings()
+        b_name = biz.business_name or "MEGHANI WATCH CO."
+        addr_parts = [biz.address_line1, biz.address_line2, f"{biz.city} - {biz.pincode}" if biz.city else ""]
+        clean_addr = ", ".join([p for p in addr_parts if p])
+        phone_txt = f"Phone: {biz.phone}" if biz.phone else "+91 91066 80191"
+        gst_txt = f" | GST: {biz.gst_number}" if biz.gst_number else ""
+        header_text = f"{clean_addr}<br/>{phone_txt}{gst_txt}" if clean_addr else f"{phone_txt}{gst_txt}"
+        footer_text = biz.invoice_footer or "Thank you for your purchase!"
+    except Exception:
+        b_name = "MEGHANI WATCH CO."
+        header_text = "Cactus Park, New Sama Rd, Vadodara, Gujarat - 390008<br/>Phone: +91 91066 80191"
+        footer_text = "Thank you for your purchase!"
+
+    business_name = Paragraph(f"<b>{b_name.upper()}</b>", styles['InvoiceTitle'])
     elements.append(business_name)
     
     address = Paragraph(
-        "Your Business Address, City - 000000<br/>"
-        "Phone: +91 XXXXXXXXXX | GST: XXXXXXXXXXXXXXX",
+        header_text,
         styles['Center']
     )
     elements.append(address)
@@ -131,18 +145,21 @@ def generate_invoice_pdf(sale):
     elements.append(totals_table)
     elements.append(Spacer(1, 5*mm))
     
-    # Payment Mode
-    payment_text = Paragraph(
-        f"<b>Payment Mode:</b> {sale.payment_mode.upper()}",
-        styles['Normal']
-    )
+    # Payment Mode & Breakdown
+    if sale.payment_mode == 'mixed' and getattr(sale, 'payment_details', None):
+        parts = [f"{str(k).upper()}: Rs. {float(v):,.2f}" for k, v in sale.payment_details.items() if float(v) > 0]
+        payment_str = f"<b>Payment Mode:</b> MIXED ({' | '.join(parts)})"
+    else:
+        payment_str = f"<b>Payment Mode:</b> {sale.payment_mode.upper()}"
+    
+    payment_text = Paragraph(payment_str, styles['Normal'])
     elements.append(payment_text)
     elements.append(Spacer(1, 10*mm))
     
     # Footer
     footer = Paragraph(
-        "<b>Thank you for your purchase!</b><br/>"
-        "For any queries, please contact us at +91 XXXXXXXXXX",
+        f"<b>{footer_text}</b><br/>"
+        f"For any queries, please contact us at {phone_txt.replace('Phone: ', '')}",
         styles['Center']
     )
     elements.append(footer)
@@ -192,10 +209,21 @@ def generate_repair_invoice_pdf(repair):
     elements = []
     
     # Header
-    elements.append(Paragraph("<b>MEGHANI WATCH CO.</b>", styles['InvoiceTitle']))
+    try:
+        from apps.core.settings_models import BusinessSettings
+        biz = BusinessSettings.get_settings()
+        b_name = biz.business_name or "MEGHANI WATCH CO."
+        addr_parts = [biz.address_line1, biz.address_line2, f"{biz.city} - {biz.pincode}" if biz.city else ""]
+        clean_addr = ", ".join([p for p in addr_parts if p])
+        phone_txt = f"Phone: {biz.phone}" if biz.phone else "+91 91066 80191"
+        header_text = f"{clean_addr}<br/>{phone_txt}" if clean_addr else phone_txt
+    except Exception:
+        b_name = "MEGHANI WATCH CO."
+        header_text = "Cactus Park, New Sama Rd, Vadodara, Gujarat - 390008<br/>Phone: +91 91066 80191"
+
+    elements.append(Paragraph(f"<b>{b_name.upper()}</b>", styles['InvoiceTitle']))
     elements.append(Paragraph(
-        "Your Business Address, City - 000000<br/>"
-        "Phone: +91 XXXXXXXXXX",
+        header_text,
         styles['Center']
     ))
     elements.append(Spacer(1, 5*mm))

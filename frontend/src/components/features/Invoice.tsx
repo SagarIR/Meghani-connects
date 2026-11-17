@@ -23,6 +23,7 @@ interface InvoiceData {
   tax: number
   total: number
   payment_mode: string
+  payment_details?: Record<string, number>
   cashier?: string
 }
 
@@ -210,10 +211,21 @@ export default function Invoice({
                 <span>Total</span>
                 <span>{formatCurrency(data.total)}</span>
               </div>
-              <div className="flex justify-center pt-2">
-                <span className="bg-gray-900 text-white text-xs px-3 py-1 rounded uppercase">
-                  {data.payment_mode}
+              <div className="flex flex-col items-center gap-1.5 pt-2">
+                <span className="bg-gray-900 text-white text-xs px-3 py-1 rounded uppercase font-semibold tracking-wider">
+                  {data.payment_mode === 'mixed' ? 'SPLIT / MIXED PAYMENT' : data.payment_mode}
                 </span>
+                {data.payment_mode === 'mixed' && data.payment_details && (
+                  <div className="text-[11px] text-gray-700 flex flex-wrap justify-center gap-1.5 mt-1">
+                    {Object.entries(data.payment_details)
+                      .filter(([_, amt]) => Number(amt) > 0)
+                      .map(([method, amt]) => (
+                        <span key={method} className="bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
+                          <b className="uppercase">{method}:</b> {formatCurrency(Number(amt))}
+                        </span>
+                      ))}
+                  </div>
+                )}
               </div>
             </div>
 

@@ -4,6 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAdminUser, AllowAny, IsAuthenticated
+from apps.users.permissions import CanManageProducts
 from django.db.models import Q
 from django.conf import settings
 from django.http import HttpResponse
@@ -18,6 +19,7 @@ from .import_service import ProductImportService
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.filter(is_active=True)
     serializer_class = ProductSerializer
+    permission_classes = [CanManageProducts]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'brand', 'barcode', 'category']
     ordering_fields = ['name', 'selling_price', 'stock', 'created_at']

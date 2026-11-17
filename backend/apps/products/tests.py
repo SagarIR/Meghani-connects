@@ -63,9 +63,13 @@ class PublicProductCatalogueTests(TestCase):
         self.assertNotIn('cost_price', data)
 
     def test_image_upload_endpoint(self):
-        """Test secure image upload handler with mocked service"""
+        """Test secure image upload handler with mocked service for authenticated staff"""
         from unittest.mock import patch
         from django.core.files.uploadedfile import SimpleUploadedFile
+        from apps.users.models import User
+        
+        staff_user = User.objects.create_user(username='upload_staff', password='pass', role='staff')
+        self.client.force_authenticate(user=staff_user)
         
         with patch('apps.core.cloudinary_service.CloudinaryMediaService.upload_image') as mock_upload:
             mock_upload.return_value = {
@@ -103,6 +107,90 @@ class PublicProductCatalogueTests(TestCase):
         cat_results = res_cats.data['results'] if isinstance(res_cats.data, dict) and 'results' in res_cats.data else res_cats.data
         self.assertEqual(len(cat_results), 1)
         self.assertEqual(cat_results[0]['slug'], 'chronograph')
+
+
+class ProductManagementAndStockTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        from apps.users.models import User
+        self.admin = User.objects.create_user(username='admin_pos', password='pospass123', role='admin', is_staff=True)
+        self.staff = User.objects.create_user(username='staff_pos', password='pospass123', role='staff')
+        self.product = Product.objects.create(
+            name='Seiko Presage Cocktail',
+            brand='Seiko',
+            category='analog',
+            barcode='SEIKO-COCKTAIL-01',
+            cost_price=22000.00,
+            selling_price=38000.00,
+            stock=10,
+            is_active=True
+        )
+
+    def test_product_crud_and_barcode_uniqueness(self):
+        """Creating a product with duplicate barcode returns 400 Bad Request"""
+        self.client.force_authenticate(user=self.admin)
+        duplicate_payload = {
+            'name': 'Duplicate Seiko',
+            'brand': 'Seiko',
+            'category': 'analog',
+            'barcode': 'SEIKO-COCKTAIL-01',  # already exists
+            'cost_price': '22000.00',
+            'selling_price': '38000.00',
+            'stock': 5
+        }
+        res = self.client.post('/api/products/', duplicate_payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('barcode', res.data)
+
+    def test_stock_update_actions(self):
+        """Stock can be updated via add, subtract, and set actions"""
+        self.client.force_authenticate(user=self.admin)
+        url = f'/api/products/{self.product.id}/update_stock/'
+
+        # Add 5 -> 15
+        res_add = self.client.post(url, {'quantity': 5, 'action': 'add'}, format='json')
+        self.assertEqual(res_add.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_add.data['stock'], 15)
+
+        # Subtract 3 -> 12
+        res_sub = self.client.post(url, {'quantity': 3, 'action': 'subtract'}, format='json')
+        self.assertEqual(res_sub.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_sub.data['stock'], 12)
+
+        # Subtract exceeding stock fails
+        res_excess = self.client.post(url, {'quantity': 99, 'action': 'subtract'}, format='json')
+        self.assertEqual(res_excess.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # Set stock directly
+        res_set = self.client.post(url, {'quantity': 2, 'action': 'set'}, format='json')
+        self.assertEqual(res_set.status_code, status.HTTP_200_OK)
+        self.assertEqual(res_set.data['stock'], 2)
+
+    def test_soft_delete_and_low_stock(self):
+        """Soft delete marks product inactive; low_stock endpoint returns items below threshold"""
+        self.client.force_authenticate(user=self.admin)
+
+        # Low stock check (stock is 10, let's create a low stock item with stock=2)
+        low_prod = Product.objects.create(
+            name='Rare Limited Watch',
+            brand='Audemars',
+            category='analog',
+            barcode='AP-ROYAL-OAK',
+            cost_price=1200000.00,
+            selling_price=2500000.00,
+            stock=2,
+            is_active=True
+        )
+        res_low = self.client.get('/api/products/low_stock/')
+        self.assertEqual(res_low.status_code, status.HTTP_200_OK)
+        self.assertTrue(any(p['id'] == low_prod.id for p in res_low.data))
+
+        # Soft delete
+        res_del = self.client.delete(f'/api/products/{low_prod.id}/')
+        self.assertEqual(res_del.status_code, status.HTTP_204_NO_CONTENT)
+        low_prod.refresh_from_db()
+        self.assertFalse(low_prod.is_active)
+
 
 
 

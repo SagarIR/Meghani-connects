@@ -35,16 +35,16 @@
                               PROJECT PHASE HEALTH SUMMARY
 ========================================================================================
 Total Project Phases:            8
-├── Completed Phases:            1  (12.5%)  [Phase 4: Database Schema]
-├── Partially Completed Phases:  6  (75.0%)  [Phases 1, 2, 3, 5, 6, 7]
+├── Completed Phases:            2  (25.0%)  [Phase 4: Database Schema, Phase 6: Reports & Visualization]
+├── Partially Completed Phases:  5  (62.5%)  [Phases 1, 2, 3, 5, 7]
 ├── In-Progress Phases:          0  ( 0.0%)
 ├── Pending Phases:              0  ( 0.0%)
 ├── Blocked Phases:              0  ( 0.0%)
 └── Phases Requiring Verification: 1 (12.5%)  [Phase 8: Deployment & Hosting]
 ----------------------------------------------------------------------------------------
-OVERALL TASK COMPLETION:         47 / 60 Verified Tasks  (78.33%)
-├── Completed & Verified:        47
-├── Partially Completed:          9
+OVERALL TASK COMPLETION:         49 / 60 Verified Tasks  (81.67%)
+├── Completed & Verified:        49
+├── Partially Completed:          7
 ├── In-Progress:                  0
 ├── Pending / Not Started:        2
 ├── Blocked:                      1
@@ -64,11 +64,11 @@ OVERALL TASK COMPLETION:         47 / 60 Verified Tasks  (78.33%)
 | **Phase 2** | [Backend Folder Structure](./02-phase-2-backend.md) | 6 | 4 | 2 | 0 | 0 | 0 | 0 | **PARTIALLY COMPLETED** |
 | **Phase 3** | [Frontend Folder Structure](./03-phase-3-frontend.md) | 7 | 6 | 1 | 0 | 0 | 0 | 0 | **PARTIALLY COMPLETED** |
 | **Phase 4** | [Database Schema](./04-phase-4-database.md) | 9 | 9 | 0 | 0 | 0 | 0 | 0 | **COMPLETED** |
-| **Phase 5** | [Module Development](./05-phase-5-modules.md) | 11 | 8 | 2 | 0 | 1 | 0 | 0 | **PARTIALLY COMPLETED** |
-| **Phase 6** | [Reports & Visualization](./06-phase-6-reports.md) | 6 | 5 | 1 | 0 | 0 | 0 | 0 | **PARTIALLY COMPLETED** |
+| **Phase 5** | [Module Development](./05-phase-5-modules.md) | 11 | 9 | 1 | 0 | 1 | 0 | 0 | **PARTIALLY COMPLETED** |
+| **Phase 6** | [Reports & Visualization](./06-phase-6-reports.md) | 6 | 6 | 0 | 0 | 0 | 0 | 0 | **COMPLETED** |
 | **Phase 7** | [AI Automation Features](./07-phase-7-ai.md) | 8 | 4 | 2 | 0 | 1 | 1 | 0 | **PARTIALLY COMPLETED** |
 | **Phase 8** | [Deployment & Hosting](./08-phase-8-deployment.md) | 6 | 5 | 0 | 0 | 0 | 0 | 1 | **NEEDS VERIFICATION** |
-| **TOTAL** | **8 Phases** | **60** | **47** | **9** | **0** | **2** | **1** | **1** | **78.3% VERIFIED** |
+| **TOTAL** | **8 Phases** | **60** | **49** | **7** | **0** | **2** | **1** | **1** | **81.67% VERIFIED** |
 
 ---
 
@@ -217,8 +217,8 @@ OVERALL TASK COMPLETION:         47 / 60 Verified Tasks  (78.33%)
   *Evidence:* `app/(dashboard)/dashboard/page.tsx` fetches `/api/analytics/dashboard/stats/`, `/sales-chart/`, `/recent-activity/`, and `/ai/insights/`.
 - [x] **Task 5.2: POS Barcode Billing & Atomic Checkout** – `COMPLETED`  
   *Evidence:* `BarcodeScanner.tsx`, `sales/page.tsx`, `SaleCreateSerializer` decorated with `@transaction.atomic`. Verifies inventory, decrements stock, records cost price, generates invoice, accrues points.
-- [ ] **Task 5.3: POS Split / Mixed Payment UI Support** – `PARTIALLY COMPLETED`  
-  *Evidence:* Backend model supports `payment_mode='mixed'`. Frontend POS UI only provides single-selection buttons (`cash`, `upi`, `card`), with no split tender inputs.
+- [x] **Task 5.3: POS Split / Mixed Payment UI Support** – `COMPLETED`  
+  *Evidence:* Full split-tender support implemented across frontend and backend. `sales/page.tsx` provides 4th payment mode ('mixed') with multi-method breakdown inputs (Cash, UPI, Card), real-time balance tracker, and Fill buttons. `SaleCreateSerializer` validates that at least two payment methods are allocated and the exact sum matches `total_amount`. `payment_details` stored as `JSONField` on `Sale` model and rendered dynamically on thermal receipt and invoice PDF (`invoice.py`, `Invoice.tsx`). Verified with 14 backend and 13 frontend automated tests.
 - [x] **Task 5.4: Product & Inventory Management with Bulk CSV/Excel Import** – `COMPLETED`  
   *Evidence:* `products/page.tsx`, `ProductViewSet`, tabbed product edit modal, `BulkImport.tsx` with `ProductImportService` line-by-line validation.
 - [x] **Task 5.5: Watch Repair Workshop & 5-Stage State Machine** – `COMPLETED`  
@@ -236,11 +236,10 @@ OVERALL TASK COMPLETION:         47 / 60 Verified Tasks  (78.33%)
 - [ ] **Task 5.11: User Password Change Endpoint** – `PARTIALLY COMPLETED (BUG)`  
   *Evidence:* Frontend calls `POST /api/users/change-password/`. DRF router generates `change_password/` (underscored), resulting in a 404 error from the settings page.
 
-* **Current Implementation Status:** **PARTIALLY COMPLETED** (8/11 verified tasks)
+* **Current Implementation Status:** **PARTIALLY COMPLETED** (9/11 verified tasks)
 * **Outstanding Work:**
   1. Fix password change URL mismatch in `apps/users/views.py`.
   2. Implement backend endpoint for `/customers/import/` or remove the tab from `BulkImport.tsx`.
-  3. Add split-tender input controls in `sales/page.tsx` for `mixed` payments.
 * **Dependencies:** Phase 4 models.
 * **Completion Criteria:** All 11 checklist items functional and verified via end-to-end user actions.
 * **Recommended Next Action:** Fix password change `@action` decorator in `apps/users/views.py`.
@@ -265,14 +264,14 @@ OVERALL TASK COMPLETION:         47 / 60 Verified Tasks  (78.33%)
   *Evidence:* `InventoryValuationReportView`. Total units, cost valuation, retail valuation, gross margin projection.
 - [x] **Task 6.5: Multi-Format Report Export Service (CSV, Excel, PDF)** – `COMPLETED`  
   *Evidence:* `ReportExportView` (`openpyxl` for Excel, Python `csv`, ReportLab for PDF). Verified in `frontend/src/app/(dashboard)/reports/page.tsx`.
-- [ ] **Task 6.6: Dynamic A4 Thermal / ReportLab Invoice Customization** – `PARTIALLY COMPLETED (DEFECT)`  
-  *Evidence:* `apps/sales/invoice.py` generates ReportLab PDF invoices. However, store address, phone numbers, and GSTIN are hardcoded dummy text (`Your Business Address...`) rather than dynamically resolved from `BusinessSettings`.
+- [x] **Task 6.6: Dynamic A4 Thermal / ReportLab Invoice Customization** – `COMPLETED`  
+  *Evidence:* `apps/sales/invoice.py` and `apps/sales/views.py` resolve business metadata dynamically from `BusinessSettings.get_settings()`, including store address, phone numbers, GSTIN, and custom footer. Split payment breakdown rendered on invoice PDF and JSON endpoint. Verified by `test_dynamic_pdf_invoice_generation` and `test_dynamic_business_settings_in_invoice_endpoint`.
 
-* **Current Implementation Status:** **PARTIALLY COMPLETED** (5/6 verified tasks)
-* **Outstanding Work:** Connect `apps/sales/invoice.py` and `apps/sales/views.py` to `BusinessSettings.get_settings()` to inject dynamic store metadata.
+* **Current Implementation Status:** **COMPLETED** (6/6 verified tasks)
+* **Outstanding Work:** None.
 * **Dependencies:** Phase 4 models, Phase 5 sales records.
 * **Completion Criteria:** ReportLab PDF invoices render verified store address and GSTIN from `BusinessSettings`.
-* **Recommended Next Action:** Update `generate_invoice_pdf()` in `apps/sales/invoice.py` with dynamic `BusinessSettings` data.
+* **Recommended Next Action:** Phase 6 complete. Proceed to operational and security defect fixes.
 
 ---
 
@@ -375,7 +374,7 @@ flowchart TD
 | **CRIT-01** | **Unapplied RBAC Permissions (Privilege Escalation)** | **HIGH (CVSS 8.1)** | [apps/users/views.py](../backend/apps/users/views.py)<br>[apps/products/views.py](../backend/apps/products/views.py)<br>[apps/sales/views.py](../backend/apps/sales/views.py) | Any authenticated staff user can list, edit, or create admin users, or delete sales records. | Attach `permission_classes = [CanManageUsers]` to `UserViewSet` and role classes to other ViewSets. |
 | **CRIT-02** | **Celery Beat Background Cron Crash** | **HIGH** | [apps/analytics/tasks.py](../backend/apps/analytics/tasks.py) | Morning scheduled tasks fail with fatal `TypeError` on non-existent `notification_type` keyword. | Change `notification_type='whatsapp'` to `type='whatsapp'` and remove `template_name`. |
 | **DEF-01** | **User Password Change 404 URL Mismatch** | **MEDIUM** | [apps/users/views.py](../backend/apps/users/views.py) | Password change from staff settings page always returns HTTP 404. | Add `url_path='change-password'` to `@action` decorator in `UserViewSet`. |
-| **DEF-02** | **Hardcoded Store Address in Invoices** | **MEDIUM** | [apps/sales/invoice.py](../backend/apps/sales/invoice.py) | ReportLab invoices print dummy placeholder strings instead of business settings. | Resolve store metadata dynamically from `BusinessSettings.get_settings()`. |
+| **DEF-02** | **Hardcoded Store Address in Invoices** | **RESOLVED (Nov 17, 2026)** | [apps/sales/invoice.py](../backend/apps/sales/invoice.py)<br>[apps/sales/views.py](../backend/apps/sales/views.py) | Dynamic store metadata resolved from `BusinessSettings.get_settings()`. Verified in tests. | Closed. |
 | **BLK-01** | **Missing `TWILIO_SMS_NUMBER` Setting** | **MEDIUM** | [backend/core/settings.py](../backend/core/settings.py) | SMS alert dispatch crashes because `TWILIO_SMS_NUMBER` is not declared. | Add `TWILIO_SMS_NUMBER = os.getenv('TWILIO_SMS_NUMBER')` to `settings.py`. |
 | **MISS-01**| **Missing Customer Bulk Import Endpoint** | **LOW** | [BulkImport.tsx](../frontend/src/components/features/BulkImport.tsx) | Frontend offers Customer import dispatching to `/customers/import/` which does not exist. | Create `CustomerImportView` in `apps/crm/` or remove the tab from `BulkImport.tsx`. |
 | **MISS-02**| **Razorpay Implementation Absent** | **LOW** | `settings.py`, `requirements.txt` | Razorpay credentials declared but zero integration code exists. | Author order creation endpoint or document as optional future feature. |

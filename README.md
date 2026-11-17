@@ -158,11 +158,12 @@ npm run dev
 Both suites must pass cleanly prior to code submission:
 
 ```bash
-# Backend test suite (30 passing tests)
+# Backend test suite (41 passing tests)
 backend/venv/Scripts/python.exe backend/manage.py test apps.products apps.core apps.crm apps.users apps.sales apps.analytics
 
-# Frontend public luxury suite (7/7 passing tests)
+# Frontend test suites (7 public storefront tests + 13 POS workflow tests)
 node frontend/test-public.js
+node frontend/test-pos-workflow.js
 ```
 
 ---
@@ -170,7 +171,7 @@ node frontend/test-public.js
 ## Development Progress Dashboard
 
 ```
-Overall Verified Completion: 78.33% (47 of 60 Tasks Verified Complete)
+Overall Verified Completion: 81.67% (49 of 60 Tasks Verified Complete)
 ```
 
 | Phase | Description | Total Tasks | Done | Partial | Pending | Blocked | Verification | Status |
@@ -179,8 +180,8 @@ Overall Verified Completion: 78.33% (47 of 60 Tasks Verified Complete)
 | **2** | [Backend Core Architecture](./docs/02-phase-2-backend.md) | 8 | 7 | 1 | 0 | 0 | 0 | **PARTIAL** |
 | **3** | [Frontend Architecture](./docs/03-phase-3-frontend.md) | 8 | 8 | 0 | 0 | 0 | 0 | **COMPLETED** |
 | **4** | [Database Schema & Models](./docs/04-phase-4-database.md) | 8 | 8 | 0 | 0 | 0 | 0 | **COMPLETED** |
-| **5** | [Module Development & POS](./docs/05-phase-5-modules.md) | 10 | 8 | 2 | 0 | 0 | 0 | **PARTIAL** |
-| **6** | [Reports & Analytics](./docs/06-phase-6-reports.md) | 6 | 5 | 1 | 0 | 0 | 0 | **PARTIAL** |
+| **5** | [Module Development & POS](./docs/05-phase-5-modules.md) | 10 | 9 | 1 | 0 | 0 | 0 | **PARTIAL** |
+| **6** | [Reports & Analytics](./docs/06-phase-6-reports.md) | 6 | 6 | 0 | 0 | 0 | 0 | **COMPLETED** |
 | **7** | [AI Automation & Notifications](./docs/07-phase-7-ai.md) | 8 | 4 | 3 | 0 | 0 | 1 | **PARTIAL** |
 | **8** | [Deployment & Operations](./docs/08-phase-8-deployment.md) | 6 | 1 | 2 | 2 | 1 | 0 | **PARTIAL** |
 

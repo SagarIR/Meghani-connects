@@ -105,6 +105,18 @@ class ProductSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            is_admin = request.user.is_superuser or getattr(request.user, 'role', '') in ['admin', 'manager']
+            if not is_admin:
+                data.pop('cost_price', None)
+                data.pop('supplier_name', None)
+                data.pop('profit_margin', None)
+                data.pop('profit_percentage', None)
+        return data
+
 
 class ProductListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for listing products"""
@@ -129,7 +141,7 @@ class PublicProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'id', 'name', 'brand', 'category', 'price', 'price_visible',
-            'availability', 'stock', 'barcode', 'image', 'gallery_images',
+            'availability', 'barcode', 'image', 'gallery_images',
             'description', 'specifications', 'warranty_months',
             'is_featured', 'is_new_arrival', 'created_at'
         ]

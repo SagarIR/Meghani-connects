@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from apps.users.permissions import CanManageRepairs
 from django.db.models import Count
 from django.utils import timezone
 from django.http import HttpResponse
@@ -12,6 +13,7 @@ from apps.sales.invoice import generate_repair_invoice_pdf
 class RepairViewSet(viewsets.ModelViewSet):
     queryset = Repair.objects.all()
     serializer_class = RepairSerializer
+    permission_classes = [CanManageRepairs]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['ticket_number', 'customer__name', 'customer__phone', 'item_type', 'brand']
     ordering_fields = ['received_date', 'expected_delivery', 'status']

@@ -1,9 +1,9 @@
 # Phase 6 – Reports & Visualization
 
-> **Current Status:** PARTIALLY COMPLETED  
-> **Progress:** 5 / 6 verified tasks  
+> **Current Status:** COMPLETED  
+> **Progress:** 6 / 6 verified tasks (100%)  
 > **Last Updated:** 2026-11-17  
-> **Next Action:** Connect ReportLab PDF invoice generation to `BusinessSettings` singleton to eliminate hardcoded dummy store metadata.  
+> **Next Action:** Phase 6 complete. Proceed to operational and security fixes in Phase 2.  
 > **Master Tracker Reference:** [PROJECT_EXECUTION_TRACKER.md](./PROJECT_EXECUTION_TRACKER.md)
 
 ---
@@ -17,7 +17,7 @@
 | Profit & Loss Statement Aggregation | **COMPLETED** | `ProfitReportView`. Revenue vs Cost of Goods Sold vs Operating Expenses -> Net Profit calculation. | None. |
 | Stock Valuation & Gross Margin Estimation | **COMPLETED** | `InventoryValuationReportView`. Total units, cost valuation, retail valuation, gross margin projection. | None. |
 | Multi-Format Report Export Service (CSV, Excel, PDF) | **COMPLETED** | `ReportExportView` (`openpyxl` for Excel, Python `csv`, ReportLab for PDF). Verified in `frontend/src/app/(dashboard)/reports/page.tsx`. | None. |
-| Dynamic A4 Thermal / ReportLab Invoice Customization | **PARTIALLY COMPLETED (DEFECT)** | `apps/sales/invoice.py` generates ReportLab PDF invoices. Store address, phone, GSTIN are hardcoded dummy text (`Your Business Address...`). | Resolve store metadata dynamically from `BusinessSettings.get_settings()`. |
+| Dynamic A4 Thermal / ReportLab Invoice Customization | **COMPLETED** | `apps/sales/invoice.py` and `apps/sales/views.py` resolve business metadata dynamically from `BusinessSettings.get_settings()`. Verified in `test_dynamic_pdf_invoice_generation`. | None. |
 
 ---
 
@@ -27,9 +27,10 @@
 - [x] Comprehensive Profit & Loss calculations integrating revenue, COGS, and operating expenses.
 - [x] Real-time inventory valuation assessing total cost vs anticipated retail realization.
 - [x] Multi-format export engine streaming CSV, Excel (`.xlsx`), and ReportLab PDF documents with dynamic HTTP disposition headers.
+- [x] Official invoice documents render verified legal and tax details from the active business configuration dynamically.
 
 ## Pending Tasks
-- [ ] Connect `generate_invoice_pdf` in `apps/sales/invoice.py` to `BusinessSettings.get_settings()` to dynamically populate boutique address, GSTIN, and contact details.
+*None.*
 
 ## Blocked Tasks
 *None.*
@@ -37,10 +38,10 @@
 ## Completion Criteria
 1. Report queries execute performantly against aggregated database records without full-table scan bottlenecks. *(PASSED)*
 2. ReportLab PDF and OpenPyXL Excel downloads generate valid, uncorrupted binary streams. *(PASSED)*
-3. Official invoice documents render verified legal and tax details from the active business configuration. *(PENDING DYNAMIC BINDING)*
+3. Official invoice documents render verified legal and tax details from the active business configuration. *(PASSED)*
 
 ## Next Action
-Inject dynamic `BusinessSettings` data into [backend/apps/sales/invoice.py](../backend/apps/sales/invoice.py).
+Phase 6 complete. Proceed to operational and security fixes in Phase 2.
 
 ---
 

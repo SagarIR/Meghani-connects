@@ -21,7 +21,9 @@ class UserManager(BaseUserManager):
 class User(AbstractBaseUser, PermissionsMixin):
     ROLE_CHOICES = [
         ('admin', 'Admin'),
+        ('manager', 'Manager'),
         ('staff', 'Staff'),
+        ('viewer', 'Viewer'),
     ]
     LANGUAGE_CHOICES = [
         ('en', 'English'),

@@ -76,3 +76,8 @@ class PublicCoreApiTests(TestCase):
         results = response.data['results'] if isinstance(response.data, dict) and 'results' in response.data else response.data
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]['year'], '1985')
+
+    def test_image_upload_requires_authentication(self):
+        """Unauthenticated requests to /api/upload/image/ must be blocked with 401"""
+        response = self.client.post('/api/upload/image/', {})
+        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)

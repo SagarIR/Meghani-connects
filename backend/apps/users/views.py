@@ -4,11 +4,17 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from .models import User
 from .serializers import UserSerializer, UserCreateSerializer, UserUpdateSerializer, ChangePasswordSerializer
+from .permissions import IsAdmin
 
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
+
+    def get_permissions(self):
+        if self.action in ['me', 'update_profile', 'change_password']:
+            return [IsAuthenticated()]
+        return [IsAdmin()]
 
     def get_serializer_class(self):
         if self.action == 'create':
@@ -32,14 +38,15 @@ class UserViewSet(viewsets.ModelViewSet):
             return Response(UserSerializer(request.user).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['post'])
+    @action(detail=False, methods=['post'], url_path='change-password')
     def change_password(self, request):
         """Change current user password"""
         serializer = ChangePasswordSerializer(data=request.data)
         if serializer.is_valid():
-            if not request.user.check_password(serializer.data['old_password']):
-                return Response({'error': 'Wrong old password'}, status=status.HTTP_400_BAD_REQUEST)
-            request.user.set_password(serializer.data['new_password'])
+            current_pw = serializer.validated_data.get('current_password') or serializer.validated_data.get('old_password')
+            if not request.user.check_password(current_pw):
+                return Response({'error': 'Wrong old password', 'detail': 'Current password is incorrect'}, status=status.HTTP_400_BAD_REQUEST)
+            request.user.set_password(serializer.validated_data['new_password'])
             request.user.save()
             return Response({'message': 'Password changed successfully'})
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

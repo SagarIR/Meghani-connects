@@ -1,9 +1,9 @@
 # Phase 5 – Module Breakdown
 
 > **Current Status:** PARTIALLY COMPLETED  
-> **Progress:** 8 / 11 verified tasks  
+> **Progress:** 9 / 11 verified tasks  
 > **Last Updated:** 2026-11-17  
-> **Next Action:** Resolve password change 404 URL mismatch in `apps/users/views.py` and wire split-payment UI in `sales/page.tsx`.  
+> **Next Action:** Resolve password change 404 URL mismatch in `apps/users/views.py`.  
 > **Master Tracker Reference:** [PROJECT_EXECUTION_TRACKER.md](./PROJECT_EXECUTION_TRACKER.md)
 
 ---
@@ -14,7 +14,7 @@
 |:---|:---:|:---|:---|
 | Executive Dashboard & Real-Time KPIs | **COMPLETED** | `app/(dashboard)/dashboard/page.tsx` fetches `/api/analytics/dashboard/stats/`, `/sales-chart/`, `/recent-activity/`, and `/ai/insights/`. | None. |
 | POS Barcode Billing & Atomic Checkout | **COMPLETED** | `BarcodeScanner.tsx`, `sales/page.tsx`, `SaleCreateSerializer` (`@transaction.atomic`), thermal receipt modal in `Invoice.tsx`. | None. |
-| POS Split / Mixed Payment UI Support | **PARTIALLY COMPLETED** | Backend model supports `payment_mode='mixed'`. Frontend UI provides single payment buttons (`cash`, `upi`, `card`). | Add split-tender input controls in `sales/page.tsx`. |
+| POS Split / Mixed Payment UI Support | **COMPLETED** | Multi-method split tender in `sales/page.tsx` (Cash, UPI, Card), real-time balance calculations, `payment_details` JSON storage, backend validation, and receipt rendering. | None. |
 | Product & Inventory Management with Bulk Import | **COMPLETED** | `products/page.tsx`, `ProductViewSet`, tabbed product modal, `BulkImport.tsx` with line-by-line validation. | None. |
 | Watch Repair Workshop & 5-Stage State Machine | **COMPLETED** | `repairs/page.tsx`, `RepairViewSet`, full lifecycle (`received` to `delivered`), automated WhatsApp hook on `ready`. | None. |
 | CRM Customer Directory & Loyalty Points Engine | **COMPLETED** | `customers/page.tsx`, `CustomerViewSet`, phone lookup, tier badges, points accrual and checkout redemption. | None. |
@@ -29,6 +29,7 @@
 ## Completed Tasks
 - [x] Executive dashboard aggregating real-time sales revenue, profits, repair queue, and inventory alerts.
 - [x] Point of Sale checkout system supporting webcam and hardware barcode scanners, dynamic cart calculations, sequential invoice numbering (`INV-YYYYMMDD-XXXX`), and `@transaction.atomic` inventory decrementing.
+- [x] Multi-method split tender payment processing in POS supporting concurrent Cash, UPI, and Card splits with real-time balance validation and receipt itemization.
 - [x] Full catalog management with tabbed detail modals and working Excel/CSV bulk import.
 - [x] Comprehensive watch repair workshop module with sequential tickets (`REP-YYYYMMDD-XXXX`), status workflow, and automated WhatsApp alert triggers.
 - [x] CRM customer database with automated loyalty points accrual ($1\text{ pt} / \text{₹}100$) and POS checkout discount redemption.
@@ -38,7 +39,6 @@
 
 ## Pending Tasks
 - [ ] Add `url_path='change-password'` to `@action` decorator in `backend/apps/users/views.py`.
-- [ ] Add split tender inputs in `frontend/src/app/(dashboard)/sales/page.tsx` for multi-payment transactions.
 - [ ] Implement `CustomerImportView` in `backend/apps/crm/views.py` or remove the customer option from `BulkImport.tsx`.
 
 ## Blocked Tasks
