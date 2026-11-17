@@ -36,6 +36,7 @@ All documentation is maintained under the [`docs/`](./docs/00-overview.md) direc
 ### Core Tracking & Architecture
 - **[PROJECT_EXECUTION_TRACKER.md](./docs/PROJECT_EXECUTION_TRACKER.md)** — **The authoritative single source of truth** for all 8 development phases, 60 mapped tasks, progress metrics (78.33% verified complete), blocker tracking, and upcoming milestones.
 - **[ARCHITECTURE_REPORT.md](./docs/architecture/ARCHITECTURE_REPORT.md)** — Comprehensive architectural breakdown of the Public Boutique, Saff Staff Portal, and Django ERP engine.
+- **[DEPLOY.md](./docs/deployment/DEPLOY.md)** — Step-by-step production deployment manual, environment configuration, systemd services, and offline-first synchronization setup.
 - **[00-overview.md](./docs/00-overview.md)** — High-level project index, core features, and module matrix.
 
 ### Phase Specifications (Phases 1 to 8)
@@ -48,26 +49,33 @@ All documentation is maintained under the [`docs/`](./docs/00-overview.md) direc
 - **[Phase 7: AI Automation & Notifications](./docs/07-phase-7-ai.md)** — WhatsApp/SMS gateways, Celery Beat tasks, Scikit-learn & Prophet predictive analytics. *(Status: PARTIAL 50.0%)*
 - **[Phase 8: Deployment & Production Ops](./docs/08-phase-8-deployment.md)** — Docker Compose production configuration, Nginx reverse proxy, SSL certbot, automated daily backups. *(Status: PARTIAL 16.7%)*
 
-### Technical Audits & Verification
-- **[CODE_VERIFICATION_AUDIT.md](./docs/audits/CODE_VERIFICATION_AUDIT.md)** — 48-item static and dynamic verification report across backend and frontend codebases.
-- **[PROJECT_RECONCILIATION_REPORT.md](./docs/audits/PROJECT_RECONCILIATION_REPORT.md)** — Roadmap reconciliation mapping historical Orders 1–7 to the 8-Phase architecture.
-- **[MEGHANI_ANIMATION_AUDIT.md](./docs/audits/MEGHANI_ANIMATION_AUDIT.md)** — Motion design verification, frame-budget audits, and luxury micro-interaction catalogue.
-- **[MEGHANI_CONNECT_360_SEO_AUDIT_REPORT.md](./docs/audits/MEGHANI_CONNECT_360_SEO_AUDIT_REPORT.md)** — Technical SEO audit, structured metadata review, and Core Web Vitals audit.
-
-### Deployment & Runbooks
-- **[DEPLOY.md](./docs/deployment/DEPLOY.md)** — Step-by-step production deployment manual, environment configuration, systemd services, and offline-first synchronization setup.
-
-### Historical Archives
-- **[Legacy MERN Documentation](./docs/archive/legacy/mern-docs/)** — Preserved specifications for the superseded MERN prototype.
-- **[Historical Implementation Reports](./docs/archive/historical/)** — Implementation logs and milestone records.
-- **[Superseded Documents](./docs/archive/superseded/)** — Historical index and navigation records.
-
 ---
 
 ## Repository Directory Structure
 
-```
+```text
 Meghani-Connects/
+├── README.md                       # Monorepo Entry Point (this file)
+├── docker-compose.yml              # Local / staging container orchestration
+│
+├── docs/                           # Master Documentation Repository
+│   ├── 00-overview.md              # Project overview
+│   ├── PROJECT_EXECUTION_TRACKER.md# Master Single Source of Truth
+│   ├── 01-phase-1-setup.md         # Phase 1: Setup & Environment
+│   ├── 02-phase-2-backend.md       # Phase 2: Backend Architecture
+│   ├── 03-phase-3-frontend.md      # Phase 3: Frontend Architecture
+│   ├── 04-phase-4-database.md      # Phase 4: Database Schema
+│   ├── 05-phase-5-modules.md       # Phase 5: Modules (POS, CRM, Repairs)
+│   ├── 06-phase-6-reports.md       # Phase 6: Reports & Financials
+│   ├── 07-phase-7-ai.md            # Phase 7: AI & Notifications
+│   ├── 08-phase-8-deployment.md    # Phase 8: Deployment & Ops
+│   │
+│   ├── architecture/
+│   │   └── ARCHITECTURE_REPORT.md  # Tri-system architectural blueprint
+│   │
+│   └── deployment/
+│       └── DEPLOY.md               # Production deployment runbook
+│
 ├── backend/                        # Django REST API & Celery Service
 │   ├── apps/
 │   │   ├── analytics/              # AI forecasting, reports, Celery tasks
@@ -91,23 +99,6 @@ Meghani-Connects/
 │   │   └── types/                  # TypeScript interface declarations
 │   ├── package.json
 │   └── tailwind.config.ts
-├── docs/                           # Master Documentation Repository
-│   ├── 00-overview.md              # Project overview
-│   ├── PROJECT_EXECUTION_TRACKER.md# Master Single Source of Truth
-│   ├── 01-phase-1-setup.md         # Phase 1: Setup & Environment
-│   ├── 02-phase-2-backend.md       # Phase 2: Backend Architecture
-│   ├── 03-phase-3-frontend.md      # Phase 3: Frontend Architecture
-│   ├── 04-phase-4-database.md      # Phase 4: Database Schema
-│   ├── 05-phase-5-modules.md       # Phase 5: Modules (POS, CRM, Repairs)
-│   ├── 06-phase-6-reports.md       # Phase 6: Reports & Financials
-│   ├── 07-phase-7-ai.md            # Phase 7: AI & Notifications
-│   ├── 08-phase-8-deployment.md    # Phase 8: Deployment & Ops
-│   ├── architecture/               # System architecture documentation
-│   ├── audits/                     # Code, SEO, animation & roadmap audits
-│   ├── deployment/                 # Deployment guides & runbooks
-│   └── archive/                    # Archived legacy, historical, and superseded docs
-├── docker-compose.yml              # Local / staging container orchestration
-└── README.md                       # Monorepo Entry Point (this file)
 ```
 
 ---

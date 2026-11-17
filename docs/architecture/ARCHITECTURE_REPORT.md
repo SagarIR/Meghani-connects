@@ -453,7 +453,7 @@ sequenceDiagram
 
 | Subsystem / Area | Duplicate / Conflicting Implementation | Code Locations | Impact & Resolution |
 | :--- | :--- | :--- | :--- |
-| **Documentation Stacks** | Planning docs describe an Express + MongoDB MERN stack, contradicting the actual Django + PostgreSQL implementation. | `mern-docs/` vs `docs/` & `backend/` | Causes onboarding confusion. Archive `mern-docs/` under `docs/archive/legacy/mern-docs/`. |
+| **Documentation Stacks** | Early planning docs described an Express + MongoDB MERN prototype, which was superseded by the Django + PostgreSQL engine. | `docs/` & `backend/` | Obsolete MERN documentation removed. Active codebase standardizes solely on Django + PostgreSQL. |
 | **Backend Utilities** | Duplicate pagination, permissions, and error handling utilities in an unreferenced `common/` package. | `backend/common/` vs `apps/core/` | Dead code. Remove `backend/common/` as the project uses `apps.core`. |
 | **Frontend Layout Header**| Standalone `Header.tsx` exists, but the dashboard layout re-implements header markup inline. | `Header.tsx` vs `src/app/(dashboard)/layout.tsx` | Dead code. Standardize on `Header.tsx` or delete it. |
 | **Invoice Components** | `InvoiceTemplate.tsx` was created alongside `Invoice.tsx` but is never imported. | `InvoiceTemplate.tsx` | Dead code. Remove unused template. |
@@ -495,7 +495,7 @@ Total Items Audited: 48
 
 ## 14. Integration Opportunities
 
-1. **Automated Customer Lead Conversion:** Add a "Convert to Customer" button in [website-cms/page.tsx](../../frontend/src/app/(dashboard)/website-cms/page.tsx) that copies an online enquiry directly into a new `Customer` record in `apps/crm/models.py`.
+1. **Automated Customer Lead Conversion:** Add a "Convert to Customer" button in [website-cms/page.tsx](../../frontend/src/app/%28dashboard%29/website-cms/page.tsx) that copies an online enquiry directly into a new `Customer` record in `apps/crm/models.py`.
 2. **Inbound WhatsApp Webhook:** Configure a Twilio webhook endpoint (`/api/notifications/webhook/`) to capture customer replies and display conversation threads inside the CRM dashboard.
 3. **Automated Supplier Purchase Orders:** Use low-stock triggers to auto-generate PDF purchase orders formatted for authorized brand distributors (Titan, Casio, etc.).
 4. **Offline POS Sync:** Implement browser IndexedDB caching with Service Workers in the Saff Portal so POS billing continues during internet outages and synchronizes once reconnected.
@@ -546,7 +546,7 @@ flowchart TD
 1. **Subdomain Routing:** Host the public boutique at `meghaniwatch.com` and the staff portal at `portal.meghaniwatch.com` (or `/staff`), preventing unauthorized visitors from encountering administrative login screens.
 2. **Strict RBAC Enforcement:** Attach `CanManageUsers`, `CanManageProducts`, and `CanManageSales` to their respective DRF ViewSets.
 3. **Dynamic Invoice Header Resolution:** Update `generate_invoice_pdf` to pull store address, phone numbers, and GSTIN directly from the `BusinessSettings` singleton.
-4. **Clean Technical Debt:** Archive the unused `mern-docs/` into `docs/archive/legacy/mern-docs/` and delete orphaned components (`backend/common/`, `InvoiceTemplate.tsx`, `Header.tsx`).
+4. **Clean Technical Debt:** Removed obsolete `mern-docs/` prototype documentation, and retire orphaned components (`backend/common/`, `InvoiceTemplate.tsx`, `Header.tsx`).
 
 ---
 

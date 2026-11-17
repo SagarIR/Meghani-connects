@@ -9,8 +9,6 @@
 3. **Meghani Connect 360** – Central Django REST Framework ERP/POS Engine
 **Last Updated:** November 17, 2026  
 **Architecture Reference:** [ARCHITECTURE_REPORT.md](./architecture/ARCHITECTURE_REPORT.md)  
-**Reconciliation Reference:** [PROJECT_RECONCILIATION_REPORT.md](./audits/PROJECT_RECONCILIATION_REPORT.md)  
-**Code Audit Reference:** [CODE_VERIFICATION_AUDIT.md](./audits/CODE_VERIFICATION_AUDIT.md)  
 **Deployment Guide:** [DEPLOY.md](./deployment/DEPLOY.md)  
 
 ---

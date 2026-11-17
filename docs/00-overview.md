@@ -82,19 +82,8 @@ All documentation is consolidated under the `docs/` tree.
 ### System Architecture
 - [ARCHITECTURE_REPORT.md](./architecture/ARCHITECTURE_REPORT.md) – Exhaustive technical architecture for Public Boutique, Saff Staff Portal, and Django Backend
 
-### Technical Audits & Roadmaps
-- [CODE_VERIFICATION_AUDIT.md](./audits/CODE_VERIFICATION_AUDIT.md) – 48-item static and dynamic verification report across backend and frontend codebases
-- [PROJECT_RECONCILIATION_REPORT.md](./audits/PROJECT_RECONCILIATION_REPORT.md) – Roadmap reconciliation mapping Order 1–7 sequence to Phase 1–8 lifecycle
-- [MEGHANI_ANIMATION_AUDIT.md](./audits/MEGHANI_ANIMATION_AUDIT.md) – 32 luxury micro-interactions, Framer Motion choreography, and performance audit
-- [MEGHANI_CONNECT_360_SEO_AUDIT_REPORT.md](./audits/MEGHANI_CONNECT_360_SEO_AUDIT_REPORT.md) – Luxury e-commerce SEO, OpenGraph, JSON-LD structured data, and Core Web Vitals audit
-
 ### Deployment
 - [DEPLOY.md](./deployment/DEPLOY.md) – Production deployment runbook, Docker configuration, and offline-first synchronization setup
-
-### Archives
-- [Historical Reports](./archive/historical/) – Preserved implementation reports (`MEGHANI_LUXURY_ANIMATION_IMPLEMENTATION_REPORT.md`)
-- [Superseded Documents](./archive/superseded/) – Superseded indexes (`PROJECT_DOCUMENTATION_INDEX.md`)
-- [Legacy MERN Architecture](./archive/legacy/mern-docs/) – Historical MERN (Mongo/Express/React/Node) specification superseded by the Django/PostgreSQL architecture
 
 ---
 
