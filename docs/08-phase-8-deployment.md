@@ -1,12 +1,59 @@
 # Phase 8 – Deployment & Hosting
 
-## Objective
+> **Current Status:** NEEDS VERIFICATION  
+> **Progress:** 5 / 6 verified tasks  
+> **Last Updated:** 2026-11-17  
+> **Next Action:** Provision live production infrastructure (Render/AWS), configure DNS records, and verify live SSL certificates.  
+> **Master Tracker Reference:** [PROJECT_EXECUTION_TRACKER.md](./PROJECT_EXECUTION_TRACKER.md)
+
+---
+
+## Phase Progress Summary
+
+| Task | Status | Evidence | Remaining Work |
+|:---|:---:|:---|:---|
+| Docker Containerization & Multi-Container Compose | **COMPLETED** | `docker-compose.yml`, `docker-compose.dev.yml`, `backend/Dockerfile`, `frontend/Dockerfile`. | None. |
+| Production Environment Variable Specification | **COMPLETED** | `backend/.env.example` and `frontend/.env.example` catalog all required keys. | None. |
+| Static Asset & Cloudinary CDN Media Storage | **COMPLETED** | WhiteNoise configured for Django staticfiles; `apps/core/cloudinary_service.py` handles image uploads with local media fallback. | None. |
+| SEO Microdata, Dynamic Sitemap & Robots Directives | **COMPLETED** | Verified JSON-LD schemas (`JewelryStore`, `Product`, `BreadcrumbList`), dynamic `sitemap.ts`, and `robots.ts`. | None. |
+| Automated Database Backup Archiving & Vault | **COMPLETED** | `apps/core/backup_service.py` creates gzip-compressed JSON snapshots with one-click restore and deletion. | None. |
+| Production Cloud Hosting & Reverse Proxy | **NEEDS VERIFICATION** | Render, Vercel, and AWS EC2 deployment topologies documented in `DEPLOY.md`. Actual live hosting requires live cloud infrastructure provisioning. | Provision live server, execute Docker Compose, configure domain DNS and SSL. |
+
+---
+
+## Completed Tasks
+- [x] Multi-container Docker configuration supporting frontend, backend, PostgreSQL, Redis, and Celery workers.
+- [x] Comprehensive `.env.example` templates specifying all operational and third-party credential keys.
+- [x] Hybrid media storage pipeline supporting Cloudinary signed CDN delivery with graceful local filesystem fallbacks.
+- [x] Search engine discovery suite with canonical sitemap generators, robots exclusion policies for ERP routes, and luxury structured data.
+- [x] Automated database backup manager generating compressed gzip snapshots with one-click restore and download.
+
+## Pending Tasks
+- [ ] Deploy containerized application to live cloud hosting platform (Render, AWS EC2, or Vercel).
+- [ ] Configure custom domain DNS records (`meghaniwatch.com` and `api.meghaniwatch.com`) with Cloudflare Full SSL.
+
+## Blocked Tasks
+*None. Awaiting client provisioning of production cloud credentials.*
+
+## Completion Criteria
+1. Backend and frontend containers boot and communicate seamlessly via internal Docker network. *(PASSED)*
+2. Production domain responds with valid SSL certificate and 200 OK on health endpoints. *(NEEDS LIVE CLOUD)*
+3. Scheduled database backups archive safely to off-site cloud storage. *(PASSED LOCALLY)*
+
+## Next Action
+Provision staging or production cloud instance using Docker Compose runbook in [DEPLOY.md](./deployment/DEPLOY.md).
+
+---
+
+## Original Technical Specifications & Deployment Architecture
+
+### Objective
 
 Deploy the application to production with proper configuration, security, and backup strategies.
 
 ---
 
-## Deployment Architecture
+### Deployment Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -38,11 +85,11 @@ Deploy the application to production with proper configuration, security, and ba
 
 ---
 
-## 1. Backend Deployment (Django on Render)
+### 1. Backend Deployment (Django on Render)
 
-### Option A: Render (Recommended for simplicity)
+#### Option A: Render (Recommended for simplicity)
 
-#### render.yaml
+##### render.yaml
 
 ```yaml
 services:
@@ -73,9 +120,9 @@ databases:
     region: singapore
 ```
 
-### Option B: AWS EC2
+#### Option B: AWS EC2
 
-#### Setup Commands
+##### Setup Commands
 
 ```bash
 # Update system
@@ -105,7 +152,7 @@ python manage.py collectstatic --noinput
 python manage.py createsuperuser
 ```
 
-#### Gunicorn Service
+##### Gunicorn Service
 
 ```ini
 # /etc/systemd/system/meghani.service
@@ -129,7 +176,7 @@ ExecStart=/home/ubuntu/meghani-connect-api/venv/bin/gunicorn \
 WantedBy=multi-user.target
 ```
 
-#### Nginx Configuration
+##### Nginx Configuration
 
 ```nginx
 # /etc/nginx/sites-available/meghani
@@ -157,9 +204,9 @@ server {
 
 ---
 
-## 2. Frontend Deployment (Next.js on Vercel)
+### 2. Frontend Deployment (Next.js on Vercel)
 
-### vercel.json
+#### vercel.json
 
 ```json
 {
@@ -173,7 +220,7 @@ server {
 }
 ```
 
-### Deploy Commands
+#### Deploy Commands
 
 ```bash
 # Install Vercel CLI
@@ -186,9 +233,9 @@ vercel --prod
 
 ---
 
-## 3. Database (PostgreSQL on AWS RDS)
+### 3. Database (PostgreSQL on AWS RDS)
 
-### RDS Configuration
+#### RDS Configuration
 
 | Setting | Value |
 |---------|-------|
@@ -199,7 +246,7 @@ vercel --prod
 | Multi-AZ | No (for cost, Yes for production) |
 | Backup | 7 days retention |
 
-### Security Group
+#### Security Group
 
 ```
 Inbound Rules:
@@ -207,7 +254,7 @@ Inbound Rules:
 - Source: Your EC2 Security Group / Render IPs
 ```
 
-### Connection String
+#### Connection String
 
 ```
 DATABASE_URL=postgres://meghani_admin:password@meghani-db.xxxxxx.ap-south-1.rds.amazonaws.com:5432/meghani_connect_360
@@ -215,9 +262,9 @@ DATABASE_URL=postgres://meghani_admin:password@meghani-db.xxxxxx.ap-south-1.rds.
 
 ---
 
-## 4. Redis (For Celery)
+### 4. Redis (For Celery)
 
-### Option A: Render Redis
+#### Option A: Render Redis
 
 ```yaml
 # Add to render.yaml
@@ -228,7 +275,7 @@ services:
     region: singapore
 ```
 
-### Option B: AWS ElastiCache
+#### Option B: AWS ElastiCache
 
 | Setting | Value |
 |---------|-------|
@@ -238,9 +285,9 @@ services:
 
 ---
 
-## 5. Media Storage (AWS S3)
+### 5. Media Storage (AWS S3)
 
-### S3 Bucket Configuration
+#### S3 Bucket Configuration
 
 ```bash
 # Create bucket
@@ -261,7 +308,7 @@ aws s3 mb s3://meghani-connect-media --region ap-south-1
 }
 ```
 
-### Django Settings
+#### Django Settings
 
 ```python
 # settings.py
@@ -280,9 +327,9 @@ MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
 
 ---
 
-## 6. Domain & SSL
+### 6. Domain & SSL
 
-### DNS Configuration (Cloudflare)
+#### DNS Configuration (Cloudflare)
 
 | Type | Name | Content |
 |------|------|---------|
@@ -290,7 +337,7 @@ MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
 | CNAME | www | meghani-connect.com |
 | CNAME | api | render/ec2 domain |
 
-### SSL (Cloudflare)
+#### SSL (Cloudflare)
 
 - Enable Full (strict) SSL
 - Enable Always Use HTTPS
@@ -298,9 +345,9 @@ MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
 
 ---
 
-## 7. Backup Strategy
+### 7. Backup Strategy
 
-### Automated Database Backup
+#### Automated Database Backup
 
 ```python
 # scripts/backup_db.py
@@ -343,14 +390,14 @@ if __name__ == '__main__':
     backup_database()
 ```
 
-### Cron Job (EC2)
+#### Cron Job (EC2)
 
 ```bash
 # Nightly backup at 2 AM
 0 2 * * * /home/ubuntu/meghani-connect-api/venv/bin/python /home/ubuntu/meghani-connect-api/scripts/backup_db.py >> /var/log/backup.log 2>&1
 ```
 
-### Celery Task (Alternative)
+#### Celery Task (Alternative)
 
 ```python
 @shared_task
@@ -361,9 +408,9 @@ def nightly_backup():
 
 ---
 
-## 8. Environment Variables Checklist
+### 8. Environment Variables Checklist
 
-### Backend (.env)
+#### Backend (.env)
 
 ```env
 # Django
@@ -395,7 +442,7 @@ RAZORPAY_KEY_SECRET=your-secret
 CORS_ALLOWED_ORIGINS=https://meghani-connect.com
 ```
 
-### Frontend (.env.production)
+#### Frontend (.env.production)
 
 ```env
 NEXT_PUBLIC_API_URL=https://api.meghani-connect.com
@@ -404,9 +451,9 @@ NEXT_PUBLIC_APP_NAME=Meghani Connect 360
 
 ---
 
-## 9. Monitoring & Logging
+### 9. Monitoring & Logging
 
-### Sentry (Error Tracking)
+#### Sentry (Error Tracking)
 
 ```python
 # settings.py
@@ -421,7 +468,7 @@ sentry_sdk.init(
 )
 ```
 
-### Health Check Endpoint
+#### Health Check Endpoint
 
 ```python
 # apps/core/views.py
@@ -440,9 +487,9 @@ class HealthCheckView(APIView):
 
 ---
 
-## 10. Deployment Checklist
+### 10. Deployment Checklist
 
-### Pre-Deployment
+#### Pre-Deployment
 
 - [ ] All tests passing
 - [ ] Environment variables set
@@ -452,7 +499,7 @@ class HealthCheckView(APIView):
 - [ ] DEBUG = False
 - [ ] ALLOWED_HOSTS configured
 
-### Post-Deployment
+#### Post-Deployment
 
 - [ ] SSL certificate active
 - [ ] Database connected
@@ -467,7 +514,7 @@ class HealthCheckView(APIView):
 
 ---
 
-## Cost Estimate (Monthly)
+### Cost Estimate (Monthly)
 
 | Service | Provider | Plan | Cost |
 |---------|----------|------|------|
@@ -481,7 +528,7 @@ class HealthCheckView(APIView):
 
 ---
 
-## Production Upgrade Path
+### Production Upgrade Path
 
 When traffic grows:
 

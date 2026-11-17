@@ -1,12 +1,60 @@
 # Phase 2 – Backend Folder Structure
 
-## Objective
+> **Current Status:** PARTIALLY COMPLETED  
+> **Progress:** 4 / 6 verified tasks  
+> **Last Updated:** 2026-11-17  
+> **Next Action:** Enforce Role-Based Access Control by attaching `CanManageUsers` to `UserViewSet` and permissions to other ViewSets.  
+> **Master Tracker Reference:** [PROJECT_EXECUTION_TRACKER.md](./PROJECT_EXECUTION_TRACKER.md)
+
+---
+
+## Phase Progress Summary
+
+| Task | Status | Evidence | Remaining Work |
+|:---|:---:|:---|:---|
+| Modular 9-App Django Structure | **COMPLETED** | Apps `users`, `products`, `sales`, `repairs`, `crm`, `expenses`, `analytics`, `notifications`, `core` active in `backend/apps/`. | None. |
+| URL Configuration & Routing Engine | **COMPLETED** | `backend/core/urls.py` delegates cleanly to each app's router. | None. |
+| Python Dependencies Management | **COMPLETED** | `backend/requirements.txt` specifies Django, DRF, SimpleJWT, Celery, Redis, Prophet, ReportLab. | None. |
+| Django Core Settings Configuration | **COMPLETED** | `backend/core/settings.py` configured with `AUTH_USER_MODEL = 'users.User'`, REST_FRAMEWORK defaults, media and static settings. | None. |
+| Shared Utilities (`backend/common/`) | **PARTIALLY COMPLETED** | `backend/common/` exists but has 0 imports across codebase; system migrated to `apps.core`. | Formalize deprecation or safely remove orphaned module. |
+| Role-Based Access Control (RBAC) Enforcement | **PARTIALLY COMPLETED (SECURITY GAP)** | Custom permission classes exist in `apps/users/permissions.py`, but were never attached to ViewSets. `User.ROLE_CHOICES` has 2 roles vs 4 in permissions. | Synchronize `ROLE_CHOICES` and attach permissions to ViewSets in `views.py`. |
+
+---
+
+## Completed Tasks
+- [x] Implemented modular 9-domain app architecture under `backend/apps/`.
+- [x] Configured master REST URL routing with DRF `DefaultRouter` in all apps.
+- [x] Established strict dependency specification in `backend/requirements.txt`.
+- [x] Configured Django core settings including custom User model authentication, SimpleJWT, CORS, WhiteNoise, and Celery broker.
+
+## Pending Tasks
+- [ ] Enforce `CanManageUsers` on `UserViewSet` in `backend/apps/users/views.py`.
+- [ ] Enforce `CanManageProducts` on `ProductViewSet` and `CanManageSales` on `SaleViewSet`.
+- [ ] Synchronize `ROLE_CHOICES` in `apps/users/models.py` (`admin`, `manager`, `staff`, `viewer`).
+- [ ] Clean up or deprecate orphaned `backend/common/` folder.
+
+## Blocked Tasks
+*None.*
+
+## Completion Criteria
+1. All 9 domain apps register cleanly without circular import errors. *(PASSED)*
+2. System check identifies 0 issues (`python manage.py check`). *(PASSED)*
+3. ViewSets reject unprivileged staff attempts to create administrator accounts or delete sales records. *(PENDING RBAC ENFORCEMENT)*
+
+## Next Action
+Attach `permission_classes = [CanManageUsers]` to `UserViewSet` in [backend/apps/users/views.py](../backend/apps/users/views.py).
+
+---
+
+## Original Technical Specifications & Backend Architecture
+
+### Objective
 
 Organize Django backend with modular app structure, utilities, and configurations.
 
 ---
 
-## Directory Structure
+### Directory Structure
 
 ```
 backend/
@@ -135,7 +183,7 @@ backend/
 
 ---
 
-## App Responsibilities
+### App Responsibilities
 
 | App | Responsibility |
 |-----|----------------|
@@ -150,7 +198,7 @@ backend/
 
 ---
 
-## requirements.txt
+### requirements.txt
 
 ```txt
 Django>=4.2,<5.0
@@ -176,7 +224,7 @@ gunicorn>=21.0
 
 ---
 
-## settings.py Configuration
+### settings.py Configuration
 
 ```python
 import os
@@ -214,6 +262,7 @@ INSTALLED_APPS = [
     'apps.expenses',
     'apps.analytics',
     'apps.notifications',
+    'apps.core',
 ]
 
 AUTH_USER_MODEL = 'users.User'

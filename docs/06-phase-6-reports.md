@@ -1,14 +1,60 @@
 # Phase 6 – Reports & Visualization
 
-## Objective
+> **Current Status:** PARTIALLY COMPLETED  
+> **Progress:** 5 / 6 verified tasks  
+> **Last Updated:** 2026-11-17  
+> **Next Action:** Connect ReportLab PDF invoice generation to `BusinessSettings` singleton to eliminate hardcoded dummy store metadata.  
+> **Master Tracker Reference:** [PROJECT_EXECUTION_TRACKER.md](./PROJECT_EXECUTION_TRACKER.md)
+
+---
+
+## Phase Progress Summary
+
+| Task | Status | Evidence | Remaining Work |
+|:---|:---:|:---|:---|
+| Sales Summary & Trend Analytics Engine | **COMPLETED** | `apps/analytics/views.py` (`SalesSummaryReportView`). Date range filters, payment breakdown, daily aggregations. | None. |
+| Product Performance & Inventory Turnover Reports | **COMPLETED** | `ProductPerformanceReportView`. Identifies top-selling timepieces and slow-moving inventory. | None. |
+| Profit & Loss Statement Aggregation | **COMPLETED** | `ProfitReportView`. Revenue vs Cost of Goods Sold vs Operating Expenses -> Net Profit calculation. | None. |
+| Stock Valuation & Gross Margin Estimation | **COMPLETED** | `InventoryValuationReportView`. Total units, cost valuation, retail valuation, gross margin projection. | None. |
+| Multi-Format Report Export Service (CSV, Excel, PDF) | **COMPLETED** | `ReportExportView` (`openpyxl` for Excel, Python `csv`, ReportLab for PDF). Verified in `frontend/src/app/(dashboard)/reports/page.tsx`. | None. |
+| Dynamic A4 Thermal / ReportLab Invoice Customization | **PARTIALLY COMPLETED (DEFECT)** | `apps/sales/invoice.py` generates ReportLab PDF invoices. Store address, phone, GSTIN are hardcoded dummy text (`Your Business Address...`). | Resolve store metadata dynamically from `BusinessSettings.get_settings()`. |
+
+---
+
+## Completed Tasks
+- [x] Sales performance analytics engine aggregating transactions by date, payment tender, and staff associate.
+- [x] Product turnover reports identifying high-velocity watches and stagnant stock.
+- [x] Comprehensive Profit & Loss calculations integrating revenue, COGS, and operating expenses.
+- [x] Real-time inventory valuation assessing total cost vs anticipated retail realization.
+- [x] Multi-format export engine streaming CSV, Excel (`.xlsx`), and ReportLab PDF documents with dynamic HTTP disposition headers.
+
+## Pending Tasks
+- [ ] Connect `generate_invoice_pdf` in `apps/sales/invoice.py` to `BusinessSettings.get_settings()` to dynamically populate boutique address, GSTIN, and contact details.
+
+## Blocked Tasks
+*None.*
+
+## Completion Criteria
+1. Report queries execute performantly against aggregated database records without full-table scan bottlenecks. *(PASSED)*
+2. ReportLab PDF and OpenPyXL Excel downloads generate valid, uncorrupted binary streams. *(PASSED)*
+3. Official invoice documents render verified legal and tax details from the active business configuration. *(PENDING DYNAMIC BINDING)*
+
+## Next Action
+Inject dynamic `BusinessSettings` data into [backend/apps/sales/invoice.py](../backend/apps/sales/invoice.py).
+
+---
+
+## Original Technical Specifications & Reports Architecture
+
+### Objective
 
 Define report types, data structures, and export formats for business analytics.
 
 ---
 
-## Report Types
+### Report Types
 
-### 1. Sales Summary Report
+#### 1. Sales Summary Report
 
 **Purpose**: Overview of sales performance for a given period.
 
@@ -59,7 +105,7 @@ GET /api/reports/sales-summary/
 
 ---
 
-### 2. Product Performance Report
+#### 2. Product Performance Report
 
 **Purpose**: Identify best and worst selling products.
 
@@ -103,7 +149,7 @@ GET /api/reports/product-performance/
 
 ---
 
-### 3. Repair Income Report
+#### 3. Repair Income Report
 
 **Purpose**: Track repair service revenue.
 
@@ -131,7 +177,7 @@ GET /api/reports/repair-income/
 
 ---
 
-### 4. Expense Report
+#### 4. Expense Report
 
 **Purpose**: Track business expenses and calculate net profit.
 
@@ -174,7 +220,7 @@ GET /api/reports/expenses/
 
 ---
 
-### 5. Customer Loyalty Report
+#### 5. Customer Loyalty Report
 
 **Purpose**: Analyze customer engagement and loyalty.
 
@@ -201,7 +247,7 @@ GET /api/reports/customer-loyalty/
 
 ---
 
-### 6. Inventory Report
+#### 6. Inventory Report
 
 **Purpose**: Current stock status and valuation.
 
@@ -224,7 +270,7 @@ GET /api/reports/inventory/
 
 ---
 
-### 7. Warranty Expiry Report
+#### 7. Warranty Expiry Report
 
 **Purpose**: Track upcoming warranty expirations.
 
@@ -241,9 +287,9 @@ GET /api/reports/inventory/
 
 ---
 
-## Charts & Visualization
+### Charts & Visualization
 
-### Dashboard Charts
+#### Dashboard Charts
 
 | Chart Type | Data | Library |
 |------------|------|---------|
@@ -252,7 +298,7 @@ GET /api/reports/inventory/
 | Pie Chart | Payment mode distribution | Recharts |
 | Area Chart | Profit margins | Recharts |
 
-### Chart Components
+#### Chart Components
 
 ```tsx
 // SalesLineChart.tsx
@@ -275,9 +321,9 @@ export function SalesLineChart({ data }) {
 
 ---
 
-## Export Formats
+### Export Formats
 
-### PDF Export
+#### PDF Export
 
 Using ReportLab for Django:
 
@@ -311,7 +357,7 @@ def generate_sales_pdf(report_data):
     return buffer.getvalue()
 ```
 
-### Excel Export
+#### Excel Export
 
 Using openpyxl:
 
@@ -343,7 +389,7 @@ def generate_sales_excel(report_data):
     return buffer.getvalue()
 ```
 
-### CSV Export
+#### CSV Export
 
 ```python
 import csv
@@ -362,7 +408,7 @@ def generate_sales_csv(report_data):
 
 ---
 
-## Report API Response Headers
+### Report API Response Headers
 
 ```python
 # PDF

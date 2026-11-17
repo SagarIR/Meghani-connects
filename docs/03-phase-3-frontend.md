@@ -1,12 +1,61 @@
 # Phase 3 – Frontend Folder Structure
 
-## Objective
+> **Current Status:** PARTIALLY COMPLETED  
+> **Progress:** 6 / 7 verified tasks  
+> **Last Updated:** 2026-11-17  
+> **Next Action:** Clean up orphaned frontend components and unreferenced UI dead code.  
+> **Master Tracker Reference:** [PROJECT_EXECUTION_TRACKER.md](./PROJECT_EXECUTION_TRACKER.md)
+
+---
+
+## Phase Progress Summary
+
+| Task | Status | Evidence | Remaining Work |
+|:---|:---:|:---|:---|
+| App Router Route Hierarchy | **COMPLETED** | `(auth)` group, `(dashboard)` group, and `(public)` luxury storefront implemented. | None. |
+| In-Store ERP / POS Dashboard Pages | **COMPLETED** | Pages `/dashboard`, `/products`, `/sales`, `/repairs`, `/customers`, `/expenses`, `/reports`, `/settings`, `/website-cms`. | None. |
+| Reusable UI Component Library | **COMPLETED** | `Button.tsx`, `Modal.tsx`, `Badge.tsx`, `Input.tsx`, `SortableHeader.tsx`, `Pagination.tsx`. | None. |
+| Axios Client & JWT Interceptor | **COMPLETED** | `frontend/src/services/api.ts` handles Bearer token injection and automatic 401 refresh rotation. | None. |
+| Global Search & Keyboard Shortcuts | **COMPLETED** | `GlobalSearch.tsx` (hotkey `/`) and `KeyboardShortcutsModal.tsx` (hotkey `?`) active. | Connect backend search filter to `SaleViewSet`. |
+| Public Digital Boutique Route Cluster | **COMPLETED** | 11 public luxury pages (`/`, `/shop`, `/brands`, `/categories`, `/offers`, `/gallery`, `/about`, `/contact`, `/privacy-policy`, `/terms`). | None. |
+| Component Hygiene & Dead Code Cleanup | **PARTIALLY COMPLETED** | 6 orphaned components remain (`Header.tsx`, `InvoiceTemplate.tsx`, `BulkActionsBar.tsx`, `useBulkSelection.ts`, `FormField.tsx`, `LoadingSpinner.tsx`). | Delete or archive unreferenced components. |
+
+---
+
+## Completed Tasks
+- [x] Established Next.js 14 App Router layout hierarchy with client-side authentication guards.
+- [x] Implemented all operational in-store staff modules across sales/POS, watch repairs, products, CRM, and analytics.
+- [x] Built reusable design system components in `src/components/ui/` with Tailwind CSS styling.
+- [x] Built Axios HTTP client with automatic SimpleJWT token refresh rotation.
+- [x] Integrated power-user keyboard navigation and instant global search.
+- [x] Developed luxury public customer storefront showcasing Meghani Watch Co. catalog with price shielding.
+
+## Pending Tasks
+- [ ] Remove orphaned dead code components (`Header.tsx`, `InvoiceTemplate.tsx`, `BulkActionsBar.tsx`, `useBulkSelection.ts`, `FormField.tsx`, `LoadingSpinner.tsx`).
+- [ ] Add `filters.SearchFilter` to backend `SaleViewSet` so `GlobalSearch.tsx` invoice search filters accurately.
+
+## Blocked Tasks
+*None.*
+
+## Completion Criteria
+1. Frontend build completes with zero TypeScript or ESLint errors (`npm run build`). *(PASSED)*
+2. Authentication guard prevents unauthenticated access to `/(dashboard)/*` routes. *(PASSED)*
+3. All UI components have active callers with zero orphaned dead code. *(PENDING CLEANUP)*
+
+## Next Action
+Remove unreferenced frontend components identified in the code verification audit.
+
+---
+
+## Original Technical Specifications & Frontend Architecture
+
+### Objective
 
 Organize Next.js frontend with App Router, reusable components, and API integration.
 
 ---
 
-## Directory Structure
+### Directory Structure
 
 ```
 frontend/
@@ -150,7 +199,7 @@ frontend/
 
 ---
 
-## Environment Variables (.env.local)
+### Environment Variables (.env.local)
 
 ```env
 NEXT_PUBLIC_API_URL=http://localhost:8000/api
@@ -159,7 +208,7 @@ NEXT_PUBLIC_APP_NAME=Meghani Connect 360
 
 ---
 
-## Key Pages
+### Key Pages
 
 | Route | Page | Description |
 |-------|------|-------------|
@@ -180,7 +229,7 @@ NEXT_PUBLIC_APP_NAME=Meghani Connect 360
 
 ---
 
-## package.json Dependencies
+### package.json Dependencies
 
 ```json
 {
@@ -212,7 +261,7 @@ NEXT_PUBLIC_APP_NAME=Meghani Connect 360
 
 ---
 
-## Tailwind Configuration
+### Tailwind Configuration
 
 ```javascript
 // tailwind.config.js

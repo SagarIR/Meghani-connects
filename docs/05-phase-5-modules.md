@@ -1,14 +1,70 @@
 # Phase 5 – Module Breakdown
 
-## Objective
+> **Current Status:** PARTIALLY COMPLETED  
+> **Progress:** 8 / 11 verified tasks  
+> **Last Updated:** 2026-11-17  
+> **Next Action:** Resolve password change 404 URL mismatch in `apps/users/views.py` and wire split-payment UI in `sales/page.tsx`.  
+> **Master Tracker Reference:** [PROJECT_EXECUTION_TRACKER.md](./PROJECT_EXECUTION_TRACKER.md)
+
+---
+
+## Phase Progress Summary
+
+| Task | Status | Evidence | Remaining Work |
+|:---|:---:|:---|:---|
+| Executive Dashboard & Real-Time KPIs | **COMPLETED** | `app/(dashboard)/dashboard/page.tsx` fetches `/api/analytics/dashboard/stats/`, `/sales-chart/`, `/recent-activity/`, and `/ai/insights/`. | None. |
+| POS Barcode Billing & Atomic Checkout | **COMPLETED** | `BarcodeScanner.tsx`, `sales/page.tsx`, `SaleCreateSerializer` (`@transaction.atomic`), thermal receipt modal in `Invoice.tsx`. | None. |
+| POS Split / Mixed Payment UI Support | **PARTIALLY COMPLETED** | Backend model supports `payment_mode='mixed'`. Frontend UI provides single payment buttons (`cash`, `upi`, `card`). | Add split-tender input controls in `sales/page.tsx`. |
+| Product & Inventory Management with Bulk Import | **COMPLETED** | `products/page.tsx`, `ProductViewSet`, tabbed product modal, `BulkImport.tsx` with line-by-line validation. | None. |
+| Watch Repair Workshop & 5-Stage State Machine | **COMPLETED** | `repairs/page.tsx`, `RepairViewSet`, full lifecycle (`received` to `delivered`), automated WhatsApp hook on `ready`. | None. |
+| CRM Customer Directory & Loyalty Points Engine | **COMPLETED** | `customers/page.tsx`, `CustomerViewSet`, phone lookup, tier badges, points accrual and checkout redemption. | None. |
+| Customer Bulk Import Endpoint | **PENDING / NOT STARTED** | `BulkImport.tsx` includes Customer Import UI dispatching to `/customers/import/`, but endpoint is missing in `apps/crm/urls.py`. | Implement `CustomerImportView` or remove tab from UI. |
+| Operating Expense Tracker with Bill Upload | **COMPLETED** | `expenses/page.tsx`, `ExpenseViewSet`, category filtering, receipt image uploads, Net Profit impact. | None. |
+| Website CMS Administration Dashboard | **COMPLETED** | `website-cms/page.tsx`, `apps/core/views.py`, CRUD for banners, brand partners, milestones, gallery, lead enquiry inbox. | None. |
+| Business Settings & Gzip Database Backup Engine | **COMPLETED** | `settings/page.tsx`, `apps/core/backup_service.py`, Gzip JSON dump creation, listing, restore, and delete endpoints. | None. |
+| User Password Change Endpoint | **PARTIALLY COMPLETED (BUG)** | Frontend calls `POST /api/users/change-password/`. DRF router registers `change_password/` (underscored), resulting in 404. | Add `url_path='change-password'` to `@action` decorator in `UserViewSet`. |
+
+---
+
+## Completed Tasks
+- [x] Executive dashboard aggregating real-time sales revenue, profits, repair queue, and inventory alerts.
+- [x] Point of Sale checkout system supporting webcam and hardware barcode scanners, dynamic cart calculations, sequential invoice numbering (`INV-YYYYMMDD-XXXX`), and `@transaction.atomic` inventory decrementing.
+- [x] Full catalog management with tabbed detail modals and working Excel/CSV bulk import.
+- [x] Comprehensive watch repair workshop module with sequential tickets (`REP-YYYYMMDD-XXXX`), status workflow, and automated WhatsApp alert triggers.
+- [x] CRM customer database with automated loyalty points accrual ($1\text{ pt} / \text{₹}100$) and POS checkout discount redemption.
+- [x] Operating expense tracking categorized across 8 business accounts with bill image uploads.
+- [x] Integrated Website CMS allowing store managers to update public storefront content, banners, milestones, and review customer consultation enquiries.
+- [x] Database backup manager generating gzip-compressed JSON archives with one-click restore and download.
+
+## Pending Tasks
+- [ ] Add `url_path='change-password'` to `@action` decorator in `backend/apps/users/views.py`.
+- [ ] Add split tender inputs in `frontend/src/app/(dashboard)/sales/page.tsx` for multi-payment transactions.
+- [ ] Implement `CustomerImportView` in `backend/apps/crm/views.py` or remove the customer option from `BulkImport.tsx`.
+
+## Blocked Tasks
+*None.*
+
+## Completion Criteria
+1. Barcode scan instantly finds product and adds to cart with accurate price and stock validation. *(PASSED)*
+2. Advancing repair ticket to `ready` triggers automated customer notification. *(PASSED)*
+3. Password change request from user settings succeeds without HTTP 404 errors. *(PENDING FIX)*
+
+## Next Action
+Fix the password change URL pattern in [backend/apps/users/views.py](../backend/apps/users/views.py).
+
+---
+
+## Original Technical Specifications & Module Breakdown
+
+### Objective
 
 Define detailed specifications for each application module.
 
 ---
 
-## Module 1: Dashboard & Analytics
+### Module 1: Dashboard & Analytics
 
-### Features
+#### Features
 
 | Feature | Description |
 |---------|-------------|
@@ -18,7 +74,7 @@ Define detailed specifications for each application module.
 | Top Products | Best selling products this month |
 | Recent Activity | Latest sales & repairs |
 
-### API Endpoints
+#### API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -27,7 +83,7 @@ Define detailed specifications for each application module.
 | GET | `/api/dashboard/top-products/` | Get top selling products |
 | GET | `/api/dashboard/recent-activity/` | Get recent transactions |
 
-### Data Structure
+#### Data Structure
 
 ```json
 {
@@ -48,9 +104,9 @@ Define detailed specifications for each application module.
 
 ---
 
-## Module 2: Sales & POS System
+### Module 2: Sales & POS System
 
-### Features
+#### Features
 
 | Feature | Description |
 |---------|-------------|
@@ -62,7 +118,7 @@ Define detailed specifications for each application module.
 | Invoice | Print thermal receipt + PDF |
 | Customer Linking | Assign sale to customer |
 
-### API Endpoints
+#### API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -73,7 +129,7 @@ Define detailed specifications for each application module.
 | GET | `/api/sales/{id}/` | Get sale details |
 | GET | `/api/sales/{id}/invoice/` | Download invoice PDF |
 
-### Sale Creation Payload
+#### Sale Creation Payload
 
 ```json
 {
@@ -88,7 +144,7 @@ Define detailed specifications for each application module.
 }
 ```
 
-### Business Logic
+#### Business Logic
 
 ```python
 def create_sale(data):
@@ -105,9 +161,9 @@ def create_sale(data):
 
 ---
 
-## Module 3: Repair Management
+### Module 3: Repair Management
 
-### Features
+#### Features
 
 | Feature | Description |
 |---------|-------------|
@@ -117,7 +173,7 @@ def create_sale(data):
 | Repair Invoice | Generate repair receipt |
 | History | View customer's past repairs |
 
-### API Endpoints
+#### API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -127,14 +183,14 @@ def create_sale(data):
 | PATCH | `/api/repairs/{id}/status/` | Update status |
 | GET | `/api/repairs/{id}/invoice/` | Download repair invoice |
 
-### Status Workflow
+#### Status Workflow
 
 ```
 received → in_repair → ready → delivered
                     ↘ cancelled
 ```
 
-### Auto Notifications
+#### Auto Notifications
 
 ```python
 # When status changes to 'ready'
@@ -145,9 +201,9 @@ def on_repair_ready(repair):
 
 ---
 
-## Module 4: CRM (Customer Management)
+### Module 4: CRM (Customer Management)
 
-### Features
+#### Features
 
 | Feature | Description |
 |---------|-------------|
@@ -157,7 +213,7 @@ def on_repair_ready(repair):
 | Birthday Offers | Auto-notify customers on birthday |
 | Language Preference | Store preferred communication language |
 
-### API Endpoints
+#### API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -168,7 +224,7 @@ def on_repair_ready(repair):
 | GET | `/api/customers/{id}/purchases/` | Get purchase history |
 | GET | `/api/customers/{id}/repairs/` | Get repair history |
 
-### Loyalty Points System
+#### Loyalty Points System
 
 ```python
 POINTS_PER_100_RUPEES = 1
@@ -190,9 +246,9 @@ def redeem_points(customer, points_to_redeem):
 
 ---
 
-## Module 5: Inventory & Products
+### Module 5: Inventory & Products
 
-### Features
+#### Features
 
 | Feature | Description |
 |---------|-------------|
@@ -203,7 +259,7 @@ def redeem_points(customer, points_to_redeem):
 | Categories | Analog, Digital, Smart, Wall, Accessory |
 | Bulk Import | Import products from Excel |
 
-### API Endpoints
+#### API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -215,7 +271,7 @@ def redeem_points(customer, points_to_redeem):
 | POST | `/api/products/bulk-import/` | Import from Excel |
 | GET | `/api/products/low-stock/` | Get low stock items |
 
-### Stock Threshold Alert
+#### Stock Threshold Alert
 
 ```python
 LOW_STOCK_THRESHOLD = 5
@@ -228,9 +284,9 @@ def check_low_stock():
 
 ---
 
-## Module 6: Expense Management
+### Module 6: Expense Management
 
-### Features
+#### Features
 
 | Feature | Description |
 |---------|-------------|
@@ -240,7 +296,7 @@ def check_low_stock():
 | Monthly Summary | View expenses by month |
 | Profit Integration | Factor expenses into profit calculations |
 
-### API Endpoints
+#### API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -251,9 +307,9 @@ def check_low_stock():
 
 ---
 
-## Module 7: Notifications
+### Module 7: Notifications
 
-### Features
+#### Features
 
 | Feature | Description |
 |---------|-------------|
@@ -263,7 +319,7 @@ def check_low_stock():
 | Bulk Send | Send offers to multiple customers |
 | Status Tracking | Track sent/pending/failed |
 
-### API Endpoints
+#### API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -272,7 +328,7 @@ def check_low_stock():
 | GET | `/api/notifications/` | List notifications |
 | GET | `/api/notifications/templates/` | Get message templates |
 
-### Message Templates
+#### Message Templates
 
 | Template | Message |
 |----------|---------|
@@ -283,9 +339,9 @@ def check_low_stock():
 
 ---
 
-## Module 8: Settings & Backup
+### Module 8: Settings & Backup
 
-### Features
+#### Features
 
 | Feature | Description |
 |---------|-------------|
@@ -295,7 +351,7 @@ def check_low_stock():
 | Cloud Sync | Sync data to cloud |
 | Data Export | Export all data as Excel/CSV |
 
-### API Endpoints
+#### API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|

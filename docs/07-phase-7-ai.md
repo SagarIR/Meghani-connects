@@ -1,12 +1,61 @@
 # Phase 7 – AI Automation Features
 
-## Objective
+> **Current Status:** PARTIALLY COMPLETED  
+> **Progress:** 4 / 8 verified tasks  
+> **Last Updated:** 2026-11-17  
+> **Next Action:** Fix Celery Beat cron keyword arguments in `apps/analytics/tasks.py` and add `TWILIO_SMS_NUMBER` to `backend/core/settings.py`.  
+> **Master Tracker Reference:** [PROJECT_EXECUTION_TRACKER.md](./PROJECT_EXECUTION_TRACKER.md)
+
+---
+
+## Phase Progress Summary
+
+| Task | Status | Evidence | Remaining Work |
+|:---|:---:|:---|:---|
+| Facebook Prophet 30-Day Sales Forecasting | **COMPLETED** | `apps/analytics/services/forecasting.py` (`SalesForecast`). Implements Prophet with weekly/yearly seasonality and rolling fallback. | None. |
+| Inventory Stockout Date Predictor & Sales Velocity Math | **COMPLETED** | `StockoutPredictionView` calculates sales velocity per product and estimates days until stockout. | None. |
+| Celery & Redis Background Worker Infrastructure | **COMPLETED** | `backend/core/celery.py`, Redis broker configuration in `settings.py`, Celery Beat schedule configured. | None. |
+| Celery Beat Automated Cron Schedules | **PARTIALLY COMPLETED (RUNTIME CRASH)** | Scheduled cron jobs in `apps/analytics/tasks.py` instantiate `Notification` with invalid kwargs (`notification_type`, `template_name`). | Update kwargs to `type='whatsapp'` and remove `template_name`. |
+| Outbound WhatsApp Concierge Alerts (Twilio) | **COMPLETED (CODE WIRED)** | `apps/notifications/services/whatsapp.py` verified. Hooked to repair status changes. | Requires live Twilio credentials for end-to-end device delivery. |
+| Outbound SMS Customer Alerts (Twilio) | **BLOCKED** | `apps/notifications/services/sms.py` attempts to read `settings.TWILIO_SMS_NUMBER`, which is missing from `backend/core/settings.py`. | Add `TWILIO_SMS_NUMBER = os.getenv('TWILIO_SMS_NUMBER')` in `settings.py`. |
+| Transactional Email Dispatch Service | **PARTIALLY COMPLETED** | `apps/notifications/services/email_service.py` exists but is orphaned with 0 callers and an unhandled attribute error. | Wire email service or document as optional. |
+| Razorpay Online Payment Gateway Integration | **PENDING / NOT STARTED** | Listed in `requirements.txt` and `settings.py`. Zero endpoint, view, or frontend payment integration exists. | Author order creation endpoint if online payments are required. |
+
+---
+
+## Completed Tasks
+- [x] Machine learning sales forecasting engine utilizing Facebook Prophet with dynamic training on historical daily transaction data.
+- [x] Predictive inventory reorder logic computing product sales velocity, days until stockout, and reorder urgency.
+- [x] Celery worker and Redis broker infrastructure with daily scheduled Celery Beat tasks.
+- [x] Twilio WhatsApp messaging client formatted for automated repair collection alerts and boutique notifications.
+
+## Pending Tasks
+- [ ] Fix runtime crash in `backend/apps/analytics/tasks.py` by aligning `Notification.objects.create` keyword arguments with the model (`type='whatsapp'`).
+- [ ] Resolve SMS blocker by declaring `TWILIO_SMS_NUMBER = os.getenv('TWILIO_SMS_NUMBER')` in `backend/core/settings.py`.
+- [ ] Implement Razorpay order creation endpoint and frontend checkout if online advance payments are required.
+
+## Blocked Tasks
+- **Twilio SMS Notifications:** Blocked until `TWILIO_SMS_NUMBER` is declared in `backend/core/settings.py`.
+
+## Completion Criteria
+1. Prophet forecasting model generates 30-day projection without memory exhaustion. *(PASSED)*
+2. Celery Beat executes scheduled morning tasks without raising `TypeError`. *(PENDING KWARG FIX)*
+3. Twilio SMS client loads configured sender number from Django settings. *(PENDING SETTINGS ENTRY)*
+
+## Next Action
+Fix task keyword arguments in [backend/apps/analytics/tasks.py](../backend/apps/analytics/tasks.py) and add `TWILIO_SMS_NUMBER` to `backend/core/settings.py`.
+
+---
+
+## Original Technical Specifications & AI Features
+
+### Objective
 
 Implement AI-powered analytics, forecasting, and automation for intelligent business insights.
 
 ---
 
-## AI Features Overview
+### AI Features Overview
 
 | Feature | Purpose | Technology |
 |---------|---------|------------|
@@ -18,16 +67,16 @@ Implement AI-powered analytics, forecasting, and automation for intelligent busi
 
 ---
 
-## 1. Sales Forecasting
+### 1. Sales Forecasting
 
-### Technology: Facebook Prophet
+#### Technology: Facebook Prophet
 
 Prophet is ideal for:
 - Daily/weekly/monthly sales data
 - Handling seasonality (festivals, weekends)
 - Missing data tolerance
 
-### Implementation
+#### Implementation
 
 ```python
 # apps/analytics/services/forecasting.py
@@ -79,7 +128,7 @@ class SalesForecast:
         }
 ```
 
-### API Endpoint
+#### API Endpoint
 
 ```python
 # apps/analytics/views.py
@@ -99,11 +148,11 @@ class SalesForecastView(APIView):
 
 ---
 
-## 2. Stock Prediction & Reorder Suggestions
+### 2. Stock Prediction & Reorder Suggestions
 
-### Technology: Scikit-learn (Linear Regression)
+#### Technology: Scikit-learn (Linear Regression)
 
-### Implementation
+#### Implementation
 
 ```python
 # apps/analytics/services/stock_predictor.py
@@ -171,7 +220,7 @@ class StockPredictor:
         return sorted(suggestions, key=lambda x: x['urgency'] == 'high', reverse=True)
 ```
 
-### API Endpoint
+#### API Endpoint
 
 ```python
 class ReorderSuggestionsView(APIView):
@@ -183,9 +232,9 @@ class ReorderSuggestionsView(APIView):
 
 ---
 
-## 3. Smart Alerts System
+### 3. Smart Alerts System
 
-### Alert Types
+#### Alert Types
 
 | Alert | Trigger | Action |
 |-------|---------|--------|
@@ -195,7 +244,7 @@ class ReorderSuggestionsView(APIView):
 | Warranty Expiring | 7 days before expiry | SMS reminder |
 | Birthday | Customer DOB = today | Send offer |
 
-### Implementation
+#### Implementation
 
 ```python
 # apps/analytics/services/alerts.py
@@ -263,9 +312,9 @@ class AlertService:
 
 ---
 
-## 4. AI Notification Triggers
+### 4. AI Notification Triggers
 
-### Celery Tasks for Automation
+#### Celery Tasks for Automation
 
 ```python
 # apps/analytics/tasks.py
@@ -310,7 +359,7 @@ def generate_daily_forecast():
     )
 ```
 
-### Celery Beat Schedule
+#### Celery Beat Schedule
 
 ```python
 # core/celery.py
@@ -335,9 +384,9 @@ app.conf.beat_schedule = {
 
 ---
 
-## 5. Profit Prediction
+### 5. Profit Prediction
 
-### Implementation
+#### Implementation
 
 ```python
 # apps/analytics/services/profit_predictor.py
@@ -379,9 +428,9 @@ class ProfitPredictor:
 
 ---
 
-## 6. Dashboard AI Insights Widget
+### 6. Dashboard AI Insights Widget
 
-### API Response
+#### API Response
 
 ```json
 {
@@ -413,7 +462,7 @@ class ProfitPredictor:
 
 ---
 
-## Requirements
+### Requirements
 
 ```txt
 # AI/ML packages
