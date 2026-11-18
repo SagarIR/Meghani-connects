@@ -73,12 +73,12 @@ export default function Pagination({
   if (totalPages <= 1 && !showPageSizeSelector) return null
 
   return (
-    <div className={clsx('flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-3', className)}>
+    <div className={clsx('flex flex-col sm:flex-row items-center justify-between gap-4 px-2 py-3 text-[#8D8980]', className)}>
       {/* Items info */}
-      <div className="text-sm text-gray-600 order-2 sm:order-1">
-        Showing <span className="font-medium">{startItem}</span> to{' '}
-        <span className="font-medium">{endItem}</span> of{' '}
-        <span className="font-medium">{totalItems}</span> results
+      <div className="text-sm order-2 sm:order-1">
+        Showing <span className="font-semibold text-[#F3EFE6]">{startItem}</span> to{' '}
+        <span className="font-semibold text-[#F3EFE6]">{endItem}</span> of{' '}
+        <span className="font-semibold text-[#C9A45C]">{totalItems}</span> results
       </div>
 
       {/* Pagination controls */}
@@ -86,11 +86,11 @@ export default function Pagination({
         {/* Page size selector */}
         {showPageSizeSelector && onPageSizeChange && (
           <div className="flex items-center gap-2 mr-4">
-            <span className="text-sm text-gray-600 hidden sm:inline">Show:</span>
+            <span className="text-xs font-medium uppercase tracking-wider hidden sm:inline">Show:</span>
             <select
               value={pageSize}
               onChange={(e) => onPageSizeChange(Number(e.target.value))}
-              className="px-2 py-1.5 text-sm border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none"
+              className="px-2.5 py-1 text-xs border border-[#2A261F] rounded-lg bg-[#1F1E1A] text-[#F3EFE6] focus:ring-1 focus:ring-[#C9A45C] focus:border-[#C9A45C] outline-none"
             >
               {pageSizeOptions.map((size) => (
                 <option key={size} value={size}>
@@ -111,8 +111,8 @@ export default function Pagination({
               className={clsx(
                 'p-1.5 rounded-lg transition-colors',
                 currentPage === 1
-                  ? 'text-gray-300 cursor-not-allowed'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'text-[#8D8980]/30 cursor-not-allowed'
+                  : 'text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#1F1E1A]'
               )}
               title="First page"
             >
@@ -126,8 +126,8 @@ export default function Pagination({
               className={clsx(
                 'p-1.5 rounded-lg transition-colors',
                 currentPage === 1
-                  ? 'text-gray-300 cursor-not-allowed'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'text-[#8D8980]/30 cursor-not-allowed'
+                  : 'text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#1F1E1A]'
               )}
               title="Previous page"
             >
@@ -142,16 +142,16 @@ export default function Pagination({
                     key={index}
                     onClick={() => onPageChange(page)}
                     className={clsx(
-                      'min-w-[32px] h-8 px-2 text-sm font-medium rounded-lg transition-colors',
+                      'min-w-[32px] h-8 px-2 text-xs font-semibold rounded-lg transition-colors',
                       page === currentPage
-                        ? 'bg-primary-600 text-white'
-                        : 'text-gray-600 hover:bg-gray-100'
+                        ? 'bg-gradient-to-r from-[#C9A45C] to-[#E8D5A7] text-[#0B0B0A] shadow-sm'
+                        : 'text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#1F1E1A]'
                     )}
                   >
                     {page}
                   </button>
                 ) : (
-                  <span key={index} className="px-1 text-gray-400">
+                  <span key={index} className="px-1 text-[#8D8980]/50 text-xs">
                     {page}
                   </span>
                 )
@@ -165,8 +165,8 @@ export default function Pagination({
               className={clsx(
                 'p-1.5 rounded-lg transition-colors',
                 currentPage === totalPages
-                  ? 'text-gray-300 cursor-not-allowed'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'text-[#8D8980]/30 cursor-not-allowed'
+                  : 'text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#1F1E1A]'
               )}
               title="Next page"
             >
@@ -180,8 +180,8 @@ export default function Pagination({
               className={clsx(
                 'p-1.5 rounded-lg transition-colors',
                 currentPage === totalPages
-                  ? 'text-gray-300 cursor-not-allowed'
-                  : 'text-gray-600 hover:bg-gray-100'
+                  ? 'text-[#8D8980]/30 cursor-not-allowed'
+                  : 'text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#1F1E1A]'
               )}
               title="Last page"
             >

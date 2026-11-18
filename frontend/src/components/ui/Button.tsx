@@ -38,45 +38,40 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(({
 
   const variants = {
     primary: `
-      bg-gradient-to-r from-primary-600 to-primary-500 text-white 
-      shadow-lg shadow-primary-500/25
-      hover:from-primary-500 hover:to-primary-400 
-      hover:shadow-xl hover:shadow-primary-500/30 hover:-translate-y-0.5
-      focus:ring-primary-500
+      bg-gradient-to-r from-[#C9A45C] via-[#DFC17B] to-[#C9A45C] text-[#0B0B0A] font-bold 
+      shadow-md shadow-[#C9A45C]/20 border border-[#C9A45C]/40
+      hover:brightness-105 hover:shadow-lg hover:shadow-[#C9A45C]/30 hover:-translate-y-0.5
+      focus:ring-[#C9A45C]
     `,
     secondary: `
-      bg-white text-gray-700 border border-gray-200 shadow-sm
-      hover:bg-gray-50 hover:border-gray-300 hover:shadow-md hover:-translate-y-0.5
-      focus:ring-gray-400
+      bg-[#1F1E1A] text-[#F3EFE6] border border-[#2A261F] shadow-sm
+      hover:bg-[#282620] hover:border-[#C9A45C]/50 hover:text-[#C9A45C] hover:shadow-md hover:-translate-y-0.5
+      focus:ring-[#C9A45C]/30
     `,
     danger: `
-      bg-gradient-to-r from-danger-600 to-danger-500 text-white 
-      shadow-lg shadow-danger-500/25
-      hover:from-danger-500 hover:to-danger-400 
-      hover:shadow-xl hover:shadow-danger-500/30 hover:-translate-y-0.5
-      focus:ring-danger-500
+      bg-red-950/60 text-red-300 border border-red-800/60 shadow-lg shadow-red-950/40
+      hover:bg-red-900/60 hover:text-red-100 hover:shadow-xl hover:-translate-y-0.5
+      focus:ring-red-500/40
     `,
     success: `
-      bg-gradient-to-r from-success-600 to-success-500 text-white 
-      shadow-lg shadow-success-500/25
-      hover:from-success-500 hover:to-success-400 
-      hover:shadow-xl hover:shadow-success-500/30 hover:-translate-y-0.5
-      focus:ring-success-500
+      bg-emerald-950/60 text-emerald-300 border border-emerald-800/60 shadow-lg shadow-emerald-950/40
+      hover:bg-emerald-900/60 hover:text-emerald-100 hover:shadow-xl hover:-translate-y-0.5
+      focus:ring-emerald-500/40
     `,
     ghost: `
-      bg-transparent text-gray-600 
-      hover:bg-gray-100 hover:text-gray-900
-      focus:ring-gray-400
+      bg-transparent text-[#8D8980] 
+      hover:bg-[#1F1E1A] hover:text-[#F3EFE6]
+      focus:ring-[#C9A45C]/20
     `,
     outline: `
-      bg-transparent text-primary-600 border-2 border-primary-600
-      hover:bg-primary-50 hover:-translate-y-0.5
-      focus:ring-primary-500
+      bg-transparent text-[#C9A45C] border border-[#C9A45C]/60
+      hover:bg-[#C9A45C]/10 hover:border-[#C9A45C] hover:-translate-y-0.5
+      focus:ring-[#C9A45C]
     `,
     luxury: `
-      bg-gradient-to-r from-[#C9A04F] to-[#DFC17B] text-[#101010] font-bold shadow-lg shadow-[#C9A04F]/20
-      hover:from-[#DFC17B] hover:to-[#C9A04F] hover:shadow-xl hover:shadow-[#C9A04F]/30 hover:-translate-y-0.5
-      focus:ring-[#C9A04F]
+      bg-gradient-to-r from-[#C9A45C] via-[#DFC17B] to-[#C9A45C] text-[#0B0B0A] font-bold shadow-lg shadow-[#C9A45C]/25 border border-[#C9A45C]
+      hover:brightness-110 hover:shadow-xl hover:shadow-[#C9A45C]/35 hover:-translate-y-0.5
+      focus:ring-[#C9A45C]
     `,
   }
 

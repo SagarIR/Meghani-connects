@@ -2,271 +2,248 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { usePathname, useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { 
   Search, Bell, User, ChevronDown, Settings, LogOut, 
-  Moon, Sun, HelpCircle, Keyboard, X, Command
+  Keyboard, Menu, ShoppingCart, Shield, Sparkles, ExternalLink, Watch
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import clsx from 'clsx'
 
-interface HeaderProps {
-  title?: string
-  subtitle?: string
+const routeTitles: Record<string, { title: string; category: string }> = {
+  '/dashboard': { title: 'Executive Overview', category: 'Operations' },
+  '/sales': { title: 'Point of Sale (POS)', category: 'Retail Desk' },
+  '/sales/history': { title: 'Sales Ledger & Invoices', category: 'Audit' },
+  '/products': { title: 'Timepiece Catalog & Inventory', category: 'Merchandise' },
+  '/repairs': { title: 'Repair Atelier & Horology', category: 'Service' },
+  '/customers': { title: 'Clientele Portfolio (CRM)', category: 'VIP Relations' },
+  '/expenses': { title: 'Boutique Operational Expenses', category: 'Finance' },
+  '/reports': { title: 'Analytics & Financial Reports', category: 'Intelligence' },
+  '/website-cms': { title: 'Digital Boutique CMS', category: 'E-Commerce' },
+  '/notifications': { title: 'Customer Alerts & Dispatch', category: 'Messaging' },
+  '/settings': { title: 'Boutique Configuration', category: 'System' },
 }
 
-export default function Header({ title, subtitle }: HeaderProps) {
+interface HeaderProps {
+  onOpenSidebar?: () => void
+}
+
+export default function Header({ onOpenSidebar }: HeaderProps) {
+  const pathname = usePathname()
+  const router = useRouter()
   const { user, logout } = useAuth()
-  const [showSearch, setShowSearch] = useState(false)
-  const [showNotifications, setShowNotifications] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
-  const searchRef = useRef<HTMLInputElement>(null)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
-  // Close dropdowns on outside click
+  // Current route metadata
+  const currentRoute = routeTitles[pathname] || {
+    title: pathname.split('/').filter(Boolean).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' / ') || 'Boutique Management',
+    category: 'Meghani 360'
+  }
+
+  // Close dropdown on outside click
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
         setShowUserMenu(false)
       }
     }
-
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  // Keyboard shortcut for search
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault()
-        setShowSearch(true)
-        setTimeout(() => searchRef.current?.focus(), 100)
-      }
-      if (e.key === 'Escape') {
-        setShowSearch(false)
-      }
-    }
+  const triggerSearch = () => {
+    window.dispatchEvent(new CustomEvent('openSearch'))
+  }
 
-    document.addEventListener('keydown', handleKeyDown)
-    return () => document.removeEventListener('keydown', handleKeyDown)
-  }, [])
+  const triggerShortcuts = () => {
+    window.dispatchEvent(new CustomEvent('showShortcuts'))
+  }
 
-  const notifications = [
-    { id: 1, title: 'New order received', message: 'Order #1234 from Rajesh Kumar', time: '5m ago', unread: true },
-    { id: 2, title: 'Low stock alert', message: 'Titan Watch Model X is running low', time: '1h ago', unread: true },
-    { id: 3, title: 'Repair completed', message: 'Ticket #567 is ready for pickup', time: '2h ago', unread: false },
-  ]
-
-  const unreadCount = notifications.filter(n => n.unread).length
+  const roleLabel = user?.role ? user.role.toUpperCase() : 'STAFF'
 
   return (
-    <>
-      <header className="h-20 bg-white/80 backdrop-blur-lg border-b border-gray-100 px-8 flex items-center justify-between sticky top-0 z-30">
-        {/* Left - Title */}
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {title && (
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
-              {subtitle && <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>}
-            </div>
-          )}
-        </motion.div>
-
-        {/* Right - Actions */}
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.3 }}
-          className="flex items-center gap-3"
-        >
-          {/* Search Button */}
+    <header className="h-16 lg:h-20 bg-[#0E0D0B]/95 backdrop-blur-md border-b border-[#2A261F] px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30 select-none">
+      {/* Left - Hamburger (Mobile) + Breadcrumb Context */}
+      <div className="flex items-center gap-3 min-w-0">
+        {onOpenSidebar && (
           <button
-            onClick={() => setShowSearch(true)}
-            className="group flex items-center gap-2 px-4 py-2.5 bg-gray-50 hover:bg-gray-100 
-                     rounded-xl transition-all duration-200 border border-gray-200"
+            onClick={onOpenSidebar}
+            className="lg:hidden p-2 rounded-xl text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#1F1E1A] border border-[#2A261F] transition-colors"
+            aria-label="Open navigation sidebar"
           >
-            <Search className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
-            <span className="text-sm text-gray-400 hidden sm:block">Search...</span>
-            <kbd className="hidden sm:flex items-center gap-0.5 px-2 py-1 bg-white rounded-md text-xs text-gray-400 border border-gray-200">
-              <Command className="w-3 h-3" />K
-            </kbd>
+            <Menu className="w-5 h-5" />
+          </button>
+        )}
+
+        {/* Brand identity on mobile */}
+        <div className="flex items-center gap-2 lg:hidden">
+          <div className="w-8 h-8 rounded-lg bg-[#1F1E1A] border border-[#C9A45C]/40 flex items-center justify-center">
+            <Watch className="w-4 h-4 text-[#C9A45C]" />
+          </div>
+          <span className="font-serif font-bold text-base text-[#F3EFE6]">Meghani</span>
+        </div>
+
+        {/* Desktop Breadcrumb Hierarchy */}
+        <div className="hidden lg:block min-w-0">
+          <div className="flex items-center gap-2 text-xs font-mono text-[#8D8980] tracking-wider uppercase mb-0.5">
+            <span>Meghani Connect 360</span>
+            <span className="text-[#C9A45C]/60">•</span>
+            <span className="text-[#C9A45C] font-semibold">{currentRoute.category}</span>
+          </div>
+          <h1 className="text-xl xl:text-2xl font-serif font-bold text-[#F3EFE6] tracking-wide truncate">
+            {currentRoute.title}
+          </h1>
+        </div>
+      </div>
+
+      {/* Right - Global Actions, Shortcuts, Role & User */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        {/* Quick Launch POS Button */}
+        {pathname !== '/sales' && (
+          <Link
+            href="/sales"
+            className="hidden md:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#C9A45C] via-[#DFC17B] to-[#C9A45C] text-[#0B0B0A] text-xs font-bold tracking-wide shadow-md shadow-[#C9A45C]/20 hover:brightness-105 transition-all"
+          >
+            <ShoppingCart className="w-3.5 h-3.5" />
+            <span>Open POS</span>
+          </Link>
+        )}
+
+        {/* Global Search Button */}
+        <button
+          onClick={triggerSearch}
+          className="flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-[#171613] hover:bg-[#1F1E1A] border border-[#2A261F] hover:border-[#C9A45C]/40 rounded-xl transition-all group"
+          title="Search (Ctrl + K)"
+        >
+          <Search className="w-4 h-4 text-[#8D8980] group-hover:text-[#C9A45C] transition-colors" />
+          <span className="text-xs text-[#8D8980] hidden sm:inline">Search boutique...</span>
+          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-[#12110F] border border-[#2A261F] rounded text-[10px] text-[#8D8980] font-mono group-hover:text-[#C9A45C]">
+            Ctrl K
+          </kbd>
+        </button>
+
+        {/* Keyboard Shortcuts Button */}
+        <button
+          onClick={triggerShortcuts}
+          className="p-2 sm:px-2.5 sm:py-2 bg-[#171613] hover:bg-[#1F1E1A] border border-[#2A261F] hover:border-[#C9A45C]/40 rounded-xl transition-all text-[#8D8980] hover:text-[#C9A45C]"
+          title="Keyboard shortcuts (Shift + ?)"
+        >
+          <Keyboard className="w-4 h-4" />
+        </button>
+
+        {/* Notifications Shortcut */}
+        <Link
+          href="/notifications"
+          className="relative p-2 sm:px-2.5 sm:py-2 bg-[#171613] hover:bg-[#1F1E1A] border border-[#2A261F] hover:border-[#C9A45C]/40 rounded-xl transition-all text-[#8D8980] hover:text-[#C9A45C]"
+          title="Notifications & Dispatches"
+        >
+          <Bell className="w-4 h-4" />
+          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#C9A45C] rounded-full ring-2 ring-[#0E0D0B]" />
+        </Link>
+
+        {/* User Profile & Role Indicator */}
+        <div className="relative ml-1" ref={userMenuRef}>
+          <button
+            onClick={() => setShowUserMenu(!showUserMenu)}
+            className="flex items-center gap-2.5 p-1.5 sm:pl-2.5 sm:pr-3 bg-[#171613] hover:bg-[#1F1E1A] border border-[#2A261F] hover:border-[#C9A45C]/40 rounded-xl transition-all"
+          >
+            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-[#2A261F] to-[#171613] border border-[#C9A45C]/50 flex items-center justify-center text-xs font-bold text-[#C9A45C]">
+              {user?.name ? user.name.charAt(0).toUpperCase() : 'M'}
+            </div>
+            <div className="hidden sm:block text-left">
+              <p className="font-semibold text-xs text-[#F3EFE6] leading-tight truncate max-w-[100px]">
+                {user?.name || user?.username || 'Staff'}
+              </p>
+              <span className="text-[10px] font-mono text-[#C9A45C] font-semibold tracking-wider">
+                {roleLabel}
+              </span>
+            </div>
+            <ChevronDown className={clsx(
+              'w-3.5 h-3.5 text-[#8D8980] transition-transform duration-200',
+              showUserMenu && 'rotate-180'
+            )} />
           </button>
 
-          {/* Notifications */}
-          <div className="relative">
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="relative p-3 bg-gray-50 hover:bg-gray-100 rounded-xl 
-                       transition-all duration-200 hover:scale-105"
-            >
-              <Bell className="w-5 h-5 text-gray-600" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-danger-500 text-white 
-                               text-xs font-bold rounded-full flex items-center justify-center
-                               animate-pulse">
-                  {unreadCount}
-                </span>
-              )}
-            </button>
-
-            <AnimatePresence>
-              {showNotifications && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50"
-                >
-                  <div className="p-4 border-b border-gray-100">
-                    <h3 className="font-semibold text-gray-900">Notifications</h3>
+          {/* User Menu Dropdown */}
+          <AnimatePresence>
+            {showUserMenu && (
+              <motion.div
+                initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+                className="absolute right-0 mt-2 w-64 bg-[#171613] text-[#F3EFE6] rounded-xl shadow-2xl border border-[#2A261F] py-2 z-50 overflow-hidden"
+              >
+                <div className="px-4 py-3 border-b border-[#2A261F] bg-[#12110F]/60">
+                  <div className="flex items-center justify-between">
+                    <p className="font-serif font-bold text-sm text-[#F3EFE6] truncate">
+                      {user?.name || user?.username}
+                    </p>
+                    <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-[#C9A45C]/20 text-[#C9A45C] border border-[#C9A45C]/30">
+                      {roleLabel}
+                    </span>
                   </div>
-                  <div className="max-h-80 overflow-y-auto">
-                    {notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        className={clsx(
-                          'p-4 border-b border-gray-50 hover:bg-gray-50 cursor-pointer transition-colors',
-                          notification.unread && 'bg-primary-50/50'
-                        )}
-                      >
-                        <div className="flex items-start gap-3">
-                          {notification.unread && (
-                            <span className="w-2 h-2 mt-2 bg-primary-500 rounded-full" />
-                          )}
-                          <div className={clsx(!notification.unread && 'ml-5')}>
-                            <p className="font-medium text-sm text-gray-900">{notification.title}</p>
-                            <p className="text-sm text-gray-500 mt-0.5">{notification.message}</p>
-                            <p className="text-xs text-gray-400 mt-1">{notification.time}</p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="p-3 bg-gray-50">
-                    <button className="w-full text-center text-sm font-medium text-primary-600 hover:text-primary-700">
-                      View all notifications
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-          {/* User Menu */}
-          <div className="relative" ref={userMenuRef}>
-            <button
-              onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-3 p-2 pr-4 bg-gray-50 hover:bg-gray-100 
-                       rounded-xl transition-all duration-200"
-            >
-              <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-500 
-                            rounded-xl flex items-center justify-center text-white font-semibold shadow-lg">
-                {user?.username?.charAt(0).toUpperCase() || 'A'}
-              </div>
-              <div className="hidden sm:block text-left">
-                <p className="font-semibold text-sm text-gray-900">{user?.username || 'Admin'}</p>
-                <p className="text-xs text-gray-500">Administrator</p>
-              </div>
-              <ChevronDown className={clsx(
-                'w-4 h-4 text-gray-400 transition-transform duration-200',
-                showUserMenu && 'rotate-180'
-              )} />
-            </button>
-
-            <AnimatePresence>
-              {showUserMenu && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                  transition={{ duration: 0.2 }}
-                  className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50"
-                >
-                  <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="font-semibold text-gray-900">{user?.username || 'Admin'}</p>
-                    <p className="text-sm text-gray-500">{user?.email || 'admin@meghani.com'}</p>
-                  </div>
-
-                  <div className="py-2">
-                    <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
-                      <User className="w-4 h-4" />
-                      My Profile
-                    </button>
-                    <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
-                      <Settings className="w-4 h-4" />
-                      Settings
-                    </button>
-                    <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
-                      <HelpCircle className="w-4 h-4" />
-                      Help Center
-                    </button>
-                    <button className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50">
-                      <Keyboard className="w-4 h-4" />
-                      Keyboard Shortcuts
-                    </button>
-                  </div>
-
-                  <div className="border-t border-gray-100 pt-2">
-                    <button
-                      onClick={logout}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Logout
-                    </button>
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </motion.div>
-      </header>
-
-      {/* Search Modal */}
-      <AnimatePresence>
-        {showSearch && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
-              onClick={() => setShowSearch(false)}
-            />
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: -20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: -20 }}
-              transition={{ duration: 0.2 }}
-              className="fixed top-20 left-1/2 -translate-x-1/2 w-full max-w-2xl z-50 p-4"
-            >
-              <div className="bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden">
-                <div className="flex items-center gap-3 p-4 border-b border-gray-100">
-                  <Search className="w-5 h-5 text-gray-400" />
-                  <input
-                    ref={searchRef}
-                    type="text"
-                    placeholder="Search products, customers, repairs..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="flex-1 text-gray-900 placeholder-gray-400 outline-none text-lg"
-                  />
-                  <kbd className="px-2 py-1 bg-gray-100 rounded-lg text-xs text-gray-500">ESC</kbd>
+                  <p className="text-xs text-[#8D8980] truncate mt-0.5">{user?.email || 'Authenticated Staff'}</p>
                 </div>
-                <div className="p-4 text-center text-gray-500">
-                  <p className="text-sm">Start typing to search...</p>
+
+                <div className="py-1 text-xs font-medium">
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setShowUserMenu(false)}
+                    className="flex items-center gap-2.5 px-4 py-2 text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#1F1E1A] transition-colors"
+                  >
+                    <Watch className="w-4 h-4 text-[#C9A45C]" />
+                    Dashboard
+                  </Link>
+                  <Link
+                    href="/sales"
+                    onClick={() => setShowUserMenu(false)}
+                    className="flex items-center gap-2.5 px-4 py-2 text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#1F1E1A] transition-colors"
+                  >
+                    <ShoppingCart className="w-4 h-4 text-[#C9A45C]" />
+                    POS Terminal
+                  </Link>
+                  <Link
+                    href="/settings"
+                    onClick={() => setShowUserMenu(false)}
+                    className="flex items-center gap-2.5 px-4 py-2 text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#1F1E1A] transition-colors"
+                  >
+                    <Settings className="w-4 h-4 text-[#C9A45C]" />
+                    Store Settings
+                  </Link>
+                  <Link
+                    href="/"
+                    target="_blank"
+                    onClick={() => setShowUserMenu(false)}
+                    className="flex items-center justify-between px-4 py-2 text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#1F1E1A] transition-colors"
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <ExternalLink className="w-4 h-4 text-[#C9A45C]" />
+                      Public Boutique
+                    </span>
+                    <span className="text-[10px] text-[#8D8980]/70">Live</span>
+                  </Link>
                 </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-    </>
+
+                <div className="border-t border-[#2A261F] pt-1">
+                  <button
+                    onClick={() => {
+                      setShowUserMenu(false)
+                      logout()
+                    }}
+                    className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-950/30 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign Out Session
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+    </header>
   )
 }

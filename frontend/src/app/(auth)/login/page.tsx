@@ -9,7 +9,7 @@ import * as yup from 'yup'
 import { useAuth } from '@/context/AuthContext'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
-import { Watch, Lock, User, Sparkles, ArrowRight, Shield } from 'lucide-react'
+import { Watch, Lock, User, Sparkles, ArrowRight, Shield, Clock } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const schema = yup.object({
@@ -35,181 +35,165 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await login(data.username, data.password)
-      toast.success('Welcome back!')
+      toast.success('Authenticated to Meghani Connect 360')
       router.push('/dashboard')
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Invalid credentials')
+      toast.error(error.response?.data?.detail || 'Invalid staff credentials')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Panel - Branding */}
-      <div className="hidden lg:flex lg:w-1/2 relative bg-gradient-to-br from-primary-600 via-primary-500 to-secondary-500 overflow-hidden">
-        {/* Animated background elements */}
+    <div className="min-h-screen flex bg-[#0B0B0A]">
+      {/* Left Panel - Luxury Boutique Heritage */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-[#0B0B0A] border-r border-[#2A261F] overflow-hidden">
+        {/* Subtle radial luxury glow */}
         <div className="absolute inset-0">
-          <div className="absolute top-20 left-20 w-72 h-72 bg-white/10 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-20 right-20 w-96 h-96 bg-secondary-500/20 rounded-full blur-3xl"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] border border-white/10 rounded-full"></div>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] border border-white/10 rounded-full"></div>
+          <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-[#C9A45C]/10 rounded-full blur-[120px]"></div>
+          <div className="absolute bottom-1/4 right-1/4 w-[450px] h-[450px] bg-[#C9A45C]/5 rounded-full blur-[140px]"></div>
+          {/* Guilloche dial circles */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[650px] border border-[#2A261F]/60 rounded-full"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[450px] h-[450px] border border-[#2A261F]/40 rounded-full border-dashed"></div>
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[250px] h-[250px] border border-[#C9A45C]/20 rounded-full"></div>
         </div>
 
         {/* Content */}
-        <div className="relative z-10 flex flex-col justify-center p-16">
+        <div className="relative z-10 flex flex-col justify-between p-16 w-full">
+          {/* Header Brand */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="flex items-center gap-3.5"
+          >
+            <div className="w-12 h-12 bg-[#171613] border border-[#C9A45C]/40 rounded-xl flex items-center justify-center shadow-gold">
+              <Watch className="w-6 h-6 text-[#C9A45C]" />
+            </div>
+            <div>
+              <h1 className="font-serif font-bold text-xl tracking-wider text-[#F3EFE6]">MEGHANI WATCH CO.</h1>
+              <p className="text-[10px] tracking-[0.25em] text-[#C9A45C] uppercase font-mono">EST. 1984 • VADODARA, GUJARAT</p>
+            </div>
+          </motion.div>
+
+          {/* Central Statement */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="max-w-lg space-y-6"
           >
-            {/* Logo */}
-            <div className="flex items-center gap-4 mb-12">
-              <motion.div
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.8 }}
-                className="w-16 h-16 bg-white/20 backdrop-blur-xl rounded-2xl flex items-center justify-center shadow-2xl"
-              >
-                <Watch className="w-8 h-8 text-white" />
-              </motion.div>
-              <div>
-                <h1 className="text-3xl font-bold text-white">Meghani</h1>
-                <p className="text-white/80 font-medium">Connect 360</p>
-              </div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1F1E1A] border border-[#2A261F] text-xs font-mono text-[#E8D5A7]">
+              <Clock className="w-3.5 h-3.5 text-[#C9A45C]" />
+              <span>Operations Desk & Staff Portal</span>
             </div>
 
-            {/* Feature highlights */}
-            <h2 className="text-4xl font-bold text-white mb-6 leading-tight">
-              Complete Business<br />
-              Management Solution
+            <h2 className="text-4xl font-serif font-bold text-[#F3EFE6] leading-tight tracking-tight">
+              Enterprise Horology & Boutique POS System
             </h2>
-            <p className="text-xl text-white/80 mb-10 max-w-md">
-              Streamline your watch & jewelry business with AI-powered insights, 
-              seamless sales, and smart inventory management.
+
+            <p className="text-sm text-[#8D8980] leading-relaxed">
+              Unified management for luxury watch inventories, master watchmaker atelier servicing, 
+              point-of-sale transactions, and VIP client relationships.
             </p>
 
-            {/* Feature pills */}
-            <div className="flex flex-wrap gap-3">
-              {['Sales & POS', 'Inventory', 'Repairs', 'CRM', 'Reports', 'AI Insights'].map((feature, i) => (
-                <motion.span
-                  key={feature}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.3 + i * 0.1 }}
-                  className="px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full text-white text-sm font-medium border border-white/20"
+            {/* Modules Badges */}
+            <div className="flex flex-wrap gap-2 pt-2">
+              {[
+                'POS Terminal', 'Timepiece Vault', 'Atelier Repairs', 
+                'VIP Clientele CRM', 'Fiscal Ledgers', 'Web Showcase CMS'
+              ].map((mod, i) => (
+                <span
+                  key={mod}
+                  className="px-3 py-1 bg-[#171613] border border-[#2A261F] rounded-lg text-xs font-medium text-[#F3EFE6]"
                 >
-                  {feature}
-                </motion.span>
+                  {mod}
+                </span>
               ))}
             </div>
           </motion.div>
 
-          {/* Bottom decoration */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="absolute bottom-8 left-16 right-16 flex items-center gap-3 text-white/60 text-sm"
-          >
-            <Shield className="w-4 h-4" />
-            <span>Enterprise-grade security with end-to-end encryption</span>
-          </motion.div>
+          {/* Security Assurance */}
+          <div className="flex items-center gap-2 text-xs text-[#8D8980] font-mono">
+            <Shield className="w-4 h-4 text-[#C9A45C]" />
+            <span>Encrypted Session • Role-Based Access Control Protected</span>
+          </div>
         </div>
       </div>
 
-      {/* Right Panel - Login Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-gray-50">
+      {/* Right Panel - Staff Login Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-[#0B0B0A]">
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
+          className="w-full max-w-md bg-[#171613] border border-[#2A261F] rounded-3xl p-8 sm:p-10 shadow-2xl"
         >
-          {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center gap-3 mb-8 justify-center">
-            <div className="w-12 h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl flex items-center justify-center shadow-lg">
-              <Watch className="w-6 h-6 text-white" />
+          {/* Mobile Brand Emblem */}
+          <div className="lg:hidden flex items-center gap-3 mb-8 justify-center text-center">
+            <div className="w-12 h-12 bg-[#1F1E1A] border border-[#C9A45C]/40 rounded-xl flex items-center justify-center text-[#C9A45C]">
+              <Watch className="w-6 h-6" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-gray-900">Meghani</h1>
-              <p className="text-xs text-primary-600 font-medium">Connect 360</p>
+              <h1 className="font-serif font-bold text-lg text-[#F3EFE6]">MEGHANI WATCH CO.</h1>
+              <p className="text-[10px] text-[#C9A45C] font-mono tracking-widest">EST. 1984</p>
             </div>
           </div>
 
-          {/* Welcome text */}
+          {/* Heading */}
           <div className="text-center lg:text-left mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome back</h2>
-            <p className="text-gray-500">Sign in to continue to your dashboard</p>
+            <h2 className="text-2xl font-serif font-bold text-[#F3EFE6]">Staff Authentication</h2>
+            <p className="text-xs text-[#8D8980] mt-1">Authenticate to access the boutique operations terminal</p>
           </div>
 
-          {/* Login Form */}
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          {/* Form */}
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
             <Input
-              label="Username"
-              placeholder="Enter your username"
-              icon={<User className="w-5 h-5" />}
+              label="Staff Username"
+              placeholder="e.g. admin or staff"
+              icon={<User className="w-4 h-4 text-[#8D8980]" />}
               error={errors.username?.message}
               {...register('username')}
             />
 
             <Input
-              label="Password"
+              label="Staff Password"
               type="password"
-              placeholder="Enter your password"
-              icon={<Lock className="w-5 h-5" />}
+              placeholder="••••••••••••"
+              icon={<Lock className="w-4 h-4 text-[#8D8980]" />}
               error={errors.password?.message}
               {...register('password')}
             />
-
-            <div className="flex items-center justify-between">
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  className="w-4 h-4 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
-                />
-                <span className="text-sm text-gray-600">Remember me</span>
-              </label>
-              <button type="button" className="text-sm font-medium text-primary-600 hover:text-primary-700">
-                Forgot password?
-              </button>
-            </div>
 
             <Button
               type="submit"
               loading={loading}
               fullWidth
               size="lg"
-              icon={<ArrowRight className="w-5 h-5" />}
+              icon={<ArrowRight className="w-4 h-4" />}
               iconPosition="right"
+              className="mt-2 shadow-gold"
             >
-              Sign in
+              Sign In to Register
             </Button>
           </form>
 
-          {/* Demo credentials */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.5 }}
-            className="mt-8 p-4 bg-primary-50 rounded-xl border border-primary-100"
-          >
-            <div className="flex items-start gap-3">
-              <Sparkles className="w-5 h-5 text-primary-600 mt-0.5" />
+          {/* Demo Credentials Guide */}
+          <div className="mt-8 p-4 bg-[#12110F] rounded-xl border border-[#2A261F] text-xs">
+            <div className="flex items-start gap-2.5">
+              <Sparkles className="w-4 h-4 text-[#C9A45C] mt-0.5 flex-shrink-0" />
               <div>
-                <p className="font-semibold text-primary-900 text-sm">Demo Credentials</p>
-                <p className="text-sm text-primary-700 mt-1">
-                  Username: <code className="bg-primary-100 px-1.5 py-0.5 rounded">admin</code>
-                </p>
-                <p className="text-sm text-primary-700">
-                  Password: <code className="bg-primary-100 px-1.5 py-0.5 rounded">admin123</code>
-                </p>
+                <p className="font-semibold text-[#F3EFE6]">Boutique Staff Credentials:</p>
+                <div className="mt-1 space-y-0.5 font-mono text-[#8D8980]">
+                  <p>Username: <span className="text-[#C9A45C] font-bold">admin</span> | Password: <span className="text-[#C9A45C] font-bold">admin123</span></p>
+                  <p>Username: <span className="text-[#E8D5A7]">staff</span> | Password: <span className="text-[#E8D5A7]">staff123</span></p>
+                </div>
               </div>
             </div>
-          </motion.div>
+          </div>
 
-          {/* Footer */}
-          <p className="mt-8 text-center text-sm text-gray-500">
-            &copy; {new Date().getFullYear()} Meghani Watch Co. All rights reserved.
+          <p className="mt-6 text-center text-[11px] text-[#8D8980]">
+            &copy; {new Date().getFullYear()} Meghani Watch Co. • Vadodara, Gujarat
           </p>
         </motion.div>
       </div>

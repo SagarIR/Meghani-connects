@@ -5,11 +5,12 @@ import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { useAuth } from '@/context/AuthContext'
 import Sidebar from '@/components/layout/Sidebar'
+import Header from '@/components/layout/Header'
 import GlobalSearch from '@/components/ui/GlobalSearch'
 import KeyboardShortcutsModal from '@/components/ui/KeyboardShortcutsModal'
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts'
-import { Watch, Menu, Bell, Search } from 'lucide-react'
+import { Watch } from 'lucide-react'
 
 export default function DashboardLayout({
   children,
@@ -42,36 +43,37 @@ export default function DashboardLayout({
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0B0B0A] text-[#F3EFE6]">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
           className="relative"
         >
-          <div className="w-16 h-16 lg:w-20 lg:h-20 bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl flex items-center justify-center shadow-xl shadow-primary-500/30">
-            <Watch className="w-8 h-8 lg:w-10 lg:h-10 text-white" />
+          <div className="w-16 h-16 lg:w-20 lg:h-20 bg-[#171613] border border-[#C9A45C]/40 rounded-2xl flex items-center justify-center shadow-2xl shadow-[#C9A45C]/10">
+            <Watch className="w-8 h-8 lg:w-10 lg:h-10 text-[#C9A45C]" />
           </div>
           <motion.div
-            className="absolute inset-0 rounded-2xl bg-primary-500/30"
-            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0, 0.5] }}
-            transition={{ duration: 1.5, repeat: Infinity }}
+            className="absolute inset-0 rounded-2xl bg-[#C9A45C]/20 border border-[#C9A45C]/50"
+            animate={{ scale: [1, 1.15, 1], opacity: [0.6, 0, 0.6] }}
+            transition={{ duration: 1.8, repeat: Infinity }}
           />
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="mt-6"
+          className="mt-6 text-center"
         >
-          <p className="text-base lg:text-lg font-semibold text-gray-700">Loading...</p>
-          <div className="mt-3 flex justify-center gap-1">
+          <p className="font-serif text-lg lg:text-xl font-bold text-[#F3EFE6] tracking-wide">Meghani Connect 360</p>
+          <p className="text-xs uppercase tracking-widest text-[#8D8980] mt-1">Authenticating Operational Session...</p>
+          <div className="mt-3 flex justify-center gap-1.5">
             {[0, 1, 2].map((i) => (
               <motion.div
                 key={i}
-                className="w-2 h-2 bg-primary-500 rounded-full"
-                animate={{ y: [0, -8, 0] }}
-                transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.1 }}
+                className="w-1.5 h-1.5 bg-[#C9A45C] rounded-full"
+                animate={{ y: [0, -6, 0] }}
+                transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.12 }}
               />
             ))}
           </div>
@@ -85,56 +87,26 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      {/* Global Components */}
+    <div className="min-h-screen bg-[#0B0B0A] text-[#F3EFE6]">
+      {/* Global Modals & Listeners */}
       <GlobalSearch />
       <KeyboardShortcutsModal />
       
-      {/* Sidebar */}
+      {/* Persistent / Responsive Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Main Content Area */}
-      <div className="lg:ml-72 min-h-screen flex flex-col">
-        {/* Mobile Header */}
-        <header className="lg:hidden sticky top-0 z-30 bg-white/95 backdrop-blur-sm border-b border-gray-100">
-          <div className="flex items-center justify-between px-4 h-14">
-            {/* Hamburger Menu */}
-            <button
-              onClick={() => setSidebarOpen(true)}
-              className="p-2 -ml-2 rounded-lg hover:bg-gray-100 transition-colors"
-              aria-label="Open menu"
-            >
-              <Menu className="w-6 h-6 text-gray-700" />
-            </button>
+      {/* Main Content Workspace */}
+      <div className="lg:ml-72 min-h-screen flex flex-col bg-[#0B0B0A]">
+        {/* Universal Top Navigation Header */}
+        <Header onOpenSidebar={() => setSidebarOpen(true)} />
 
-            {/* Logo */}
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg flex items-center justify-center">
-                <Watch className="w-4 h-4 text-white" />
-              </div>
-              <span className="font-bold text-gray-900">Meghani</span>
-            </div>
-
-            {/* Actions */}
-            <div className="flex items-center gap-1">
-              <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors">
-                <Search className="w-5 h-5 text-gray-600" />
-              </button>
-              <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
-                <Bell className="w-5 h-5 text-gray-600" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-              </button>
-            </div>
-          </div>
-        </header>
-
-        {/* Page Content */}
-        <main className="flex-1 p-4 sm:p-6 lg:p-8">
+        {/* Page Content Body */}
+        <main className="flex-1 p-3 sm:p-5 lg:p-7 xl:p-8">
           <ErrorBoundary>
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4 }}
+              transition={{ duration: 0.3 }}
             >
               {children}
             </motion.div>

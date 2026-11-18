@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { ShoppingBag, User, Clock, ChevronRight, ArrowUpRight } from 'lucide-react'
+import { ShoppingBag, User, ChevronRight } from 'lucide-react'
+import Link from 'next/link'
 import { api } from '@/services/api'
-import { formatDistanceToNow } from 'date-fns'
 
 interface Sale {
   id: number
@@ -43,84 +43,68 @@ export default function RecentSales() {
   }
 
   return (
-    <div className="bg-white rounded-xl lg:rounded-2xl border border-gray-100 shadow-card overflow-hidden h-full">
-      <div className="p-4 sm:p-6 border-b border-gray-100">
+    <div className="bg-[#171613] rounded-2xl border border-[#2A261F] shadow-xl overflow-hidden h-full flex flex-col">
+      <div className="p-4 sm:p-5 border-b border-[#2A261F] bg-[#12110F]/70">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-green-500/25">
-              <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-emerald-950/60 border border-emerald-800/40 flex items-center justify-center text-emerald-400">
+              <ShoppingBag className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-sm sm:text-base text-gray-900">Recent Sales</h3>
-              <p className="text-xs text-gray-500 hidden sm:block">Latest transactions</p>
+              <h3 className="font-serif font-bold text-sm sm:text-base text-[#F3EFE6]">Recent Transactions</h3>
+              <p className="text-[11px] font-mono text-[#8D8980]">Latest register activity</p>
             </div>
           </div>
-          <button className="text-xs sm:text-sm font-medium text-primary-600 hover:text-primary-700 flex items-center gap-1">
-            <span className="hidden sm:inline">View all</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
+          <Link href="/sales/history" className="text-xs font-semibold text-[#C9A45C] hover:text-[#E8D5A7] flex items-center gap-1 transition-colors">
+            <span>Audit all</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
       </div>
 
-      <div className="divide-y divide-gray-50">
+      <div className="divide-y divide-[#2A261F]/60 flex-1">
         {loading ? (
-          <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+          <div className="p-4 space-y-3">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-center gap-3 sm:gap-4 animate-pulse">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gray-100 rounded-full"></div>
-                <div className="flex-1">
-                  <div className="h-3 sm:h-4 w-20 sm:w-24 bg-gray-100 rounded mb-1.5 sm:mb-2"></div>
-                  <div className="h-2.5 sm:h-3 w-24 sm:w-32 bg-gray-100 rounded"></div>
+              <div key={i} className="flex items-center gap-3 animate-pulse">
+                <div className="w-8 h-8 bg-[#1F1E1A] rounded-full"></div>
+                <div className="flex-1 space-y-1">
+                  <div className="h-3 w-24 bg-[#1F1E1A] rounded"></div>
+                  <div className="h-2.5 w-16 bg-[#1F1E1A] rounded"></div>
                 </div>
-                <div className="h-4 sm:h-5 w-14 sm:w-16 bg-gray-100 rounded"></div>
+                <div className="h-4 w-14 bg-[#1F1E1A] rounded"></div>
               </div>
             ))}
           </div>
         ) : sales.length === 0 ? (
-          <div className="p-6 sm:p-8 text-center">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-3 sm:mb-4">
-              <ShoppingBag className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
-            </div>
-            <p className="text-sm sm:text-base text-gray-500">No recent sales</p>
+          <div className="p-6 text-center text-[#8D8980]">
+            <p className="text-xs">No recent transactions recorded today</p>
           </div>
         ) : (
           sales.slice(0, 5).map((sale, index) => (
             <motion.div
-              key={sale.id}
-              initial={{ opacity: 0, x: -20 }}
+              key={sale.id || index}
+              initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="p-3 sm:p-4 hover:bg-gray-50 cursor-pointer transition-colors group"
+              transition={{ delay: index * 0.05 }}
+              className="p-3.5 hover:bg-[#1F1E1A]/60 transition-colors flex items-center justify-between gap-3 group"
             >
-              <div className="flex items-center gap-3 sm:gap-4">
-                <div className="relative flex-shrink-0">
-                  <div className="w-9 h-9 sm:w-11 sm:h-11 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center">
-                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600" />
-                  </div>
-                  <div className="absolute -bottom-0.5 -right-0.5 sm:-bottom-1 sm:-right-1 w-4 h-4 sm:w-5 sm:h-5 bg-green-500 rounded-full flex items-center justify-center border-2 border-white">
-                    <ArrowUpRight className="w-2 h-2 sm:w-3 sm:h-3 text-white" />
-                  </div>
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-8 h-8 rounded-full bg-[#1F1E1A] border border-[#2A261F] flex items-center justify-center text-xs font-bold text-[#C9A45C] flex-shrink-0">
+                  {sale.customer ? sale.customer.charAt(0).toUpperCase() : 'W'}
                 </div>
-                
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm sm:text-base text-gray-900 truncate group-hover:text-primary-600 transition-colors">
-                    {sale.customer}
+                <div className="min-w-0">
+                  <p className="text-xs sm:text-sm font-semibold text-[#F3EFE6] truncate group-hover:text-[#C9A45C] transition-colors">
+                    {sale.customer || 'Walk-in Client'}
                   </p>
-                  <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-500">
-                    <span className="font-mono text-[10px] sm:text-xs bg-gray-100 px-1 sm:px-1.5 py-0.5 rounded">
-                      #{sale.invoice}
-                    </span>
-                    <span className="hidden sm:flex items-center gap-1">
-                      <Clock className="w-3 h-3" />
-                      {formatDistanceToNow(new Date(sale.date), { addSuffix: true })}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="text-right flex-shrink-0">
-                  <p className="font-bold text-sm sm:text-base text-gray-900">{formatCurrency(sale.amount)}</p>
+                  <p className="text-[11px] font-mono text-[#8D8980]">
+                    {sale.invoice}
+                  </p>
                 </div>
               </div>
+              <span className="font-mono text-xs sm:text-sm font-bold text-[#C9A45C] flex-shrink-0">
+                {formatCurrency(sale.amount)}
+              </span>
             </motion.div>
           ))
         )}

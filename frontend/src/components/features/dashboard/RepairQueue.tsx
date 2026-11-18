@@ -2,10 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Wrench, Clock, User, ChevronRight } from 'lucide-react'
+import { Wrench, ChevronRight } from 'lucide-react'
+import Link from 'next/link'
 import { api } from '@/services/api'
-import { formatDistanceToNow } from 'date-fns'
-import { StatusBadge } from '@/components/ui/Badge'
 import clsx from 'clsx'
 
 interface Repair {
@@ -37,100 +36,86 @@ export default function RepairQueue() {
     }
   }
 
-  const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-      received: 'from-blue-400 to-blue-500',
-      diagnosing: 'from-yellow-400 to-yellow-500',
-      repairing: 'from-orange-400 to-orange-500',
-      ready_for_pickup: 'from-green-400 to-green-500',
-      delivered: 'from-emerald-400 to-emerald-500',
+  const getStatusBadge = (status: string) => {
+    const s = status?.toLowerCase()
+    if (s === 'ready' || s === 'ready_for_pickup') {
+      return { label: 'Ready', pill: 'bg-emerald-950/70 text-emerald-300 border-emerald-800/40' }
     }
-    return colors[status] || 'from-gray-400 to-gray-500'
+    if (s === 'in_repair' || s === 'repairing') {
+      return { label: 'In Repair', pill: 'bg-amber-950/70 text-amber-300 border-amber-800/40' }
+    }
+    if (s === 'delivered') {
+      return { label: 'Delivered', pill: 'bg-sky-950/70 text-sky-300 border-sky-800/40' }
+    }
+    return { label: 'Received', pill: 'bg-[#1F1E1A] text-[#8D8980] border-[#2A261F]' }
   }
 
   return (
-    <div className="bg-white rounded-xl lg:rounded-2xl border border-gray-100 shadow-card overflow-hidden h-full">
-      <div className="p-4 sm:p-6 border-b border-gray-100">
+    <div className="bg-[#171613] rounded-2xl border border-[#2A261F] shadow-xl overflow-hidden h-full flex flex-col">
+      <div className="p-4 sm:p-5 border-b border-[#2A261F] bg-[#12110F]/70">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-orange-500/25">
-              <Wrench className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-xl bg-amber-950/60 border border-amber-800/40 flex items-center justify-center text-amber-400">
+              <Wrench className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-bold text-sm sm:text-base text-gray-900">Repair Queue</h3>
-              <p className="text-xs text-gray-500 hidden sm:block">Active repairs</p>
+              <h3 className="font-serif font-bold text-sm sm:text-base text-[#F3EFE6]">Repair Atelier</h3>
+              <p className="text-[11px] font-mono text-[#8D8980]">Active timepiece servicing</p>
             </div>
           </div>
-          <button className="text-xs sm:text-sm font-medium text-primary-600 hover:text-primary-700 flex items-center gap-1">
-            <span className="hidden sm:inline">View all</span>
-            <ChevronRight className="w-4 h-4" />
-          </button>
+          <Link href="/repairs" className="text-xs font-semibold text-[#C9A45C] hover:text-[#E8D5A7] flex items-center gap-1 transition-colors">
+            <span>View atelier</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </Link>
         </div>
       </div>
 
-      <div className="divide-y divide-gray-50">
+      <div className="divide-y divide-[#2A261F]/60 flex-1">
         {loading ? (
-          <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
+          <div className="p-4 space-y-3">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="flex items-center gap-3 sm:gap-4 animate-pulse">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gray-100 rounded-lg"></div>
-                <div className="flex-1">
-                  <div className="h-3 sm:h-4 w-20 sm:w-24 bg-gray-100 rounded mb-1.5 sm:mb-2"></div>
-                  <div className="h-2.5 sm:h-3 w-24 sm:w-32 bg-gray-100 rounded"></div>
+              <div key={i} className="flex items-center gap-3 animate-pulse">
+                <div className="w-8 h-8 bg-[#1F1E1A] rounded-lg"></div>
+                <div className="flex-1 space-y-1">
+                  <div className="h-3 w-20 bg-[#1F1E1A] rounded"></div>
+                  <div className="h-2.5 w-24 bg-[#1F1E1A] rounded"></div>
                 </div>
-                <div className="h-5 sm:h-6 w-16 sm:w-20 bg-gray-100 rounded-full"></div>
+                <div className="h-5 w-16 bg-[#1F1E1A] rounded"></div>
               </div>
             ))}
           </div>
         ) : repairs.length === 0 ? (
-          <div className="p-6 sm:p-8 text-center">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-gray-100 rounded-full flex items-center justify-center mb-3 sm:mb-4">
-              <Wrench className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
-            </div>
-            <p className="text-sm sm:text-base text-gray-500">No active repairs</p>
+          <div className="p-6 text-center text-[#8D8980]">
+            <p className="text-xs">All repair tickets are current and delivered</p>
           </div>
         ) : (
-          repairs.slice(0, 5).map((repair, index) => (
-            <motion.div
-              key={repair.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: index * 0.1 }}
-              className="p-3 sm:p-4 hover:bg-gray-50 cursor-pointer transition-colors group"
-            >
-              <div className="flex items-center gap-3 sm:gap-4">
-                <div className={clsx(
-                  'w-9 h-9 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl flex items-center justify-center bg-gradient-to-br shadow-lg flex-shrink-0',
-                  getStatusColor(repair.status)
-                )}>
-                  <Wrench className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                </div>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-                    <p className="font-semibold text-sm sm:text-base text-gray-900 group-hover:text-primary-600 transition-colors truncate">
-                      {repair.item}
-                    </p>
-                    <span className="font-mono text-[10px] sm:text-xs bg-gray-100 px-1 sm:px-1.5 py-0.5 rounded">
-                      #{repair.ticket}
+          repairs.slice(0, 5).map((repair, index) => {
+            const badge = getStatusBadge(repair.status)
+            return (
+              <motion.div
+                key={repair.id || index}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: index * 0.05 }}
+                className="p-3.5 hover:bg-[#1F1E1A]/60 transition-colors flex items-center justify-between gap-3 group"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-xs font-bold text-[#F3EFE6] group-hover:text-[#C9A45C] transition-colors">
+                      {repair.ticket}
                     </span>
+                    <span className="text-[10px] text-[#8D8980] truncate">• {repair.item}</span>
                   </div>
-                  <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-gray-500 mt-0.5">
-                    <User className="w-3 h-3 flex-shrink-0" />
-                    <span className="truncate">{repair.customer}</span>
-                  </div>
-                </div>
-
-                <div className="text-right flex-shrink-0">
-                  <StatusBadge status={repair.status} pulse />
-                  <p className="text-[10px] sm:text-xs text-gray-400 mt-1 hidden sm:flex items-center gap-1 justify-end">
-                    <Clock className="w-3 h-3" />
-                    {formatDistanceToNow(new Date(repair.date), { addSuffix: true })}
+                  <p className="text-xs text-[#8D8980] truncate mt-0.5">
+                    {repair.customer || 'Walk-in'}
                   </p>
                 </div>
-              </div>
-            </motion.div>
-          ))
+                <span className={clsx('text-[10px] font-mono px-2 py-0.5 rounded-full border font-semibold flex-shrink-0', badge.pill)}>
+                  {badge.label}
+                </span>
+              </motion.div>
+            )
+          })
         )}
       </div>
     </div>

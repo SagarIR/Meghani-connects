@@ -5,13 +5,15 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   User, Store, Bell, Shield, Database, Upload, Save, 
   RefreshCw, Download, Check, X, Moon, Sun,
-  Globe, Monitor, Printer, Clock, ChevronDown
+  Globe, Monitor, Printer, Clock, ChevronDown, Lock,
+  Watch, Building, Sparkles
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import toast from 'react-hot-toast'
 import api from '@/services/api'
+import clsx from 'clsx'
 
 interface BusinessSettings {
   id: number
@@ -85,12 +87,12 @@ export default function SettingsPage() {
   const [backupLoading, setBackupLoading] = useState(false)
 
   const tabs = [
-    { id: 'profile', label: 'Profile', icon: User },
-    { id: 'business', label: 'Business', icon: Store },
-    { id: 'preferences', label: 'Preferences', icon: Monitor },
-    { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'security', label: 'Security', icon: Shield },
-    { id: 'backup', label: 'Backup', icon: Database },
+    { id: 'profile', label: 'Staff Profile', icon: User },
+    { id: 'business', label: 'Boutique Storefront', icon: Store },
+    { id: 'preferences', label: 'Terminal Preferences', icon: Monitor },
+    { id: 'notifications', label: 'Client Dispatches', icon: Bell },
+    { id: 'security', label: 'Credentials & Security', icon: Shield },
+    { id: 'backup', label: 'Database Archiving', icon: Database },
   ]
 
   useEffect(() => {
@@ -140,7 +142,7 @@ export default function SettingsPage() {
       })
       
       setBusinessSettings(response.data)
-      toast.success('Business settings saved!')
+      toast.success('Boutique settings saved!')
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Failed to save settings')
     } finally {
@@ -155,7 +157,7 @@ export default function SettingsPage() {
     try {
       const response = await api.patch('/settings/preferences/', preferences)
       setPreferences(response.data)
-      toast.success('Preferences saved!')
+      toast.success('Terminal preferences committed!')
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Failed to save preferences')
     } finally {
@@ -177,11 +179,11 @@ export default function SettingsPage() {
 
   const handlePasswordChange = async () => {
     if (passwordForm.new_password !== passwordForm.confirm_password) {
-      toast.error('Passwords do not match')
+      toast.error('New passwords do not match')
       return
     }
     if (passwordForm.new_password.length < 8) {
-      toast.error('Password must be at least 8 characters')
+      toast.error('Password must contain at least 8 characters')
       return
     }
     
@@ -191,7 +193,7 @@ export default function SettingsPage() {
         current_password: passwordForm.current_password,
         new_password: passwordForm.new_password
       })
-      toast.success('Password changed!')
+      toast.success('Staff password updated securely')
       setPasswordForm({ current_password: '', new_password: '', confirm_password: '' })
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Failed to change password')
@@ -213,10 +215,10 @@ export default function SettingsPage() {
     setBackupLoading(true)
     try {
       await api.post('/backups/')
-      toast.success('Backup created!')
+      toast.success('Database snapshot generated!')
       fetchBackups()
     } catch (error) {
-      toast.error('Failed to create backup')
+      toast.error('Failed to create backup snapshot')
     } finally {
       setBackupLoading(false)
     }
@@ -227,11 +229,11 @@ export default function SettingsPage() {
   }
 
   const handleDeleteBackup = async (filename: string) => {
-    if (!confirm('Delete this backup?')) return
+    if (!confirm('Are you certain you wish to delete this database archive?')) return
     
     try {
       await api.delete(`/backups/${filename}/delete/`)
-      toast.success('Backup deleted')
+      toast.success('Backup archive removed')
       fetchBackups()
     } catch (error) {
       toast.error('Failed to delete backup')
@@ -242,25 +244,30 @@ export default function SettingsPage() {
   const CurrentIcon = currentTab?.icon || User
 
   return (
-    <div className="space-y-4 lg:space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-xl lg:text-2xl font-bold text-gray-900">Settings</h1>
-        <p className="text-sm lg:text-base text-gray-500 mt-1">Manage your account and preferences</p>
+      <div className="flex items-center gap-3">
+        <div className="w-11 h-11 bg-[#171613] border border-[#2A261F] rounded-xl flex items-center justify-center shadow-md">
+          <Store className="w-5 h-5 text-[#C9A45C]" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">System & Boutique Settings</h1>
+          <p className="text-xs sm:text-sm text-[#8D8980]">Manage boutique profile, invoice prefixes, VAT/GST parameters, security, and database archiving</p>
+        </div>
       </div>
 
-      <div className="flex flex-col lg:flex-row gap-4 lg:gap-6">
+      <div className="flex flex-col lg:flex-row gap-6">
         {/* Mobile Tab Selector */}
         <div className="lg:hidden">
           <button
             onClick={() => setShowMobileMenu(!showMobileMenu)}
-            className="w-full flex items-center justify-between p-4 bg-white rounded-xl border border-gray-100 shadow-sm"
+            className="w-full flex items-center justify-between p-4 bg-[#171613] rounded-2xl border border-[#2A261F] shadow-md"
           >
             <div className="flex items-center gap-3">
-              <CurrentIcon className="w-5 h-5 text-primary-600" />
-              <span className="font-medium text-gray-900">{currentTab?.label}</span>
+              <CurrentIcon className="w-5 h-5 text-[#C9A45C]" />
+              <span className="font-serif font-semibold text-sm text-[#F3EFE6]">{currentTab?.label}</span>
             </div>
-            <ChevronDown className={`w-5 h-5 text-gray-400 transition-transform ${showMobileMenu ? 'rotate-180' : ''}`} />
+            <ChevronDown className={clsx('w-4 h-4 text-[#8D8980] transition-transform', showMobileMenu && 'rotate-180')} />
           </button>
           
           <AnimatePresence>
@@ -269,20 +276,21 @@ export default function SettingsPage() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mt-2 bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
+                className="mt-2 bg-[#171613] rounded-2xl border border-[#2A261F] shadow-xl overflow-hidden divide-y divide-[#2A261F]"
               >
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => { setActiveTab(tab.id); setShowMobileMenu(false); }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
+                    className={clsx(
+                      'w-full flex items-center gap-3 px-4 py-3 text-xs transition-colors',
                       activeTab === tab.id
-                        ? 'bg-primary-50 text-primary-600'
-                        : 'text-gray-600 hover:bg-gray-50'
-                    }`}
+                        ? 'bg-[#C9A45C]/15 text-[#C9A45C] font-bold'
+                        : 'text-[#8D8980] hover:bg-[#1F1E1A] hover:text-[#F3EFE6]'
+                    )}
                   >
-                    <tab.icon className="w-5 h-5" />
-                    <span className="font-medium">{tab.label}</span>
+                    <tab.icon className="w-4 h-4" />
+                    <span>{tab.label}</span>
                   </button>
                 ))}
               </motion.div>
@@ -290,34 +298,28 @@ export default function SettingsPage() {
           </AnimatePresence>
         </div>
 
-        {/* Desktop Sidebar */}
+        {/* Desktop Sidebar Navigation */}
         <div className="hidden lg:block w-64 shrink-0">
-          <motion.div 
-            className="bg-white rounded-xl shadow-sm border border-gray-100 p-3 sticky top-6"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-          >
-            {tabs.map((tab, index) => (
-              <motion.button
+          <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-2 space-y-1 shadow-xl sticky top-6">
+            {tabs.map((tab) => (
+              <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 relative ${
+                className={clsx(
+                  'w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-xs font-semibold text-left',
                   activeTab === tab.id
-                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg shadow-primary-500/30'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
+                    ? 'bg-[#C9A45C] text-[#0B0B0A] shadow-gold font-bold'
+                    : 'text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#1F1E1A]'
+                )}
               >
-                <tab.icon className="w-5 h-5" />
-                <span className="font-medium">{tab.label}</span>
-              </motion.button>
+                <tab.icon className="w-4 h-4" />
+                <span>{tab.label}</span>
+              </button>
             ))}
-          </motion.div>
+          </div>
         </div>
 
-        {/* Content */}
+        {/* Main Settings Card */}
         <div className="flex-1 min-w-0">
           <AnimatePresence mode="wait">
             <motion.div
@@ -325,87 +327,100 @@ export default function SettingsPage() {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 lg:p-6"
+              transition={{ duration: 0.15 }}
+              className="bg-[#171613] rounded-2xl border border-[#2A261F] p-6 lg:p-8 shadow-xl"
             >
+              {/* TAB 1: Profile */}
               {activeTab === 'profile' && (
-                <div className="space-y-4 lg:space-y-6">
-                  <h2 className="text-lg font-semibold text-gray-900">Profile Settings</h2>
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Staff Operator Profile</h2>
+                    <p className="text-xs text-[#8D8980] mt-0.5">Authenticated session credentials and administrative access level</p>
+                  </div>
                   
-                  <div className="flex flex-col sm:flex-row items-center gap-4 lg:gap-6 p-4 lg:p-6 bg-gradient-to-r from-primary-50 to-primary-100 rounded-xl">
-                    <div className="w-16 h-16 lg:w-24 lg:h-24 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl lg:rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
-                      <span className="text-2xl lg:text-3xl font-bold text-white">
-                        {user?.name?.charAt(0).toUpperCase() || 'U'}
-                      </span>
+                  <div className="flex flex-col sm:flex-row items-center gap-5 p-6 bg-[#12110F] border border-[#2A261F] rounded-2xl">
+                    <div className="w-20 h-20 bg-[#171613] border border-[#C9A45C]/40 rounded-2xl flex items-center justify-center font-serif font-bold text-2xl text-[#C9A45C] flex-shrink-0 shadow-gold">
+                      {user?.name?.charAt(0).toUpperCase() || 'U'}
                     </div>
                     <div className="text-center sm:text-left">
-                      <h3 className="text-lg lg:text-xl font-bold text-gray-900">{user?.name}</h3>
-                      <p className="text-sm text-gray-600 capitalize mt-1">{user?.role}</p>
-                      <p className="text-xs text-gray-500 mt-1 lg:mt-2">{user?.email}</p>
+                      <div className="flex items-center gap-2 justify-center sm:justify-start">
+                        <h3 className="text-lg font-serif font-bold text-[#F3EFE6]">{user?.name}</h3>
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-[#C9A45C]/20 border border-[#C9A45C]/40 text-[#C9A45C] uppercase">
+                          {user?.role}
+                        </span>
+                      </div>
+                      <p className="text-xs text-[#8D8980] font-mono mt-1">{user?.email || 'operator@meghaniwatch.com'}</p>
+                      <p className="text-[11px] text-[#8D8980] mt-1">Meghani Watch Co. Vadodara • Authorized Staff Terminal</p>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
-                    <Input label="Full Name" defaultValue={user?.name} icon={<User className="w-4 h-4" />} />
-                    <Input label="Username" defaultValue={user?.username} disabled icon={<User className="w-4 h-4" />} />
-                    <Input label="Email" type="email" defaultValue={user?.email} />
-                    <Input label="Phone" defaultValue={user?.phone} />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Input label="Display Full Name" defaultValue={user?.name} icon={<User className="w-4 h-4 text-[#8D8980]" />} />
+                    <Input label="Login Username" defaultValue={user?.username} disabled icon={<Lock className="w-4 h-4 text-[#C9A45C]" />} />
+                    <Input label="Official Email" type="email" defaultValue={user?.email} />
+                    <Input label="Terminal Phone" defaultValue={user?.phone} />
                   </div>
 
-                  <Button variant="primary" icon={<Save className="w-4 h-4" />}>Save Changes</Button>
+                  <Button icon={<Save className="w-4 h-4" />} className="shadow-gold">
+                    Save Profile Changes
+                  </Button>
                 </div>
               )}
 
+              {/* TAB 2: Business Settings */}
               {activeTab === 'business' && (
-                <div className="space-y-4 lg:space-y-6">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                    <h2 className="text-lg font-semibold text-gray-900">Business Settings</h2>
-                    <Button variant="ghost" size="sm" onClick={fetchBusinessSettings} icon={<RefreshCw className="w-4 h-4" />}>
-                      Refresh
+                <div className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Boutique Storefront & Identity</h2>
+                      <p className="text-xs text-[#8D8980] mt-0.5">Parameters printed on customer tax invoices and shown on the showcase portal</p>
+                    </div>
+                    <Button variant="secondary" size="sm" onClick={fetchBusinessSettings} icon={<RefreshCw className="w-3.5 h-3.5" />}>
+                      Reload
                     </Button>
                   </div>
 
                   {/* Logo Upload */}
-                  <div className="flex flex-col sm:flex-row items-start gap-4 lg:gap-6 p-4 lg:p-6 bg-gray-50 rounded-xl">
+                  <div className="flex flex-col sm:flex-row items-start gap-5 p-5 bg-[#12110F] border border-[#2A261F] rounded-2xl">
                     <div className="relative mx-auto sm:mx-0">
-                      <div className="w-24 h-24 lg:w-32 lg:h-32 bg-white rounded-xl border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden">
+                      <div className="w-28 h-28 bg-[#171613] rounded-2xl border-2 border-dashed border-[#2A261F] flex items-center justify-center overflow-hidden">
                         {logoPreview ? (
-                          <img src={logoPreview} alt="Logo" className="w-full h-full object-contain" />
+                          <img src={logoPreview} alt="Logo" className="w-full h-full object-contain p-2" />
                         ) : (
-                          <Store className="w-8 h-8 lg:w-12 lg:h-12 text-gray-400" />
+                          <Store className="w-10 h-10 text-[#8D8980]" />
                         )}
                       </div>
-                      <label className="absolute -bottom-2 -right-2 w-7 h-7 lg:w-8 lg:h-8 bg-primary-500 hover:bg-primary-600 rounded-full flex items-center justify-center cursor-pointer shadow-lg transition-colors">
-                        <Upload className="w-3.5 h-3.5 lg:w-4 lg:h-4 text-white" />
+                      <label className="absolute -bottom-2 -right-2 w-8 h-8 bg-[#C9A45C] hover:bg-[#E8D5A7] text-[#0B0B0A] rounded-full flex items-center justify-center cursor-pointer shadow-lg transition-colors">
+                        <Upload className="w-4 h-4" />
                         <input type="file" accept="image/*" onChange={handleLogoChange} className="hidden" />
                       </label>
                     </div>
                     <div className="text-center sm:text-left">
-                      <h3 className="font-semibold text-gray-900">Business Logo</h3>
-                      <p className="text-sm text-gray-500 mt-1">Upload your logo for invoices</p>
-                      <p className="text-xs text-gray-400 mt-1 lg:mt-2">Recommended: 500x500px, PNG/JPG</p>
+                      <h3 className="font-serif font-bold text-[#F3EFE6] text-base">Boutique Crest / Logo</h3>
+                      <p className="text-xs text-[#8D8980] mt-1">Rendered on thermal slips, 80mm receipts, and PDF tax invoices</p>
+                      <p className="text-[11px] text-[#8D8980] mt-2 font-mono">PNG / WEBP format recommended (transparent background)</p>
                     </div>
                   </div>
                   
                   {/* Business Info */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Input 
-                      label="Business Name" 
+                      label="Boutique Enterprise Name" 
                       value={businessSettings?.business_name || ''} 
                       onChange={(e) => setBusinessSettings(prev => prev ? {...prev, business_name: e.target.value} : null)}
                     />
                     <Input 
-                      label="Tagline" 
+                      label="Maison Tagline" 
                       value={businessSettings?.tagline || ''} 
                       onChange={(e) => setBusinessSettings(prev => prev ? {...prev, tagline: e.target.value} : null)}
                     />
                     <Input 
-                      label="Phone" 
+                      label="Official Showroom Phone" 
                       value={businessSettings?.phone || ''} 
                       onChange={(e) => setBusinessSettings(prev => prev ? {...prev, phone: e.target.value} : null)}
                     />
                     <Input 
-                      label="Email" 
+                      label="Official Email" 
                       type="email" 
                       value={businessSettings?.email || ''} 
                       onChange={(e) => setBusinessSettings(prev => prev ? {...prev, email: e.target.value} : null)}
@@ -413,9 +428,9 @@ export default function SettingsPage() {
                   </div>
 
                   {/* Address */}
-                  <div className="space-y-3 lg:space-y-4">
-                    <h3 className="font-medium text-gray-700">Address</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
+                  <div className="space-y-3 pt-3 border-t border-[#2A261F]">
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Physical Showroom Address</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input 
                         label="Address Line 1" 
                         value={businessSettings?.address_line1 || ''} 
@@ -439,43 +454,39 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
-                  {/* Tax Info */}
-                  <div className="space-y-3 lg:space-y-4">
-                    <h3 className="font-medium text-gray-700">Tax Information</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
+                  {/* Tax & Invoice Prefixes */}
+                  <div className="space-y-3 pt-3 border-t border-[#2A261F]">
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Taxation & Document Numbering</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input 
-                        label="GSTIN" 
+                        label="GSTIN Number" 
                         value={businessSettings?.gst_number || ''} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, gst_number: e.target.value} : null)}
-                        placeholder="22AAAAA0000A1Z5"
+                        placeholder="24AAAAA0000A1Z5"
                       />
                       <Input 
-                        label="PAN" 
+                        label="Permanent Account Number (PAN)" 
                         value={businessSettings?.pan_number || ''} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, pan_number: e.target.value} : null)}
                         placeholder="AAAAA0000A"
                       />
+                      <Input 
+                        label="Sales Invoice Prefix" 
+                        value={businessSettings?.invoice_prefix || 'MWC-INV-'} 
+                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, invoice_prefix: e.target.value} : null)}
+                      />
+                      <Input 
+                        label="Repair Ticket Prefix" 
+                        value={businessSettings?.repair_prefix || 'MWC-REP-'} 
+                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, repair_prefix: e.target.value} : null)}
+                      />
                     </div>
                   </div>
 
-                  {/* Public Website & Concierge Information */}
-                  <div className="space-y-3 lg:space-y-4 pt-4 border-t border-gray-100">
-                    <h3 className="font-medium text-amber-800 flex items-center gap-2">
-                      <span>Public Website & Showroom Timings</span>
-                    </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 lg:gap-4">
-                      <Input 
-                        label="WhatsApp Concierge Number (with country code)" 
-                        value={businessSettings?.whatsapp_number || ''} 
-                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, whatsapp_number: e.target.value} : null)}
-                        placeholder="919106680191"
-                      />
-                      <Input 
-                        label="Landmark / Navigation Plus Code" 
-                        value={businessSettings?.landmark || ''} 
-                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, landmark: e.target.value} : null)}
-                        placeholder="Near Abhilasha Char Rasta"
-                      />
+                  {/* Hours & WhatsApp */}
+                  <div className="space-y-3 pt-3 border-t border-[#2A261F]">
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Showroom Timings & Direct Line</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input 
                         label="Weekday Opening Hours" 
                         value={businessSettings?.opening_hours_weekdays || ''} 
@@ -489,244 +500,203 @@ export default function SettingsPage() {
                         placeholder="11:00 AM – 8:00 PM (Sun)"
                       />
                       <Input 
-                        label="Google Maps URL" 
-                        value={businessSettings?.google_maps_url || ''} 
-                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, google_maps_url: e.target.value} : null)}
-                        placeholder="https://maps.app.goo.gl/..."
+                        label="WhatsApp Concierge Number" 
+                        value={businessSettings?.whatsapp_number || ''} 
+                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, whatsapp_number: e.target.value} : null)}
+                        placeholder="919106680191"
                       />
                       <Input 
-                        label="Google Maps Embed Iframe Src" 
-                        value={businessSettings?.google_maps_embed_src || ''} 
-                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, google_maps_embed_src: e.target.value} : null)}
-                        placeholder="https://maps.google.com/maps?q=..."
-                      />
-                      <Input 
-                        label="Instagram URL" 
-                        value={businessSettings?.instagram_url || ''} 
-                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, instagram_url: e.target.value} : null)}
-                        placeholder="https://instagram.com/meghaniwatchco"
-                      />
-                      <Input 
-                        label="Facebook URL" 
-                        value={businessSettings?.facebook_url || ''} 
-                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, facebook_url: e.target.value} : null)}
-                        placeholder="https://facebook.com/meghaniwatchco"
+                        label="Prominent Landmark" 
+                        value={businessSettings?.landmark || ''} 
+                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, landmark: e.target.value} : null)}
+                        placeholder="Near Abhilasha Char Rasta"
                       />
                     </div>
                   </div>
 
-                  {/* Public Legal Policies */}
-                  <div className="space-y-3 lg:space-y-4 pt-4 border-t border-gray-100">
-                    <h3 className="font-medium text-gray-700">Public Website Policies</h3>
-                    <div className="grid grid-cols-1 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Terms & Conditions</label>
-                        <textarea
-                          rows={3}
-                          value={businessSettings?.terms_and_conditions || ''}
-                          onChange={(e) => setBusinessSettings(prev => prev ? {...prev, terms_and_conditions: e.target.value} : null)}
-                          className="w-full text-xs border border-gray-300 rounded-lg p-2.5 focus:border-amber-500 focus:outline-none"
-                          placeholder="Store terms, warranty policies, repair conditions..."
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Privacy Policy</label>
-                        <textarea
-                          rows={3}
-                          value={businessSettings?.privacy_policy || ''}
-                          onChange={(e) => setBusinessSettings(prev => prev ? {...prev, privacy_policy: e.target.value} : null)}
-                          className="w-full text-xs border border-gray-300 rounded-lg p-2.5 focus:border-amber-500 focus:outline-none"
-                          placeholder="Customer data confidentiality and privacy commitment..."
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  <Button variant="primary" onClick={handleBusinessSettingsSave} loading={saving} icon={<Save className="w-4 h-4" />}>
-                    Save Business Settings
+                  <Button onClick={handleBusinessSettingsSave} loading={saving} icon={<Save className="w-4 h-4" />} className="shadow-gold">
+                    Commit Boutique Settings
                   </Button>
                 </div>
               )}
 
+              {/* TAB 3: Terminal Preferences */}
               {activeTab === 'preferences' && (
-                <div className="space-y-4 lg:space-y-6">
-                  <h2 className="text-lg font-semibold text-gray-900">User Preferences</h2>
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Terminal Configuration</h2>
+                    <p className="text-xs text-[#8D8980] mt-0.5">Adjust workspace theme, currency formatting, and automated thermal printing</p>
+                  </div>
                   
                   {/* Theme */}
-                  <div className="space-y-3 lg:space-y-4">
-                    <h3 className="font-medium text-gray-700">Appearance</h3>
-                    <div className="grid grid-cols-3 gap-2 lg:gap-4">
+                  <div className="space-y-3">
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Interface Palette</span>
+                    <div className="grid grid-cols-3 gap-3">
                       {[
-                        { id: 'light', label: 'Light', icon: Sun },
-                        { id: 'dark', label: 'Dark', icon: Moon },
-                        { id: 'system', label: 'System', icon: Monitor },
-                      ].map((theme) => (
+                        { id: 'dark', label: 'Midnight Gold (Luxury)', icon: Moon },
+                        { id: 'system', label: 'Boutique Adaptive', icon: Monitor },
+                        { id: 'light', label: 'Showroom Daylight', icon: Sun },
+                      ].map((th) => (
                         <button
-                          key={theme.id}
-                          onClick={() => setPreferences(prev => prev ? {...prev, theme: theme.id} : null)}
-                          className={`p-3 lg:p-4 rounded-lg lg:rounded-xl border-2 transition-all ${
-                            preferences?.theme === theme.id
-                              ? 'border-primary-500 bg-primary-50'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
+                          key={th.id}
+                          onClick={() => setPreferences(prev => prev ? {...prev, theme: th.id} : null)}
+                          className={clsx(
+                            'p-4 rounded-xl border text-center transition-all',
+                            preferences?.theme === th.id
+                              ? 'border-[#C9A45C] bg-[#C9A45C]/15 text-[#C9A45C] font-bold shadow-gold'
+                              : 'border-[#2A261F] bg-[#12110F] text-[#8D8980] hover:text-[#F3EFE6]'
+                          )}
                         >
-                          <theme.icon className={`w-5 h-5 lg:w-6 lg:h-6 mx-auto mb-1 lg:mb-2 ${
-                            preferences?.theme === theme.id ? 'text-primary-600' : 'text-gray-400'
-                          }`} />
-                          <p className={`text-xs lg:text-sm font-medium ${
-                            preferences?.theme === theme.id ? 'text-primary-600' : 'text-gray-600'
-                          }`}>{theme.label}</p>
+                          <th.icon className="w-5 h-5 mx-auto mb-2 text-[#C9A45C]" />
+                          <span className="text-xs">{th.label}</span>
                         </button>
                       ))}
                     </div>
                   </div>
 
                   {/* Language */}
-                  <div className="space-y-3 lg:space-y-4">
-                    <h3 className="font-medium text-gray-700">Language</h3>
-                    <div className="grid grid-cols-3 gap-2 lg:gap-4">
+                  <div className="space-y-3 pt-3 border-t border-[#2A261F]">
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Staff Language</span>
+                    <div className="grid grid-cols-3 gap-3">
                       {[
-                        { id: 'en', label: 'English' },
-                        { id: 'hi', label: 'Hindi' },
-                        { id: 'gu', label: 'Gujarati' },
+                        { id: 'en', label: 'English (UK / Global)' },
+                        { id: 'gu', label: 'Gujarati (ગુજરાતી)' },
+                        { id: 'hi', label: 'Hindi (हिंदी)' },
                       ].map((lang) => (
                         <button
                           key={lang.id}
                           onClick={() => setPreferences(prev => prev ? {...prev, language: lang.id} : null)}
-                          className={`p-3 lg:p-4 rounded-lg lg:rounded-xl border-2 transition-all ${
+                          className={clsx(
+                            'p-3.5 rounded-xl border text-center transition-all text-xs',
                             preferences?.language === lang.id
-                              ? 'border-primary-500 bg-primary-50'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
+                              ? 'border-[#C9A45C] bg-[#C9A45C]/15 text-[#C9A45C] font-bold shadow-gold'
+                              : 'border-[#2A261F] bg-[#12110F] text-[#8D8980] hover:text-[#F3EFE6]'
+                          )}
                         >
-                          <Globe className={`w-5 h-5 lg:w-6 lg:h-6 mx-auto mb-1 lg:mb-2 ${
-                            preferences?.language === lang.id ? 'text-primary-600' : 'text-gray-400'
-                          }`} />
-                          <p className={`text-xs lg:text-sm font-medium ${
-                            preferences?.language === lang.id ? 'text-primary-600' : 'text-gray-600'
-                          }`}>{lang.label}</p>
+                          <Globe className="w-4 h-4 mx-auto mb-1 text-[#C9A45C]" />
+                          <span>{lang.label}</span>
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  {/* POS Settings */}
-                  <div className="space-y-3 lg:space-y-4">
-                    <h3 className="font-medium text-gray-700">POS Settings</h3>
-                    <div className="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg lg:rounded-xl">
-                      <div className="flex items-center gap-2 lg:gap-3">
-                        <Printer className="w-4 h-4 lg:w-5 lg:h-5 text-gray-400" />
+                  {/* POS Printing */}
+                  <div className="space-y-3 pt-3 border-t border-[#2A261F]">
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Automated Receipt Generation</span>
+                    <div className="flex items-center justify-between p-4 bg-[#12110F] border border-[#2A261F] rounded-xl">
+                      <div className="flex items-center gap-3">
+                        <Printer className="w-5 h-5 text-[#C9A45C]" />
                         <div>
-                          <p className="font-medium text-sm lg:text-base text-gray-900">Auto Print Receipt</p>
-                          <p className="text-xs lg:text-sm text-gray-500 hidden sm:block">Print after sale</p>
+                          <p className="font-semibold text-sm text-[#F3EFE6]">Auto-Prompt Receipt Print On Checkout</p>
+                          <p className="text-xs text-[#8D8980]">Automatically trigger browser print dialog upon POS checkout confirmation</p>
                         </div>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          className="sr-only peer" 
-                          checked={preferences?.auto_print_receipt || false}
-                          onChange={(e) => setPreferences(prev => prev ? {...prev, auto_print_receipt: e.target.checked} : null)}
-                        />
-                        <div className="w-10 h-5 lg:w-11 lg:h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 lg:after:h-5 lg:after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                      </label>
+                      <input 
+                        type="checkbox" 
+                        className="w-4 h-4 accent-[#C9A45C]" 
+                        checked={preferences?.auto_print_receipt || false}
+                        onChange={(e) => setPreferences(prev => prev ? {...prev, auto_print_receipt: e.target.checked} : null)}
+                      />
                     </div>
                   </div>
 
-                  <Button variant="primary" onClick={handlePreferencesSave} loading={saving} icon={<Save className="w-4 h-4" />}>
-                    Save Preferences
+                  <Button onClick={handlePreferencesSave} loading={saving} icon={<Save className="w-4 h-4" />} className="shadow-gold">
+                    Commit Terminal Preferences
                   </Button>
                 </div>
               )}
 
+              {/* TAB 4: Notifications */}
               {activeTab === 'notifications' && (
-                <div className="space-y-4 lg:space-y-6">
-                  <h2 className="text-lg font-semibold text-gray-900">Notification Settings</h2>
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Dispatch & Alert Channels</h2>
+                    <p className="text-xs text-[#8D8980] mt-0.5">Configure client messaging gateways and low-stock warning triggers</p>
+                  </div>
                   
-                  <div className="space-y-3 lg:space-y-4">
-                    <h3 className="font-medium text-gray-700">Notification Channels</h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 lg:gap-4">
+                  <div className="space-y-3">
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Active Outbound Gateways</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       {[
-                        { key: 'enable_email', label: 'Email' },
-                        { key: 'enable_sms', label: 'SMS' },
-                        { key: 'enable_whatsapp', label: 'WhatsApp' },
+                        { key: 'enable_whatsapp', label: 'WhatsApp API' },
+                        { key: 'enable_email', label: 'Boutique Email' },
+                        { key: 'enable_sms', label: 'Transactional SMS' },
                       ].map((channel) => (
-                        <div key={channel.key} className="p-3 lg:p-4 bg-gray-50 rounded-lg lg:rounded-xl">
-                          <div className="flex items-center justify-between">
-                            <p className="font-medium text-sm lg:text-base text-gray-900">{channel.label}</p>
-                            <label className="relative inline-flex items-center cursor-pointer">
-                              <input 
-                                type="checkbox" 
-                                className="sr-only peer" 
-                                checked={(businessSettings as any)?.[channel.key] || false}
-                                onChange={(e) => setBusinessSettings(prev => prev ? {...prev, [channel.key]: e.target.checked} : null)}
-                              />
-                              <div className="w-9 h-5 bg-gray-200 peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-600"></div>
-                            </label>
-                          </div>
+                        <div key={channel.key} className="p-4 bg-[#12110F] border border-[#2A261F] rounded-xl flex items-center justify-between">
+                          <span className="font-medium text-xs text-[#F3EFE6]">{channel.label}</span>
+                          <input 
+                            type="checkbox" 
+                            className="w-4 h-4 accent-[#C9A45C]" 
+                            checked={(businessSettings as any)?.[channel.key] || false}
+                            onChange={(e) => setBusinessSettings(prev => prev ? {...prev, [channel.key]: e.target.checked} : null)}
+                          />
                         </div>
                       ))}
                     </div>
                   </div>
                   
-                  <div className="space-y-3 lg:space-y-4">
-                    <h3 className="font-medium text-gray-700">Your Notifications</h3>
+                  <div className="space-y-3 pt-3 border-t border-[#2A261F]">
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Operational In-App Triggers</span>
                     {[
-                      { key: 'notify_low_stock', label: 'Low Stock Alerts' },
-                      { key: 'notify_new_repair', label: 'New Repair Tickets' },
-                      { key: 'notify_repair_ready', label: 'Repair Ready' },
-                      { key: 'notify_daily_summary', label: 'Daily Summary' },
+                      { key: 'notify_low_stock', label: 'Low Stock Level Warnings (Critical Threshold Alerts)' },
+                      { key: 'notify_new_repair', label: 'New Atelier Intake Registration' },
+                      { key: 'notify_repair_ready', label: 'Watch Ready for Client Collection' },
+                      { key: 'notify_daily_summary', label: 'End-of-Day Register Settlement Summary' },
                     ].map((item) => (
-                      <div key={item.key} className="flex items-center justify-between p-3 lg:p-4 bg-gray-50 rounded-lg lg:rounded-xl">
-                        <p className="font-medium text-sm lg:text-base text-gray-900">{item.label}</p>
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input 
-                            type="checkbox" 
-                            className="sr-only peer" 
-                            checked={(preferences as any)?.[item.key] || false}
-                            onChange={(e) => setPreferences(prev => prev ? {...prev, [item.key]: e.target.checked} : null)}
-                          />
-                          <div className="w-10 h-5 lg:w-11 lg:h-6 bg-gray-200 peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 lg:after:h-5 lg:after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                        </label>
+                      <div key={item.key} className="flex items-center justify-between p-3.5 bg-[#12110F] border border-[#2A261F] rounded-xl">
+                        <span className="text-xs text-[#F3EFE6] font-medium">{item.label}</span>
+                        <input 
+                          type="checkbox" 
+                          className="w-4 h-4 accent-[#C9A45C]" 
+                          checked={(preferences as any)?.[item.key] || false}
+                          onChange={(e) => setPreferences(prev => prev ? {...prev, [item.key]: e.target.checked} : null)}
+                        />
                       </div>
                     ))}
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-2 lg:gap-3">
-                    <Button variant="primary" onClick={handleBusinessSettingsSave} loading={saving} icon={<Save className="w-4 h-4" />}>
-                      Save Channel Settings
+                  <div className="flex gap-3 pt-2">
+                    <Button onClick={handleBusinessSettingsSave} loading={saving} icon={<Save className="w-4 h-4" />} className="shadow-gold">
+                      Save Gateway Channels
                     </Button>
-                    <Button variant="secondary" onClick={handlePreferencesSave} loading={saving} icon={<Save className="w-4 h-4" />}>
-                      Save Preferences
+                    <Button variant="secondary" onClick={handlePreferencesSave} loading={saving}>
+                      Save Alert Triggers
                     </Button>
                   </div>
                 </div>
               )}
 
+              {/* TAB 5: Security */}
               {activeTab === 'security' && (
-                <div className="space-y-4 lg:space-y-6">
-                  <h2 className="text-lg font-semibold text-gray-900">Security Settings</h2>
-                  
-                  <div className="p-3 lg:p-4 bg-yellow-50 border border-yellow-200 rounded-lg lg:rounded-xl">
-                    <p className="text-xs lg:text-sm text-yellow-700">Enter your current password to change it.</p>
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Credential & Security Management</h2>
+                    <p className="text-xs text-[#8D8980] mt-0.5">Update staff account authentication credentials</p>
                   </div>
                   
-                  <div className="space-y-3 lg:space-y-4 max-w-md">
+                  <div className="p-4 bg-amber-950/20 border border-amber-800/40 rounded-xl text-xs text-amber-300">
+                    <p>Enter your active authentication key followed by the new credential set.</p>
+                  </div>
+                  
+                  <div className="space-y-4 max-w-md">
                     <Input 
                       label="Current Password" 
                       type="password"
+                      placeholder="••••••••••••"
                       value={passwordForm.current_password}
                       onChange={(e) => setPasswordForm(prev => ({...prev, current_password: e.target.value}))}
                     />
                     <Input 
-                      label="New Password" 
+                      label="New Secure Password" 
                       type="password"
+                      placeholder="••••••••••••"
                       value={passwordForm.new_password}
                       onChange={(e) => setPasswordForm(prev => ({...prev, new_password: e.target.value}))}
                     />
                     <Input 
                       label="Confirm New Password" 
                       type="password"
+                      placeholder="••••••••••••"
                       value={passwordForm.confirm_password}
                       onChange={(e) => setPasswordForm(prev => ({...prev, confirm_password: e.target.value}))}
                       error={passwordForm.confirm_password && passwordForm.new_password !== passwordForm.confirm_password ? 'Passwords do not match' : undefined}
@@ -734,77 +704,81 @@ export default function SettingsPage() {
                   </div>
 
                   <Button 
-                    variant="primary"
                     onClick={handlePasswordChange}
                     loading={saving}
                     disabled={!passwordForm.current_password || !passwordForm.new_password || passwordForm.new_password !== passwordForm.confirm_password}
                     icon={<Shield className="w-4 h-4" />}
+                    className="shadow-gold"
                   >
-                    Change Password
+                    Commit Password Update
                   </Button>
                 </div>
               )}
 
+              {/* TAB 6: Backup & Database Archiving */}
               {activeTab === 'backup' && (
-                <div className="space-y-4 lg:space-y-6">
-                  <h2 className="text-lg font-semibold text-gray-900">Backup & Restore</h2>
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Database Snapshot & Archiving</h2>
+                    <p className="text-xs text-[#8D8980] mt-0.5">Generate standalone SQLite/Postgres data snapshots for disaster recovery</p>
+                  </div>
                   
-                  <div className="p-3 lg:p-4 bg-blue-50 border border-blue-200 rounded-lg lg:rounded-xl">
-                    <div className="flex items-start gap-2 lg:gap-3">
-                      <Clock className="w-4 h-4 lg:w-5 lg:h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p className="font-medium text-sm lg:text-base text-blue-800">Automatic Backups</p>
-                        <p className="text-xs lg:text-sm text-blue-600 mt-0.5 lg:mt-1">Backups are created daily at 2:00 AM IST.</p>
-                      </div>
+                  <div className="p-4 bg-sky-950/20 border border-sky-800/40 rounded-xl flex items-start gap-3 text-xs text-sky-300">
+                    <Clock className="w-4 h-4 text-sky-400 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <p className="font-semibold text-sky-200">Scheduled Automated Archiving Active</p>
+                      <p className="text-[#8D8980] mt-0.5">Database dumps are compressed and saved to secure storage daily at 02:00 AM IST.</p>
                     </div>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row gap-2 lg:gap-4">
-                    <Button variant="primary" onClick={handleBackup} loading={backupLoading} icon={<Database className="w-4 h-4" />}>
-                      Create Backup Now
+                  <div className="flex gap-3">
+                    <Button onClick={handleBackup} loading={backupLoading} icon={<Database className="w-4 h-4" />} className="shadow-gold">
+                      Generate Archive Snapshot Now
                     </Button>
                     {backups.length > 0 && (
-                      <Button variant="secondary" onClick={() => handleDownloadBackup(backups[0].filename)} icon={<Download className="w-4 h-4" />}>
-                        Download Latest
+                      <Button variant="secondary" onClick={() => handleDownloadBackup(backups[0].filename)} icon={<Download className="w-4 h-4 text-[#C9A45C]" />}>
+                        Download Most Recent
                       </Button>
                     )}
                   </div>
 
-                  <div className="border-t border-gray-200 pt-4 lg:pt-6">
-                    <h3 className="font-medium text-gray-900 mb-3 lg:mb-4">Recent Backups ({backups.length})</h3>
+                  <div className="pt-4 border-t border-[#2A261F]">
+                    <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-3">Stored Database Snapshots ({backups.length})</h3>
                     {backups.length === 0 ? (
-                      <div className="text-center py-6 lg:py-8 text-gray-500">
-                        <Database className="w-10 h-10 lg:w-12 lg:h-12 mx-auto mb-2 lg:mb-3 text-gray-300" />
-                        <p className="text-sm lg:text-base">No backups yet</p>
+                      <div className="text-center py-8 text-[#8D8980] bg-[#12110F] border border-[#2A261F] rounded-xl">
+                        <Database className="w-8 h-8 mx-auto mb-2 opacity-30 text-[#C9A45C]" />
+                        <p className="text-xs">No manual snapshots generated yet.</p>
                       </div>
                     ) : (
                       <div className="space-y-2">
-                        {backups.slice(0, 10).map((backup, i) => (
-                          <motion.div 
+                        {backups.slice(0, 8).map((backup) => (
+                          <div 
                             key={backup.filename} 
-                            className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 lg:p-4 bg-gray-50 rounded-lg lg:rounded-xl"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.05 }}
+                            className="flex items-center justify-between p-3.5 bg-[#12110F] border border-[#2A261F] rounded-xl text-xs"
                           >
-                            <div className="flex items-center gap-3 lg:gap-4">
-                              <div className="w-8 h-8 lg:w-10 lg:h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                <Check className="w-4 h-4 lg:w-5 lg:h-5 text-green-600" />
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 bg-emerald-950/40 border border-emerald-800/40 rounded-lg flex items-center justify-center text-emerald-400">
+                                <Check className="w-4 h-4" />
                               </div>
                               <div>
-                                <p className="font-medium text-sm lg:text-base text-gray-900">
-                                  {new Date(backup.created_at).toLocaleString()}
-                                </p>
-                                <p className="text-xs lg:text-sm text-gray-500">{backup.size_mb} MB</p>
+                                <p className="font-mono font-bold text-[#F3EFE6]">{backup.filename}</p>
+                                <p className="text-[11px] text-[#8D8980] font-mono">{backup.size_mb} MB • {new Date(backup.created_at).toLocaleString()}</p>
                               </div>
                             </div>
-                            <div className="flex gap-2 ml-11 sm:ml-0">
-                              <Button variant="ghost" size="sm" icon={<Download className="w-4 h-4" />} onClick={() => handleDownloadBackup(backup.filename)}>
-                                <span className="hidden sm:inline">Download</span>
+
+                            <div className="flex items-center gap-2">
+                              <Button variant="secondary" size="sm" onClick={() => handleDownloadBackup(backup.filename)} icon={<Download className="w-3.5 h-3.5" />}>
+                                Download
                               </Button>
-                              <Button variant="ghost" size="sm" className="text-red-600 hover:bg-red-50" icon={<X className="w-4 h-4" />} onClick={() => handleDeleteBackup(backup.filename)} />
+                              <button 
+                                onClick={() => handleDeleteBackup(backup.filename)}
+                                className="p-2 text-rose-400 hover:bg-rose-950/40 rounded-lg transition"
+                                title="Purge Archive"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
                             </div>
-                          </motion.div>
+                          </div>
                         ))}
                       </div>
                     )}

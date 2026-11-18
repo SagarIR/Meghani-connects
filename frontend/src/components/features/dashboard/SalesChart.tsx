@@ -44,8 +44,8 @@ export default function SalesChart() {
     return (
       <div className="h-48 sm:h-64 lg:h-80 flex items-center justify-center">
         <div className="animate-pulse flex flex-col items-center gap-2">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gray-200 rounded-lg sm:rounded-xl"></div>
-          <div className="w-20 sm:w-24 h-2.5 sm:h-3 bg-gray-200 rounded"></div>
+          <div className="w-10 h-10 bg-[#1F1E1A] rounded-xl border border-[#2A261F]"></div>
+          <div className="w-24 h-3 bg-[#1F1E1A] rounded"></div>
         </div>
       </div>
     )
@@ -53,16 +53,10 @@ export default function SalesChart() {
 
   if (data.length === 0) {
     return (
-      <div className="h-48 sm:h-64 lg:h-80 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-gray-100 rounded-xl sm:rounded-2xl flex items-center justify-center mb-3 sm:mb-4">
-            <svg className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} 
-                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-          </div>
-          <p className="text-sm sm:text-base text-gray-500">No sales data available</p>
-          <p className="text-xs sm:text-sm text-gray-400 mt-1">Start making sales to see the chart</p>
+      <div className="h-48 sm:h-64 lg:h-80 flex items-center justify-center text-center text-[#8D8980]">
+        <div>
+          <p className="text-sm font-semibold text-[#F3EFE6]">No Sales Records Found</p>
+          <p className="text-xs mt-1">Transactions logged via the POS terminal will appear here</p>
         </div>
       </div>
     )
@@ -76,19 +70,27 @@ export default function SalesChart() {
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white/95 backdrop-blur-lg rounded-lg sm:rounded-xl shadow-xl border border-gray-100 p-2.5 sm:p-4">
-          <p className="text-[10px] sm:text-xs font-medium text-gray-500 mb-1.5 sm:mb-2">{label}</p>
-          <div className="space-y-0.5 sm:space-y-1">
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-primary-500"></div>
-              <span className="text-xs sm:text-sm text-gray-600">Sales:</span>
-              <span className="text-xs sm:text-sm font-bold text-gray-900">₹{payload[0]?.value?.toLocaleString('en-IN')}</span>
+        <div className="bg-[#171613] border border-[#2A261F] rounded-xl shadow-2xl p-3 text-xs">
+          <p className="font-mono text-[11px] text-[#8D8980] uppercase tracking-wider mb-2">{label}</p>
+          <div className="space-y-1">
+            <div className="flex items-center justify-between gap-4">
+              <span className="flex items-center gap-1.5 text-[#8D8980]">
+                <span className="w-2 h-2 rounded-full bg-[#C9A45C]" /> Sales:
+              </span>
+              <span className="font-mono font-bold text-[#F3EFE6]">
+                ₹{payload[0]?.value?.toLocaleString('en-IN')}
+              </span>
             </div>
-            <div className="flex items-center gap-1.5 sm:gap-2">
-              <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500"></div>
-              <span className="text-xs sm:text-sm text-gray-600">Profit:</span>
-              <span className="text-xs sm:text-sm font-bold text-emerald-600">₹{payload[1]?.value?.toLocaleString('en-IN')}</span>
-            </div>
+            {payload[1] && (
+              <div className="flex items-center justify-between gap-4">
+                <span className="flex items-center gap-1.5 text-[#8D8980]">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" /> Margin:
+                </span>
+                <span className="font-mono font-bold text-emerald-400">
+                  ₹{payload[1]?.value?.toLocaleString('en-IN')}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       )
@@ -97,53 +99,50 @@ export default function SalesChart() {
   }
 
   return (
-    <div className="h-48 sm:h-64 lg:h-80">
+    <div className="h-48 sm:h-64 lg:h-80 w-full">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={formattedData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+        <AreaChart data={formattedData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>
-            <linearGradient id="salesGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3}/>
-              <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
+            <linearGradient id="goldSalesGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#C9A45C" stopOpacity={0.35}/>
+              <stop offset="95%" stopColor="#C9A45C" stopOpacity={0}/>
             </linearGradient>
-            <linearGradient id="profitGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+            <linearGradient id="emeraldMarginGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#10b981" stopOpacity={0.25}/>
               <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="#2A261F" vertical={false} />
           <XAxis 
             dataKey="formattedDate" 
-            axisLine={false}
+            stroke="#8D8980" 
+            fontSize={11}
             tickLine={false}
-            tick={{ fill: '#94a3b8', fontSize: 10 }}
-            dy={10}
-            interval="preserveStartEnd"
+            axisLine={false}
           />
           <YAxis 
-            axisLine={false}
+            stroke="#8D8980" 
+            fontSize={11}
             tickLine={false}
-            tick={{ fill: '#94a3b8', fontSize: 10 }}
+            axisLine={false}
             tickFormatter={formatCurrency}
-            dx={-5}
-            width={45}
           />
           <Tooltip content={<CustomTooltip />} />
           <Area 
             type="monotone" 
             dataKey="sales" 
-            stroke="#6366f1" 
+            stroke="#C9A45C" 
             strokeWidth={2}
-            fill="url(#salesGradient)" 
-            animationDuration={1500}
+            fillOpacity={1} 
+            fill="url(#goldSalesGradient)" 
           />
           <Area 
             type="monotone" 
             dataKey="profit" 
             stroke="#10b981" 
-            strokeWidth={2}
-            fill="url(#profitGradient)"
-            animationDuration={1500}
-            animationBegin={300}
+            strokeWidth={1.5}
+            fillOpacity={1} 
+            fill="url(#emeraldMarginGradient)" 
           />
         </AreaChart>
       </ResponsiveContainer>

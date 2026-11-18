@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Search, Plus, Minus, Trash2, User, CreditCard, Wallet, Smartphone, 
   ShoppingCart, Package, Barcode, Receipt, X, Check, ChevronRight, Camera,
-  Gift, Star, ChevronUp, Split
+  Gift, Star, ChevronUp, Split, Sparkles, Filter, AlertCircle, RefreshCw
 } from 'lucide-react'
 import { api } from '@/services/api'
 import { Product, CartItem, Customer } from '@/types'
@@ -16,8 +16,19 @@ import Invoice from '@/components/features/Invoice'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
 
+const categories = [
+  { value: '', label: 'All Watches' },
+  { value: 'analog', label: 'Analog' },
+  { value: 'digital', label: 'Digital' },
+  { value: 'smart', label: 'Smart' },
+  { value: 'wall', label: 'Wall Clocks' },
+  { value: 'accessory', label: 'Accessories' },
+]
+
 export default function POSPage() {
   const [products, setProducts] = useState<Product[]>([])
+  const [initialProducts, setInitialProducts] = useState<Product[]>([])
+  const [selectedCategory, setSelectedCategory] = useState('')
   const [cart, setCart] = useState<CartItem[]>([])
   const [search, setSearch] = useState('')
   const [customer, setCustomer] = useState<Customer | null>(null)
@@ -37,7 +48,26 @@ export default function POSPage() {
   const [showMobileCart, setShowMobileCart] = useState(false)
   const [showInvoice, setShowInvoice] = useState(false)
   const [invoiceData, setInvoiceData] = useState<any>(null)
+  const [loadingProducts, setLoadingProducts] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
+
+  // Fetch initial catalog on mount
+  useEffect(() => {
+    fetchInitialCatalog()
+  }, [])
+
+  const fetchInitialCatalog = async () => {
+    setLoadingProducts(true)
+    try {
+      const response = await api.get('/products/?page_size=12&ordering=-created_at')
+      const items = response.data?.results || response.data || []
+      setInitialProducts(items)
+    } catch (err) {
+      console.error('Failed to load initial catalog:', err)
+    } finally {
+      setLoadingProducts(false)
+    }
+  }
 
   // Keyboard shortcut listener (/ for search, F4 for payment modal)
   useEffect(() => {
@@ -54,6 +84,38 @@ export default function POSPage() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [cart.length])
 
+  // Keyboard-wedge barcode scanner hardware listener
+  useEffect(() => {
+    let buffer = ''
+    let lastKeyTime = Date.now()
+
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement
+      const isInput = activeEl?.tagName === 'INPUT' || activeEl?.tagName === 'TEXTAREA'
+
+      const currentTime = Date.now()
+      if (currentTime - lastKeyTime > 120) {
+        buffer = ''
+      }
+      lastKeyTime = currentTime
+
+      if (e.key === 'Enter') {
+        if (buffer.length >= 3 && !isInput) {
+          e.preventDefault()
+          handleBarcodeScan(buffer.trim())
+          buffer = ''
+        }
+      } else if (e.key.length === 1 && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        if (!isInput) {
+          buffer += e.key
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleGlobalKeyDown)
+    return () => window.removeEventListener('keydown', handleGlobalKeyDown)
+  }, [cart])
+
   // Handle barcode scan
   const handleBarcodeScan = async (barcode: string) => {
     try {
@@ -65,7 +127,7 @@ export default function POSPage() {
     } catch (error) {
       setSearch(barcode)
       setShowScanner(false)
-      toast.error('Product not found. Try searching instead.')
+      toast.error('Product not found for scanned barcode. Filtering inventory.')
     }
   }
 
@@ -75,7 +137,7 @@ export default function POSPage() {
     } else {
       setProducts([])
     }
-  }, [search])
+  }, [search, selectedCategory])
 
   useEffect(() => {
     if (customerSearch.length >= 2) {
@@ -87,7 +149,11 @@ export default function POSPage() {
 
   const searchProducts = async () => {
     try {
-      const response = await api.get(`/products/search/?q=${search}`)
+      let url = `/products/search/?q=${encodeURIComponent(search)}`
+      if (selectedCategory) {
+        url += `&category=${selectedCategory}`
+      }
+      const response = await api.get(url)
       setProducts(response.data)
     } catch (error) {
       console.error('Search failed:', error)
@@ -96,7 +162,7 @@ export default function POSPage() {
 
   const searchCustomers = async () => {
     try {
-      const response = await api.get(`/customers/?search=${customerSearch}`)
+      const response = await api.get(`/customers/?search=${encodeURIComponent(customerSearch)}`)
       setCustomerResults(response.data.results || response.data)
     } catch (error) {
       console.error('Customer search failed:', error)
@@ -108,7 +174,7 @@ export default function POSPage() {
     
     if (existing) {
       if (existing.quantity >= product.stock) {
-        toast.error('Insufficient stock')
+        toast.error(`Insufficient stock for ${product.name} (Max: ${product.stock})`)
         return
       }
       setCart(cart.map(item =>
@@ -117,10 +183,14 @@ export default function POSPage() {
           : item
       ))
     } else {
+      if (product.stock <= 0) {
+        toast.error(`${product.name} is out of stock`)
+        return
+      }
       setCart([...cart, { product, quantity: 1, unit_price: product.selling_price }])
     }
     
-    toast.success(`${product.name} added`, { duration: 1500 })
+    toast.success(`${product.name} added to cart`, { duration: 1500 })
     setSearch('')
     setProducts([])
   }
@@ -131,7 +201,7 @@ export default function POSPage() {
         const newQty = item.quantity + delta
         if (newQty < 1) return item
         if (newQty > item.product.stock) {
-          toast.error('Insufficient stock')
+          toast.error(`Maximum available stock is ${item.product.stock}`)
           return item
         }
         return { ...item, quantity: newQty }
@@ -149,7 +219,7 @@ export default function POSPage() {
     setShowCustomerSearch(false)
     setCustomerSearch('')
     setCustomerResults([])
-    toast.success(`Customer: ${c.name}`, { duration: 1500 })
+    toast.success(`Client Attached: ${c.name}`, { duration: 1500 })
   }
 
   const subtotal = cart.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0)
@@ -167,7 +237,7 @@ export default function POSPage() {
 
   const handleCheckout = async () => {
     if (cart.length === 0) {
-      toast.error('Cart is empty')
+      toast.error('Register cart is empty')
       return
     }
 
@@ -228,7 +298,7 @@ export default function POSPage() {
       
       setInvoiceData(invoice)
       setShowInvoice(true)
-      toast.success(`Sale completed! Invoice: ${response.data.invoice_number}`, { duration: 3000 })
+      toast.success(`Sale completed! Invoice: ${response.data.invoice_number}`, { duration: 3500 })
       
       setCart([])
       setCustomer(null)
@@ -236,6 +306,7 @@ export default function POSPage() {
       setSplitPayments({ cash: 0, upi: 0, card: 0 })
       setShowPaymentModal(false)
       setShowMobileCart(false)
+      fetchInitialCatalog()
     } catch (error: any) {
       const errMsg = error.response?.data?.error || 
                      (typeof error.response?.data?.payment_details === 'string' ? error.response.data.payment_details : null) ||
@@ -254,22 +325,25 @@ export default function POSPage() {
     toast.success('Cart cleared')
   }
 
+  // Active product list to render
+  const displayedProducts = products.length > 0 
+    ? products 
+    : (selectedCategory 
+        ? initialProducts.filter(p => p.category === selectedCategory) 
+        : initialProducts)
+
   return (
-    <div className="h-[calc(100vh-6rem)] lg:h-[calc(100vh-8rem)] flex flex-col lg:flex-row gap-4 lg:gap-6">
-      {/* Left - Product Search & Selection */}
+    <div className="h-[calc(100vh-5.5rem)] lg:h-[calc(100vh-7rem)] flex flex-col lg:flex-row gap-4 lg:gap-6 text-[#F3EFE6]">
+      {/* Left Workspace: Search, Inventory Gallery & Quick Selection */}
       <div className="flex-1 flex flex-col gap-3 lg:gap-4 min-h-0">
-        {/* Search Bar */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-gray-100"
-        >
+        {/* Top Search & Barcode Wedge Bar */}
+        <div className="bg-[#171613] border border-[#2A261F] rounded-2xl p-3 sm:p-4 shadow-xl">
           <div className="relative">
-            <Search className="absolute left-3 lg:left-4 top-1/2 -translate-y-1/2 w-4 h-4 lg:w-5 lg:h-5 text-gray-400" />
+            <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-[#C9A45C]" />
             <input
               ref={searchInputRef}
               type="text"
-              placeholder="Search by name, brand or scan barcode (Enter)..."
+              placeholder="Search by timepiece name, brand, or scan barcode wedge (Enter)..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={async (e) => {
@@ -295,296 +369,315 @@ export default function POSPage() {
                   }
                 }
               }}
-              className="w-full pl-10 lg:pl-12 pr-20 lg:pr-24 py-3 lg:py-4 bg-gray-50 border-0 rounded-lg lg:rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm lg:text-lg text-gray-900 placeholder-gray-400"
+              className="w-full pl-10 sm:pl-12 pr-24 py-3 bg-[#12110F] border border-[#2A261F] rounded-xl text-sm sm:text-base text-[#F3EFE6] placeholder-[#8D8980] focus:outline-none focus:border-[#C9A45C] focus:ring-1 focus:ring-[#C9A45C] transition-all"
               autoFocus
             />
-            <div className="absolute right-2 lg:right-4 top-1/2 -translate-y-1/2 flex items-center gap-1 lg:gap-2">
+            <div className="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1.5 sm:gap-2">
               <button
                 onClick={() => setShowScanner(true)}
-                className="p-1.5 lg:p-2 bg-primary-100 hover:bg-primary-200 rounded-lg transition-colors group"
-                title="Scan Barcode"
+                className="p-2 bg-[#1F1E1A] hover:bg-[#282620] border border-[#2A261F] hover:border-[#C9A45C]/50 rounded-lg text-[#C9A45C] transition-colors"
+                title="Camera Barcode Scanner"
               >
-                <Camera className="w-4 h-4 lg:w-5 lg:h-5 text-primary-600 group-hover:text-primary-700" />
+                <Camera className="w-4 h-4" />
               </button>
-              <kbd className="hidden sm:inline px-2 py-1 bg-gray-200 rounded text-xs text-gray-500 font-mono">/</kbd>
+              <kbd className="hidden sm:inline-flex items-center px-2 py-1 bg-[#1F1E1A] border border-[#2A261F] rounded text-xs text-[#8D8980] font-mono">
+                /
+              </kbd>
             </div>
           </div>
 
-          {/* Search Results */}
-          <AnimatePresence>
-            {products.length > 0 && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="mt-3 lg:mt-4 space-y-1.5 lg:space-y-2 max-h-48 lg:max-h-80 overflow-y-auto"
+          {/* Quick Filter Categories */}
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pt-3 scrollbar-hide">
+            {categories.map((cat) => (
+              <button
+                key={cat.value}
+                onClick={() => setSelectedCategory(cat.value)}
+                className={clsx(
+                  'px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all border',
+                  selectedCategory === cat.value
+                    ? 'bg-[#C9A45C] text-[#0B0B0A] font-bold border-[#C9A45C] shadow-sm shadow-[#C9A45C]/20'
+                    : 'bg-[#12110F] text-[#8D8980] border-[#2A261F] hover:border-[#C9A45C]/40 hover:text-[#F3EFE6]'
+                )}
               >
-                {products.map((product, index) => (
-                  <motion.button
-                    key={product.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.05 }}
-                    onClick={() => addToCart(product)}
-                    className="w-full flex items-center gap-3 lg:gap-4 p-3 lg:p-4 bg-gray-50 hover:bg-primary-50 rounded-lg lg:rounded-xl transition-all group"
-                  >
-                    <div className="w-10 h-10 lg:w-12 lg:h-12 bg-white rounded-lg flex items-center justify-center border border-gray-100 group-hover:border-primary-200 flex-shrink-0">
-                      <Package className="w-5 h-5 lg:w-6 lg:h-6 text-gray-400 group-hover:text-primary-500" />
-                    </div>
-                    <div className="flex-1 text-left min-w-0">
-                      <p className="font-medium text-sm lg:text-base text-gray-900 group-hover:text-primary-700 truncate">{product.name}</p>
-                      <div className="flex items-center gap-2 lg:gap-3 mt-0.5 lg:mt-1">
-                        <span className="text-xs lg:text-sm text-gray-500 truncate">{product.brand}</span>
-                        <span className={clsx(
-                          'text-[10px] lg:text-xs px-1.5 lg:px-2 py-0.5 rounded-full flex-shrink-0',
-                          product.stock > 5 ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
-                        )}>
-                          Stock: {product.stock}
-                        </span>
-                      </div>
-                    </div>
-                    <div className="text-right flex-shrink-0">
-                      <p className="font-bold text-sm lg:text-base text-primary-600">{formatCurrency(product.selling_price)}</p>
-                      <p className="text-[10px] lg:text-xs text-gray-400">Tap to add</p>
-                    </div>
-                    <Plus className="w-4 h-4 lg:w-5 lg:h-5 text-gray-400 group-hover:text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 hidden sm:block" />
-                  </motion.button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
+                {cat.label}
+              </button>
+            ))}
+          </div>
+        </div>
 
-        {/* Customer Selection */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="bg-white rounded-xl lg:rounded-2xl p-3 lg:p-4 shadow-sm border border-gray-100"
-        >
+        {/* Customer Attachment Card */}
+        <div className="bg-[#171613] border border-[#2A261F] rounded-2xl p-3 sm:p-3.5 shadow-xl">
           {customer ? (
-            <div className="flex items-center gap-3 lg:gap-4">
-              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg lg:rounded-xl flex items-center justify-center flex-shrink-0">
-                <span className="text-lg lg:text-xl font-bold text-white">{customer.name.charAt(0)}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <p className="font-semibold text-sm lg:text-base text-gray-900">{customer.name}</p>
-                  <span className="text-[10px] lg:text-xs px-1.5 lg:px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full flex items-center gap-1 flex-shrink-0">
-                    <Star className="w-2.5 h-2.5 lg:w-3 lg:h-3" /> {customer.loyalty_points} pts
-                  </span>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#2A261F] to-[#171613] border border-[#C9A45C]/50 flex items-center justify-center font-bold text-sm text-[#C9A45C] flex-shrink-0">
+                  {customer.name.charAt(0).toUpperCase()}
                 </div>
-                <p className="text-xs lg:text-sm text-gray-500">{customer.phone}</p>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <p className="font-semibold text-sm text-[#F3EFE6] truncate">{customer.name}</p>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-950/70 border border-amber-800/50 text-amber-300 font-medium flex items-center gap-1">
+                      <Star className="w-2.5 h-2.5 text-amber-400" /> {customer.loyalty_points} VIP pts
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#8D8980] font-mono">{customer.phone}</p>
+                </div>
               </div>
               <Button variant="ghost" size="sm" onClick={() => setCustomer(null)} className="flex-shrink-0">
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 mr-1" /> Detach
               </Button>
             </div>
           ) : (
             <button
               onClick={() => setShowCustomerSearch(true)}
-              className="w-full flex items-center gap-3 lg:gap-4 p-2 lg:p-3 bg-gray-50 hover:bg-gray-100 rounded-lg lg:rounded-xl transition-colors"
+              className="w-full flex items-center justify-between p-2 sm:p-2.5 rounded-xl bg-[#12110F] hover:bg-[#1A1916] border border-[#2A261F] hover:border-[#C9A45C]/40 transition-colors group"
             >
-              <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gray-200 rounded-lg lg:rounded-xl flex items-center justify-center flex-shrink-0">
-                <User className="w-5 h-5 lg:w-6 lg:h-6 text-gray-400" />
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#1F1E1A] border border-[#2A261F] flex items-center justify-center text-[#8D8980] group-hover:text-[#C9A45C]">
+                  <User className="w-4 h-4" />
+                </div>
+                <div className="text-left">
+                  <p className="text-xs sm:text-sm font-semibold text-[#F3EFE6]">Attach Customer Profile</p>
+                  <p className="text-[11px] text-[#8D8980]">Earn loyalty points & link invoice to warranty CRM</p>
+                </div>
               </div>
-              <div className="flex-1 text-left min-w-0">
-                <p className="font-medium text-sm lg:text-base text-gray-700">Add Customer</p>
-                <p className="text-xs lg:text-sm text-gray-500 hidden sm:block">Track loyalty points & history</p>
-              </div>
-              <ChevronRight className="w-4 h-4 lg:w-5 lg:h-5 text-gray-400 flex-shrink-0" />
+              <ChevronRight className="w-4 h-4 text-[#8D8980] group-hover:text-[#C9A45C] group-hover:translate-x-0.5 transition-all" />
             </button>
           )}
-        </motion.div>
+        </div>
 
-        {/* Quick Info - Hidden on mobile when cart has items */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className={clsx(
-            "flex-1 bg-gradient-to-br from-primary-50 to-purple-50 rounded-xl lg:rounded-2xl p-4 lg:p-6 flex flex-col items-center justify-center border border-primary-100",
-            cart.length > 0 && "hidden lg:flex"
-          )}
-        >
-          {cart.length === 0 ? (
-            <div className="text-center">
-              <div className="w-14 h-14 lg:w-20 lg:h-20 mx-auto bg-white rounded-xl lg:rounded-2xl flex items-center justify-center mb-3 lg:mb-4 shadow-sm">
-                <Barcode className="w-7 h-7 lg:w-10 lg:h-10 text-primary-400" />
-              </div>
-              <h3 className="text-lg lg:text-xl font-semibold text-gray-800 mb-1 lg:mb-2">Ready to Scan</h3>
-              <p className="text-sm lg:text-base text-gray-500 max-w-sm">Search products or scan barcode to add items</p>
-              <div className="hidden sm:flex items-center justify-center gap-4 lg:gap-6 mt-4 lg:mt-6">
-                <div className="text-center">
-                  <kbd className="px-2 lg:px-3 py-1 lg:py-1.5 bg-white rounded-lg text-xs lg:text-sm font-mono shadow-sm">Ctrl + K</kbd>
-                  <p className="text-[10px] lg:text-xs text-gray-500 mt-1">Global Search</p>
-                </div>
-                <div className="text-center">
-                  <kbd className="px-2 lg:px-3 py-1 lg:py-1.5 bg-white rounded-lg text-xs lg:text-sm font-mono shadow-sm">/</kbd>
-                  <p className="text-[10px] lg:text-xs text-gray-500 mt-1">Focus Search</p>
-                </div>
-              </div>
+        {/* Timepiece Selection Grid / Instant Search Results */}
+        <div className="flex-1 overflow-y-auto bg-[#171613] border border-[#2A261F] rounded-2xl p-3 sm:p-4 shadow-xl min-h-0">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <span className="text-xs font-semibold uppercase tracking-wider text-[#8D8980]">
+              {search.length >= 2 ? `Search Results (${products.length})` : 'Timepiece Quick Select'}
+            </span>
+            <span className="text-[11px] font-mono text-[#8D8980]/70">
+              Wedge scanner active
+            </span>
+          </div>
+
+          {displayedProducts.length === 0 ? (
+            <div className="h-64 flex flex-col items-center justify-center text-center p-6 text-[#8D8980]">
+              <Barcode className="w-12 h-12 text-[#2A261F] mb-3" />
+              <p className="text-sm font-medium text-[#F3EFE6]">No matching timepieces found</p>
+              <p className="text-xs mt-1">Try another brand name or scan with the barcode scanner</p>
             </div>
           ) : (
-            <div className="text-center">
-              <div className="w-14 h-14 lg:w-20 lg:h-20 mx-auto bg-white rounded-xl lg:rounded-2xl flex items-center justify-center mb-3 lg:mb-4 shadow-sm">
-                <ShoppingCart className="w-7 h-7 lg:w-10 lg:h-10 text-primary-500" />
-              </div>
-              <h3 className="text-3xl lg:text-4xl font-bold text-gray-900">{cart.length}</h3>
-              <p className="text-sm lg:text-base text-gray-600">items in cart</p>
-              <p className="text-xl lg:text-2xl font-bold text-primary-600 mt-2">{formatCurrency(total)}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-3">
+              {displayedProducts.map((product) => {
+                const inCart = cart.find(c => c.product.id === product.id)
+                const isOutOfStock = product.stock <= 0
+
+                return (
+                  <button
+                    key={product.id}
+                    onClick={() => !isOutOfStock && addToCart(product)}
+                    disabled={isOutOfStock}
+                    className={clsx(
+                      'relative text-left p-3 rounded-xl border transition-all duration-200 flex flex-col justify-between group',
+                      isOutOfStock
+                        ? 'opacity-40 bg-[#12110F] border-[#2A261F] cursor-not-allowed'
+                        : inCart
+                          ? 'bg-[#1F1E1A] border-[#C9A45C]/60 shadow-md shadow-[#C9A45C]/10'
+                          : 'bg-[#12110F] border-[#2A261F] hover:border-[#C9A45C]/50 hover:bg-[#1A1916]'
+                    )}
+                  >
+                    <div>
+                      <div className="flex items-start justify-between gap-2 mb-1.5">
+                        <span className="text-[10px] font-mono font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#1F1E1A] text-[#8D8980] border border-[#2A261F]">
+                          {product.brand || 'Boutique'}
+                        </span>
+                        <span className={clsx(
+                          'text-[10px] font-mono px-1.5 py-0.5 rounded-full font-medium',
+                          product.stock > 3 
+                            ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/40' 
+                            : product.stock > 0 
+                              ? 'bg-amber-950/60 text-amber-300 border border-amber-800/40'
+                              : 'bg-red-950/60 text-red-300 border border-red-800/40'
+                        )}>
+                          {product.stock > 0 ? `Stock: ${product.stock}` : 'Sold Out'}
+                        </span>
+                      </div>
+                      <p className="font-serif font-bold text-sm text-[#F3EFE6] line-clamp-1 group-hover:text-[#C9A45C] transition-colors">
+                        {product.name}
+                      </p>
+                      {product.barcode && (
+                        <p className="text-[10px] font-mono text-[#8D8980]/80 mt-0.5">
+                          {product.barcode}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="flex items-baseline justify-between pt-2.5 mt-2 border-t border-[#2A261F]/60">
+                      <span className="font-mono text-sm sm:text-base font-bold text-[#C9A45C]">
+                        {formatCurrency(product.selling_price)}
+                      </span>
+                      {inCart ? (
+                        <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 px-2 py-0.5 rounded-full">
+                          In Cart: {inCart.quantity}
+                        </span>
+                      ) : (
+                        <span className="text-xs text-[#8D8980] group-hover:text-[#F3EFE6] flex items-center gap-1">
+                          <Plus className="w-3.5 h-3.5 text-[#C9A45C]" /> Add
+                        </span>
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
             </div>
           )}
-        </motion.div>
+        </div>
       </div>
 
-      {/* Right - Cart (Desktop) */}
-      <motion.div
-        initial={{ opacity: 0, x: 20 }}
-        animate={{ opacity: 1, x: 0 }}
-        className="hidden lg:flex w-[380px] xl:w-[420px] bg-white rounded-2xl shadow-sm border border-gray-100 flex-col"
-      >
+      {/* Right Workspace: Register Cart & Live Tender (Desktop) */}
+      <div className="hidden lg:flex w-[390px] xl:w-[430px] bg-[#171613] border border-[#2A261F] rounded-2xl shadow-2xl flex-col">
         {/* Cart Header */}
-        <div className="p-4 lg:p-5 border-b border-gray-100 flex items-center justify-between">
-          <div className="flex items-center gap-2 lg:gap-3">
-            <div className="w-8 h-8 lg:w-10 lg:h-10 bg-primary-100 rounded-lg lg:rounded-xl flex items-center justify-center">
-              <Receipt className="w-4 h-4 lg:w-5 lg:h-5 text-primary-600" />
+        <div className="p-4 border-b border-[#2A261F] bg-[#12110F]/70 flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-[#1F1E1A] border border-[#C9A45C]/40 flex items-center justify-center text-[#C9A45C]">
+              <Receipt className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="font-semibold text-sm lg:text-base text-gray-900">Current Sale</h2>
-              <p className="text-xs lg:text-sm text-gray-500">{cart.length} items</p>
+              <h2 className="font-serif font-bold text-base text-[#F3EFE6]">Register Order</h2>
+              <p className="text-[11px] font-mono text-[#8D8980]">{cart.length} item(s) in tender</p>
             </div>
           </div>
           {cart.length > 0 && (
-            <Button variant="ghost" size="sm" onClick={clearCart} className="text-red-600 hover:bg-red-50">
-              <Trash2 className="w-4 h-4 mr-1" /> Clear
-            </Button>
+            <button 
+              onClick={clearCart} 
+              className="text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30 px-2 py-1 rounded-lg border border-transparent hover:border-red-800/40 transition-colors flex items-center gap-1"
+            >
+              <Trash2 className="w-3.5 h-3.5" /> Clear
+            </button>
           )}
         </div>
 
-        {/* Cart Items */}
-        <div className="flex-1 overflow-y-auto p-4 lg:p-5 space-y-2 lg:space-y-3">
-          <AnimatePresence mode="popLayout">
-            {cart.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="h-full flex flex-col items-center justify-center text-center"
+        {/* Cart Line Items */}
+        <div className="flex-1 overflow-y-auto p-3.5 space-y-2">
+          {cart.length === 0 ? (
+            <div className="h-full flex flex-col items-center justify-center text-center p-6 text-[#8D8980]">
+              <ShoppingCart className="w-10 h-10 text-[#2A261F] mb-3" />
+              <p className="text-sm font-semibold text-[#F3EFE6]">Register Cart is Empty</p>
+              <p className="text-xs text-[#8D8980] mt-1">Scan a barcode or tap a timepiece to begin sale</p>
+            </div>
+          ) : (
+            cart.map((item) => (
+              <div 
+                key={item.product.id} 
+                className="p-3 rounded-xl bg-[#12110F] border border-[#2A261F] hover:border-[#C9A45C]/40 transition-all group"
               >
-                <div className="w-14 h-14 lg:w-16 lg:h-16 bg-gray-100 rounded-xl lg:rounded-2xl flex items-center justify-center mb-3 lg:mb-4">
-                  <ShoppingCart className="w-7 h-7 lg:w-8 lg:h-8 text-gray-300" />
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-serif font-bold text-sm text-[#F3EFE6] truncate group-hover:text-[#C9A45C] transition-colors">
+                      {item.product.name}
+                    </p>
+                    <p className="text-xs font-mono text-[#8D8980]">
+                      {formatCurrency(item.unit_price)} each
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => removeFromCart(item.product.id)}
+                    className="p-1 text-[#8D8980] hover:text-red-400 rounded-lg transition-colors flex-shrink-0"
+                    title="Remove item"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-                <p className="text-sm lg:text-base text-gray-500">Cart is empty</p>
-                <p className="text-xs lg:text-sm text-gray-400">Add products to get started</p>
-              </motion.div>
-            ) : (
-              cart.map((item, index) => (
-                <motion.div
-                  key={item.product.id}
-                  layout
-                  initial={{ opacity: 0, x: 20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -20 }}
-                  transition={{ delay: index * 0.03 }}
-                  className="bg-gray-50 rounded-lg lg:rounded-xl p-3 lg:p-4 hover:bg-gray-100 transition-colors group"
-                >
-                  <div className="flex items-start justify-between mb-2 lg:mb-3">
-                    <div className="flex-1 min-w-0 pr-2">
-                      <p className="font-medium text-sm lg:text-base text-gray-900 line-clamp-1">{item.product.name}</p>
-                      <p className="text-xs lg:text-sm text-gray-500">{formatCurrency(item.unit_price)} each</p>
-                    </div>
-                    <button 
-                      onClick={() => removeFromCart(item.product.id)} 
-                      className="p-1 lg:p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-100 lg:opacity-0 lg:group-hover:opacity-100 flex-shrink-0"
+
+                <div className="flex items-center justify-between pt-1">
+                  <div className="flex items-center gap-1 bg-[#1F1E1A] border border-[#2A261F] rounded-lg p-0.5">
+                    <button
+                      onClick={() => updateQuantity(item.product.id, -1)}
+                      className="w-7 h-7 flex items-center justify-center rounded text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#282620] transition-colors"
                     >
-                      <X className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
+                      <Minus className="w-3.5 h-3.5" />
+                    </button>
+                    <span className="w-8 text-center text-xs font-bold font-mono text-[#F3EFE6]">
+                      {item.quantity}
+                    </span>
+                    <button
+                      onClick={() => updateQuantity(item.product.id, 1)}
+                      className="w-7 h-7 flex items-center justify-center rounded text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#282620] transition-colors"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
                     </button>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-0.5 lg:gap-1 bg-white rounded-lg border border-gray-200">
-                      <button
-                        onClick={() => updateQuantity(item.product.id, -1)}
-                        className="w-8 h-8 lg:w-9 lg:h-9 flex items-center justify-center hover:bg-gray-100 rounded-l-lg transition-colors"
-                      >
-                        <Minus className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
-                      </button>
-                      <span className="w-8 lg:w-10 text-center font-semibold text-sm lg:text-base text-gray-900">{item.quantity}</span>
-                      <button
-                        onClick={() => updateQuantity(item.product.id, 1)}
-                        className="w-8 h-8 lg:w-9 lg:h-9 flex items-center justify-center hover:bg-gray-100 rounded-r-lg transition-colors"
-                      >
-                        <Plus className="w-3.5 h-3.5 lg:w-4 lg:h-4" />
-                      </button>
-                    </div>
-                    <p className="font-bold text-sm lg:text-base text-gray-900">{formatCurrency(item.unit_price * item.quantity)}</p>
-                  </div>
-                </motion.div>
-              ))
-            )}
-          </AnimatePresence>
+                  <span className="font-mono text-sm font-bold text-[#F3EFE6]">
+                    {formatCurrency(item.unit_price * item.quantity)}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
-        {/* Totals & Checkout */}
-        <div className="p-4 lg:p-5 border-t border-gray-100 bg-gray-50/50">
-          <div className="space-y-2 lg:space-y-3 mb-4 lg:mb-5">
-            <div className="flex justify-between text-sm lg:text-base text-gray-600">
+        {/* Cart Totals & Checkout Trigger */}
+        <div className="p-4 border-t border-[#2A261F] bg-[#12110F]/90 space-y-3">
+          <div className="space-y-2 text-xs">
+            <div className="flex justify-between text-[#8D8980]">
               <span>Subtotal</span>
-              <span className="font-medium">{formatCurrency(subtotal)}</span>
+              <span className="font-mono text-[#F3EFE6]">{formatCurrency(subtotal)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm lg:text-base text-gray-600">Discount</span>
+              <span className="text-[#8D8980]">Special Courtesy Discount</span>
               <div className="relative">
-                <span className="absolute left-2.5 lg:left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₹</span>
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#8D8980] text-xs font-semibold">₹</span>
                 <input
                   type="number"
-                  value={discount}
-                  onChange={(e) => setDiscount(Number(e.target.value))}
-                  className="w-24 lg:w-28 pl-6 lg:pl-7 pr-2 lg:pr-3 py-1.5 lg:py-2 bg-white border border-gray-200 rounded-lg text-right text-sm focus:ring-2 focus:ring-primary-500 outline-none"
+                  min="0"
+                  value={discount || ''}
+                  onChange={(e) => setDiscount(Math.max(0, Number(e.target.value) || 0))}
+                  placeholder="0"
+                  className="w-24 pl-6 pr-2 py-1 text-right text-xs bg-[#1F1E1A] border border-[#2A261F] focus:border-[#C9A45C] rounded-lg text-[#F3EFE6] font-mono outline-none"
                 />
               </div>
             </div>
-            <div className="flex justify-between items-center pt-2 lg:pt-3 border-t border-gray-200">
-              <span className="text-base lg:text-lg font-semibold text-gray-900">Total</span>
-              <span className="text-xl lg:text-2xl font-bold text-primary-600">{formatCurrency(total)}</span>
+            <div className="flex justify-between items-baseline pt-2.5 border-t border-[#2A261F]">
+              <span className="font-serif text-sm font-semibold text-[#F3EFE6]">Total Payable</span>
+              <span className="font-serif text-2xl font-bold text-[#C9A45C] tracking-tight">
+                {formatCurrency(total)}
+              </span>
             </div>
           </div>
 
           <Button
-            className="w-full py-3 lg:py-4 text-base lg:text-lg"
+            variant="primary"
+            fullWidth
+            size="lg"
             disabled={cart.length === 0}
             onClick={() => setShowPaymentModal(true)}
+            className="py-3.5"
           >
-            <CreditCard className="w-4 h-4 lg:w-5 lg:h-5 mr-2" />
-            Proceed to Payment
+            <CreditCard className="w-4 h-4 mr-1.5" />
+            Proceed to Payment (F4)
           </Button>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Mobile Cart Button */}
+      {/* Mobile Cart Floating Action Bar */}
       {cart.length > 0 && (
-        <motion.button
-          initial={{ y: 100 }}
-          animate={{ y: 0 }}
-          onClick={() => setShowMobileCart(true)}
-          className="lg:hidden fixed bottom-4 left-4 right-4 bg-gradient-to-r from-primary-600 to-primary-500 text-white rounded-xl p-4 shadow-lg shadow-primary-500/25 flex items-center justify-between z-40"
-        >
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-              <ShoppingCart className="w-5 h-5" />
+        <div className="lg:hidden fixed bottom-4 left-4 right-4 z-40">
+          <button
+            onClick={() => setShowMobileCart(true)}
+            className="w-full bg-gradient-to-r from-[#C9A45C] via-[#DFC17B] to-[#C9A45C] text-[#0B0B0A] rounded-2xl p-3.5 shadow-2xl flex items-center justify-between font-bold"
+          >
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-[#0B0B0A]/15 flex items-center justify-center">
+                <ShoppingCart className="w-4 h-4" />
+              </div>
+              <span className="text-sm">{cart.length} item(s) in cart</span>
             </div>
-            <div className="text-left">
-              <p className="font-semibold">{cart.length} items</p>
-              <p className="text-sm text-white/80">View cart</p>
+            <div className="flex items-center gap-2">
+              <span className="text-base font-serif font-extrabold">{formatCurrency(total)}</span>
+              <ChevronUp className="w-4 h-4" />
             </div>
-          </div>
-          <div className="text-right">
-            <p className="text-xl font-bold">{formatCurrency(total)}</p>
-            <ChevronUp className="w-5 h-5 mx-auto mt-0.5" />
-          </div>
-        </motion.button>
+          </button>
+        </div>
       )}
 
-      {/* Mobile Cart Modal */}
+      {/* Mobile Cart Drawer */}
       <AnimatePresence>
         {showMobileCart && (
           <>
@@ -592,7 +685,7 @@ export default function POSPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="lg:hidden fixed inset-0 bg-black/60 z-50"
+              className="lg:hidden fixed inset-0 bg-black/80 z-50 backdrop-blur-sm"
               onClick={() => setShowMobileCart(false)}
             />
             <motion.div
@@ -600,81 +693,67 @@ export default function POSPage() {
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="lg:hidden fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl max-h-[85vh] z-50 flex flex-col"
+              className="lg:hidden fixed bottom-0 left-0 right-0 bg-[#171613] border-t border-[#2A261F] text-[#F3EFE6] rounded-t-3xl max-h-[85vh] z-50 flex flex-col overflow-hidden"
             >
-              {/* Cart Header */}
-              <div className="p-4 border-b border-gray-100 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Receipt className="w-5 h-5 text-primary-600" />
-                  <h2 className="font-semibold text-gray-900">Cart ({cart.length})</h2>
+              <div className="p-4 border-b border-[#2A261F] flex items-center justify-between bg-[#12110F]">
+                <div className="flex items-center gap-2">
+                  <Receipt className="w-4 h-4 text-[#C9A45C]" />
+                  <span className="font-serif font-bold text-base">Cart Review ({cart.length})</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {cart.length > 0 && (
-                    <button onClick={clearCart} className="text-sm text-red-600 font-medium">Clear</button>
+                    <button onClick={clearCart} className="text-xs text-red-400 font-medium">Clear</button>
                   )}
-                  <button onClick={() => setShowMobileCart(false)} className="p-1.5 hover:bg-gray-100 rounded-lg">
-                    <X className="w-5 h-5 text-gray-500" />
+                  <button onClick={() => setShowMobileCart(false)} className="p-1.5 text-[#8D8980]">
+                    <X className="w-5 h-5" />
                   </button>
                 </div>
               </div>
 
-              {/* Cart Items */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              <div className="flex-1 overflow-y-auto p-4 space-y-2.5">
                 {cart.map((item) => (
-                  <div key={item.product.id} className="bg-gray-50 rounded-xl p-3">
-                    <div className="flex items-start justify-between mb-2">
-                      <div className="flex-1 min-w-0 pr-2">
-                        <p className="font-medium text-sm text-gray-900 line-clamp-1">{item.product.name}</p>
-                        <p className="text-xs text-gray-500">{formatCurrency(item.unit_price)} each</p>
+                  <div key={item.product.id} className="p-3 bg-[#12110F] border border-[#2A261F] rounded-xl">
+                    <div className="flex justify-between items-start mb-2">
+                      <div>
+                        <p className="font-bold text-sm text-[#F3EFE6]">{item.product.name}</p>
+                        <p className="text-xs font-mono text-[#8D8980]">{formatCurrency(item.unit_price)} each</p>
                       </div>
-                      <button onClick={() => removeFromCart(item.product.id)} className="p-1 text-gray-400 hover:text-red-500">
+                      <button onClick={() => removeFromCart(item.product.id)} className="p-1 text-[#8D8980]">
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-1 bg-white rounded-lg border border-gray-200">
-                        <button onClick={() => updateQuantity(item.product.id, -1)} className="w-8 h-8 flex items-center justify-center">
-                          <Minus className="w-4 h-4" />
+                      <div className="flex items-center gap-1 bg-[#1F1E1A] border border-[#2A261F] rounded-lg">
+                        <button onClick={() => updateQuantity(item.product.id, -1)} className="w-7 h-7 flex items-center justify-center">
+                          <Minus className="w-3.5 h-3.5" />
                         </button>
-                        <span className="w-8 text-center font-semibold text-sm">{item.quantity}</span>
-                        <button onClick={() => updateQuantity(item.product.id, 1)} className="w-8 h-8 flex items-center justify-center">
-                          <Plus className="w-4 h-4" />
+                        <span className="w-8 text-center text-xs font-bold font-mono">{item.quantity}</span>
+                        <button onClick={() => updateQuantity(item.product.id, 1)} className="w-7 h-7 flex items-center justify-center">
+                          <Plus className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                      <p className="font-bold text-sm text-gray-900">{formatCurrency(item.unit_price * item.quantity)}</p>
+                      <span className="font-mono font-bold text-sm text-[#C9A45C]">
+                        {formatCurrency(item.unit_price * item.quantity)}
+                      </span>
                     </div>
                   </div>
                 ))}
               </div>
 
-              {/* Totals & Checkout */}
-              <div className="p-4 border-t border-gray-100 bg-gray-50/50 space-y-3">
-                <div className="flex justify-between text-sm text-gray-600">
-                  <span>Subtotal</span>
-                  <span className="font-medium">{formatCurrency(subtotal)}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Discount</span>
-                  <div className="relative">
-                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₹</span>
-                    <input
-                      type="number"
-                      value={discount}
-                      onChange={(e) => setDiscount(Number(e.target.value))}
-                      className="w-24 pl-6 pr-2 py-1.5 bg-white border border-gray-200 rounded-lg text-right text-sm outline-none"
-                    />
-                  </div>
-                </div>
-                <div className="flex justify-between items-center pt-2 border-t border-gray-200">
-                  <span className="text-lg font-semibold text-gray-900">Total</span>
-                  <span className="text-2xl font-bold text-primary-600">{formatCurrency(total)}</span>
+              <div className="p-4 border-t border-[#2A261F] bg-[#12110F] space-y-3">
+                <div className="flex justify-between items-baseline">
+                  <span className="text-sm font-semibold">Total Payable</span>
+                  <span className="text-xl font-bold font-serif text-[#C9A45C]">{formatCurrency(total)}</span>
                 </div>
                 <Button
-                  className="w-full py-4 text-base"
-                  disabled={cart.length === 0}
-                  onClick={() => { setShowMobileCart(false); setShowPaymentModal(true); }}
+                  variant="primary"
+                  fullWidth
+                  size="lg"
+                  onClick={() => {
+                    setShowMobileCart(false)
+                    setShowPaymentModal(true)
+                  }}
                 >
-                  <CreditCard className="w-5 h-5 mr-2" />
                   Proceed to Payment
                 </Button>
               </div>
@@ -683,130 +762,131 @@ export default function POSPage() {
         )}
       </AnimatePresence>
 
-      {/* Customer Search Modal */}
+      {/* Customer Lookup Modal */}
       <Modal
         isOpen={showCustomerSearch}
         onClose={() => setShowCustomerSearch(false)}
-        title="Find Customer"
+        title="Lookup Boutique Client"
+        description="Search client by full name or phone number"
       >
         <div className="space-y-4">
           <div className="relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#C9A45C]" />
             <input
               type="text"
-              placeholder="Search by name or phone..."
+              placeholder="Search by client name or mobile..."
               value={customerSearch}
               onChange={(e) => setCustomerSearch(e.target.value)}
-              className="w-full pl-12 pr-4 py-3 bg-gray-50 border-0 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none"
+              className="w-full pl-10 pr-4 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl text-sm text-[#F3EFE6] placeholder-[#8D8980] focus:border-[#C9A45C] outline-none"
               autoFocus
             />
           </div>
 
-          <div className="max-h-60 overflow-y-auto space-y-2">
+          <div className="max-h-64 overflow-y-auto space-y-2">
             {customerResults.map((c) => (
               <button
                 key={c.id}
                 onClick={() => selectCustomer(c)}
-                className="w-full flex items-center gap-3 lg:gap-4 p-3 lg:p-4 bg-gray-50 hover:bg-primary-50 rounded-xl transition-colors group"
+                className="w-full flex items-center justify-between p-3 rounded-xl bg-[#12110F] hover:bg-[#1F1E1A] border border-[#2A261F] hover:border-[#C9A45C]/40 transition-colors text-left"
               >
-                <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-primary-500 to-primary-700 rounded-lg lg:rounded-xl flex items-center justify-center flex-shrink-0">
-                  <span className="text-base lg:text-lg font-bold text-white">{c.name.charAt(0)}</span>
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-[#1F1E1A] border border-[#C9A45C]/30 flex items-center justify-center font-bold text-xs text-[#C9A45C]">
+                    {c.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-sm text-[#F3EFE6]">{c.name}</p>
+                    <p className="text-xs font-mono text-[#8D8980]">{c.phone}</p>
+                  </div>
                 </div>
-                <div className="flex-1 text-left min-w-0">
-                  <p className="font-medium text-sm lg:text-base text-gray-900">{c.name}</p>
-                  <p className="text-xs lg:text-sm text-gray-500">{c.phone}</p>
-                </div>
-                <div className="text-right flex-shrink-0">
-                  <span className="flex items-center gap-1 text-yellow-600 text-sm">
-                    <Gift className="w-3.5 h-3.5 lg:w-4 lg:h-4" /> {c.loyalty_points} pts
-                  </span>
-                </div>
+                <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-amber-950/60 border border-amber-800/40 text-amber-300">
+                  {c.loyalty_points} pts
+                </span>
               </button>
             ))}
             {customerSearch.length >= 2 && customerResults.length === 0 && (
-              <div className="text-center py-6 lg:py-8 text-gray-500">
-                <User className="w-8 h-8 lg:w-10 lg:h-10 mx-auto text-gray-300 mb-2" />
-                <p className="text-sm lg:text-base">No customers found</p>
+              <div className="text-center py-8 text-[#8D8980]">
+                <User className="w-8 h-8 mx-auto text-[#2A261F] mb-2" />
+                <p className="text-sm">No client found matching &ldquo;{customerSearch}&rdquo;</p>
               </div>
             )}
           </div>
         </div>
       </Modal>
 
-      {/* Payment Modal */}
+      {/* Complete Payment & Split Tender Modal */}
       <Modal
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
-        title="Complete Payment"
+        title="Complete Boutique Tender"
+        description="Select tender method and confirm payment allocation"
         size="lg"
       >
-        <div className="space-y-4 lg:space-y-6">
-          {/* Payment Methods */}
+        <div className="space-y-5">
+          {/* Payment Method Selector */}
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2 lg:mb-3">Payment Method</p>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 lg:gap-3">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#8D8980] mb-2">
+              Payment Method
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {[
-                { mode: 'cash', label: 'Cash', icon: Wallet, color: 'from-green-500 to-emerald-600' },
-                { mode: 'upi', label: 'UPI', icon: Smartphone, color: 'from-purple-500 to-violet-600' },
-                { mode: 'card', label: 'Card', icon: CreditCard, color: 'from-blue-500 to-indigo-600' },
-                { mode: 'mixed', label: 'Split / Mixed', icon: Split, color: 'from-amber-500 to-orange-600' },
-              ].map(({ mode, label, icon: Icon, color }) => (
+                { mode: 'cash', label: 'Cash Tender', icon: Wallet },
+                { mode: 'upi', label: 'UPI / QR', icon: Smartphone },
+                { mode: 'card', label: 'Credit / Debit', icon: CreditCard },
+                { mode: 'mixed', label: 'Split Tender', icon: Split },
+              ].map(({ mode, label, icon: Icon }) => (
                 <button
                   key={mode}
                   type="button"
                   onClick={() => setPaymentMode(mode as 'cash' | 'upi' | 'card' | 'mixed')}
                   className={clsx(
-                    'relative p-3 lg:p-4 border-2 rounded-lg lg:rounded-xl flex flex-col items-center gap-2 transition-all',
+                    'relative p-3.5 rounded-xl border flex flex-col items-center gap-2 transition-all',
                     paymentMode === mode
-                      ? 'border-primary-500 bg-primary-50 shadow-md scale-102'
-                      : 'border-gray-200 hover:border-gray-300 bg-white'
+                      ? 'border-[#C9A45C] bg-[#1F1E1A] shadow-md shadow-[#C9A45C]/15'
+                      : 'border-[#2A261F] bg-[#12110F] hover:bg-[#1A1916] text-[#8D8980]'
                   )}
                 >
                   <div className={clsx(
-                    'w-9 h-9 lg:w-11 lg:h-11 rounded-lg lg:rounded-xl flex items-center justify-center',
-                    paymentMode === mode ? `bg-gradient-to-br ${color}` : 'bg-gray-100'
+                    'w-9 h-9 rounded-lg flex items-center justify-center transition-colors',
+                    paymentMode === mode ? 'bg-[#C9A45C] text-[#0B0B0A]' : 'bg-[#1F1E1A] text-[#8D8980]'
                   )}>
-                    <Icon className={clsx('w-4 h-4 lg:w-5 lg:h-5', paymentMode === mode ? 'text-white' : 'text-gray-500')} />
+                    <Icon className="w-5 h-5" />
                   </div>
-                  <span className={clsx('font-medium text-xs lg:text-sm text-center', paymentMode === mode ? 'text-primary-700 font-semibold' : 'text-gray-700')}>
+                  <span className={clsx('text-xs font-semibold', paymentMode === mode ? 'text-[#F3EFE6]' : 'text-[#8D8980]')}>
                     {label}
                   </span>
                   {paymentMode === mode && (
-                    <motion.div
-                      layoutId="payment-check"
-                      className="absolute top-1.5 right-1.5 w-4 h-4 bg-primary-500 rounded-full flex items-center justify-center"
-                    >
-                      <Check className="w-2.5 h-2.5 text-white" />
-                    </motion.div>
+                    <div className="absolute top-1.5 right-1.5 w-3.5 h-3.5 rounded-full bg-[#C9A45C] flex items-center justify-center text-[#0B0B0A]">
+                      <Check className="w-2.5 h-2.5 stroke-[3]" />
+                    </div>
                   )}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Split Payment Breakdown Inputs */}
+          {/* Split Payment Breakdown UI */}
           {paymentMode === 'mixed' && (
-            <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-3.5 space-y-3">
+            <div className="bg-[#12110F] border border-[#2A261F] rounded-xl p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-amber-900 uppercase tracking-wider flex items-center gap-1.5">
-                  <Split className="w-3.5 h-3.5" /> Split Tender Breakdown
+                <span className="text-xs font-bold text-[#C9A45C] uppercase tracking-wider flex items-center gap-1.5">
+                  <Split className="w-4 h-4" /> Split Tender Breakdown
                 </span>
                 <button
                   type="button"
                   onClick={() => setSplitPayments({ cash: 0, upi: 0, card: 0 })}
-                  className="text-xs text-amber-700 hover:text-amber-900 font-semibold underline"
+                  className="text-xs text-[#8D8980] hover:text-[#F3EFE6] underline"
                 >
-                  Clear Split
+                  Clear Tender
                 </button>
               </div>
 
               {/* Cash Input */}
               <div className="flex items-center gap-2">
-                <div className="w-20 text-xs font-semibold text-gray-700 flex items-center gap-1">
-                  <Wallet className="w-3.5 h-3.5 text-green-600" /> Cash:
+                <div className="w-24 text-xs font-semibold text-[#8D8980] flex items-center gap-1.5">
+                  <Wallet className="w-3.5 h-3.5 text-emerald-400" /> Cash:
                 </div>
                 <div className="relative flex-1">
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-semibold">₹</span>
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-[#8D8980]">₹</span>
                   <input
                     type="number"
                     min="0"
@@ -814,14 +894,14 @@ export default function POSPage() {
                     value={splitPayments.cash || ''}
                     onChange={(e) => setSplitPayments({ ...splitPayments, cash: Math.max(0, parseFloat(e.target.value) || 0) })}
                     placeholder="0.00"
-                    className="w-full pl-6 pr-2 py-1.5 text-sm bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-right font-mono"
+                    className="w-full pl-6 pr-2 py-1.5 text-xs bg-[#1F1E1A] border border-[#2A261F] focus:border-[#C9A45C] rounded-lg text-[#F3EFE6] font-mono outline-none text-right"
                   />
                 </div>
                 {remainingToPay > 0 && (
                   <button
                     type="button"
                     onClick={() => setSplitPayments({ ...splitPayments, cash: (splitPayments.cash || 0) + remainingToPay })}
-                    className="px-2 py-1 text-xs bg-white border border-amber-300 text-amber-800 rounded hover:bg-amber-100 whitespace-nowrap font-medium"
+                    className="px-2 py-1 text-xs bg-[#1F1E1A] border border-[#C9A45C]/40 text-[#C9A45C] rounded hover:bg-[#282620] whitespace-nowrap font-mono"
                   >
                     +₹{remainingToPay}
                   </button>
@@ -830,11 +910,11 @@ export default function POSPage() {
 
               {/* UPI Input */}
               <div className="flex items-center gap-2">
-                <div className="w-20 text-xs font-semibold text-gray-700 flex items-center gap-1">
-                  <Smartphone className="w-3.5 h-3.5 text-purple-600" /> UPI:
+                <div className="w-24 text-xs font-semibold text-[#8D8980] flex items-center gap-1.5">
+                  <Smartphone className="w-3.5 h-3.5 text-sky-400" /> UPI / QR:
                 </div>
                 <div className="relative flex-1">
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-semibold">₹</span>
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-[#8D8980]">₹</span>
                   <input
                     type="number"
                     min="0"
@@ -842,14 +922,14 @@ export default function POSPage() {
                     value={splitPayments.upi || ''}
                     onChange={(e) => setSplitPayments({ ...splitPayments, upi: Math.max(0, parseFloat(e.target.value) || 0) })}
                     placeholder="0.00"
-                    className="w-full pl-6 pr-2 py-1.5 text-sm bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-right font-mono"
+                    className="w-full pl-6 pr-2 py-1.5 text-xs bg-[#1F1E1A] border border-[#2A261F] focus:border-[#C9A45C] rounded-lg text-[#F3EFE6] font-mono outline-none text-right"
                   />
                 </div>
                 {remainingToPay > 0 && (
                   <button
                     type="button"
                     onClick={() => setSplitPayments({ ...splitPayments, upi: (splitPayments.upi || 0) + remainingToPay })}
-                    className="px-2 py-1 text-xs bg-white border border-amber-300 text-amber-800 rounded hover:bg-amber-100 whitespace-nowrap font-medium"
+                    className="px-2 py-1 text-xs bg-[#1F1E1A] border border-[#C9A45C]/40 text-[#C9A45C] rounded hover:bg-[#282620] whitespace-nowrap font-mono"
                   >
                     +₹{remainingToPay}
                   </button>
@@ -858,11 +938,11 @@ export default function POSPage() {
 
               {/* Card Input */}
               <div className="flex items-center gap-2">
-                <div className="w-20 text-xs font-semibold text-gray-700 flex items-center gap-1">
-                  <CreditCard className="w-3.5 h-3.5 text-blue-600" /> Card:
+                <div className="w-24 text-xs font-semibold text-[#8D8980] flex items-center gap-1.5">
+                  <CreditCard className="w-3.5 h-3.5 text-amber-400" /> Card:
                 </div>
                 <div className="relative flex-1">
-                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-gray-400 font-semibold">₹</span>
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-[#8D8980]">₹</span>
                   <input
                     type="number"
                     min="0"
@@ -870,33 +950,35 @@ export default function POSPage() {
                     value={splitPayments.card || ''}
                     onChange={(e) => setSplitPayments({ ...splitPayments, card: Math.max(0, parseFloat(e.target.value) || 0) })}
                     placeholder="0.00"
-                    className="w-full pl-6 pr-2 py-1.5 text-sm bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-right font-mono"
+                    className="w-full pl-6 pr-2 py-1.5 text-xs bg-[#1F1E1A] border border-[#2A261F] focus:border-[#C9A45C] rounded-lg text-[#F3EFE6] font-mono outline-none text-right"
                   />
                 </div>
                 {remainingToPay > 0 && (
                   <button
                     type="button"
                     onClick={() => setSplitPayments({ ...splitPayments, card: (splitPayments.card || 0) + remainingToPay })}
-                    className="px-2 py-1 text-xs bg-white border border-amber-300 text-amber-800 rounded hover:bg-amber-100 whitespace-nowrap font-medium"
+                    className="px-2 py-1 text-xs bg-[#1F1E1A] border border-[#C9A45C]/40 text-[#C9A45C] rounded hover:bg-[#282620] whitespace-nowrap font-mono"
                   >
                     +₹{remainingToPay}
                   </button>
                 )}
               </div>
 
-              {/* Balance Summary Row */}
-              <div className="pt-2 border-t border-amber-200 flex items-center justify-between text-xs">
-                <span className="text-gray-600 font-medium">Allocated: <b className="text-gray-900 font-mono">{formatCurrency(splitTotal)}</b></span>
+              {/* Tender Allocation Balance Indicator */}
+              <div className="pt-2.5 border-t border-[#2A261F] flex items-center justify-between text-xs">
+                <span className="text-[#8D8980]">
+                  Allocated: <b className="text-[#F3EFE6] font-mono">{formatCurrency(splitTotal)}</b>
+                </span>
                 {remainingToPay === 0 ? (
-                  <span className="text-emerald-700 font-bold flex items-center gap-1 bg-emerald-100 px-2 py-0.5 rounded">
-                    <Check className="w-3 h-3" /> Exact Match (₹0.00)
+                  <span className="text-emerald-300 font-bold flex items-center gap-1 bg-emerald-950/70 border border-emerald-800/50 px-2 py-0.5 rounded">
+                    <Check className="w-3 h-3 text-emerald-400" /> Exact Match (₹0.00 Remaining)
                   </span>
                 ) : remainingToPay > 0 ? (
-                  <span className="text-rose-700 font-bold bg-rose-100 px-2 py-0.5 rounded">
+                  <span className="text-amber-300 font-bold bg-amber-950/70 border border-amber-800/50 px-2 py-0.5 rounded">
                     Remaining: {formatCurrency(remainingToPay)}
                   </span>
                 ) : (
-                  <span className="text-amber-800 font-bold bg-amber-100 px-2 py-0.5 rounded">
+                  <span className="text-red-300 font-bold bg-red-950/70 border border-red-800/50 px-2 py-0.5 rounded">
                     Overallocated: +{formatCurrency(Math.abs(remainingToPay))}
                   </span>
                 )}
@@ -904,62 +986,64 @@ export default function POSPage() {
             </div>
           )}
 
-          {/* Order Summary */}
-          <div className="p-3 lg:p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-lg lg:rounded-xl space-y-2">
-            <div className="flex justify-between text-sm text-gray-600">
-              <span>Items ({cart.length})</span>
-              <span>{formatCurrency(subtotal)}</span>
+          {/* Tender Summary Box */}
+          <div className="p-4 bg-[#12110F] border border-[#2A261F] rounded-xl space-y-2 text-xs">
+            <div className="flex justify-between text-[#8D8980]">
+              <span>Cart Timepieces ({cart.length})</span>
+              <span className="font-mono text-[#F3EFE6]">{formatCurrency(subtotal)}</span>
             </div>
             {discount > 0 && (
-              <div className="flex justify-between text-sm text-green-600">
-                <span>Discount</span>
-                <span>-{formatCurrency(discount)}</span>
+              <div className="flex justify-between text-emerald-400">
+                <span>Discount Applied</span>
+                <span className="font-mono">-{formatCurrency(discount)}</span>
               </div>
             )}
             {customer && (
-              <div className="flex justify-between text-sm text-gray-600">
-                <span>Customer</span>
-                <span>{customer.name}</span>
+              <div className="flex justify-between text-[#8D8980]">
+                <span>Boutique Client</span>
+                <span className="text-[#F3EFE6] font-semibold">{customer.name}</span>
               </div>
             )}
-            <div className="pt-2 border-t border-gray-200 flex justify-between items-center">
-              <span className="text-base font-semibold text-gray-900">Total Payable</span>
-              <span className="text-2xl font-bold text-primary-600">{formatCurrency(total)}</span>
+            <div className="pt-2.5 border-t border-[#2A261F] flex justify-between items-baseline">
+              <span className="text-sm font-semibold text-[#F3EFE6]">Total Payable Amount</span>
+              <span className="font-serif text-2xl font-bold text-[#C9A45C]">{formatCurrency(total)}</span>
             </div>
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-2">
             <Button
-              className="w-full py-3 lg:py-4 text-base lg:text-lg"
+              variant="primary"
+              fullWidth
+              size="lg"
               onClick={handleCheckout}
               loading={isProcessing}
               disabled={paymentMode === 'mixed' && (remainingToPay !== 0 || Object.values(splitPayments).filter(v => Number(v) > 0).length < 2)}
             >
-              <Check className="w-4 h-4 lg:w-5 lg:h-5 mr-2" />
-              Complete Sale
+              <Check className="w-4 h-4 mr-1.5" />
+              Authorize & Complete Sale
             </Button>
             {paymentMode === 'mixed' && remainingToPay !== 0 && (
-              <p className="text-xs text-center text-amber-700 font-medium">
-                Split tender must match the total payable amount exactly before completing the sale.
+              <p className="text-[11px] text-center text-amber-300">
+                Split tender must match the total payable amount exactly before authorising transaction.
               </p>
             )}
             {paymentMode === 'mixed' && remainingToPay === 0 && Object.values(splitPayments).filter(v => Number(v) > 0).length < 2 && (
-              <p className="text-xs text-center text-amber-700 font-medium">
-                Please allocate funds across at least two payment methods for a split transaction.
+              <p className="text-[11px] text-center text-amber-300">
+                Please allocate across at least two payment methods for a split transaction.
               </p>
             )}
           </div>
         </div>
       </Modal>
 
-      {/* Barcode Scanner */}
+      {/* Barcode Camera Scanner Modal */}
       <BarcodeScanner
         isOpen={showScanner}
         onClose={() => setShowScanner(false)}
         onScan={handleBarcodeScan}
       />
 
-      {/* Invoice Preview */}
+      {/* Luxury Thermal Invoice Preview */}
       {showInvoice && invoiceData && (
         <Invoice
           data={invoiceData}

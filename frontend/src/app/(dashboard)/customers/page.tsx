@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { yupResolver } from '@hookform/resolvers/yup'
 import * as yup from 'yup'
@@ -8,14 +8,15 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Plus, Search, Users, Phone, Gift, Edit, Trash2, Eye, ShoppingCart, 
   Wrench, Mail, MapPin, Calendar, Award, Star, TrendingUp, History,
-  LayoutGrid, List
+  LayoutGrid, List, MessageSquare, Send, Crown, Sparkles, Receipt,
+  Clock, ShieldCheck
 } from 'lucide-react'
 import { api } from '@/services/api'
 import { Customer, Sale, Repair } from '@/types'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import Input from '@/components/ui/Input'
-import Modal from '@/components/ui/Modal'
+import Modal, { ConfirmModal } from '@/components/ui/Modal'
 import Pagination from '@/components/ui/Pagination'
 import SortableHeader, { SortDirection } from '@/components/ui/SortableHeader'
 import ExportButton from '@/components/ui/ExportButton'
@@ -25,9 +26,9 @@ import toast from 'react-hot-toast'
 import clsx from 'clsx'
 
 const schema = yup.object({
-  name: yup.string().required('Customer name is required'),
-  phone: yup.string().required('Phone number is required').min(10, 'Invalid phone number'),
-  email: yup.string().email('Invalid email').nullable(),
+  name: yup.string().required('Client full name is required'),
+  phone: yup.string().required('Phone number is required').min(10, 'Valid 10-digit phone required'),
+  email: yup.string().email('Invalid email address').nullable(),
   address: yup.string().nullable(),
   date_of_birth: yup.string().nullable(),
   language_preference: yup.string().default('en'),
@@ -38,15 +39,39 @@ type FormData = yup.InferType<typeof schema>
 
 const languages = [
   { value: 'en', label: 'English' },
-  { value: 'hi', label: 'Hindi' },
-  { value: 'gu', label: 'Gujarati' },
+  { value: 'gu', label: 'Gujarati (ગુજરાતી)' },
+  { value: 'hi', label: 'Hindi (हिंदी)' },
 ]
 
 const getLoyaltyTier = (points: number) => {
-  if (points >= 5000) return { tier: 'Platinum', color: 'text-purple-600', bg: 'bg-purple-100', icon: Award }
-  if (points >= 2000) return { tier: 'Gold', color: 'text-yellow-600', bg: 'bg-yellow-100', icon: Star }
-  if (points >= 500) return { tier: 'Silver', color: 'text-gray-600', bg: 'bg-gray-200', icon: Gift }
-  return { tier: 'Bronze', color: 'text-orange-600', bg: 'bg-orange-100', icon: Gift }
+  if (points >= 5000) return { 
+    tier: 'Platinum Connoisseur', 
+    color: 'text-[#E8D5A7]', 
+    bg: 'bg-[#C9A45C]/15', 
+    border: 'border-[#C9A45C]/40',
+    icon: Crown 
+  }
+  if (points >= 2000) return { 
+    tier: 'Gold Patron', 
+    color: 'text-[#C9A45C]', 
+    bg: 'bg-amber-950/30', 
+    border: 'border-amber-800/40',
+    icon: Star 
+  }
+  if (points >= 500) return { 
+    tier: 'Silver Member', 
+    color: 'text-[#F3EFE6]', 
+    bg: 'bg-[#1F1E1A]', 
+    border: 'border-[#2A261F]',
+    icon: Award 
+  }
+  return { 
+    tier: 'Bronze Member', 
+    color: 'text-[#8D8980]', 
+    bg: 'bg-[#12110F]', 
+    border: 'border-[#2A261F]',
+    icon: Gift 
+  }
 }
 
 export default function CustomersPage() {
@@ -122,7 +147,7 @@ export default function CustomersPage() {
       }
     } catch (error) {
       console.error('Failed to fetch customers:', error)
-      toast.error('Failed to load customers')
+      toast.error('Failed to load clientele roster')
     } finally {
       setLoading(false)
     }
@@ -151,7 +176,15 @@ export default function CustomersPage() {
 
   const openEditModal = (customer: Customer) => {
     setSelectedCustomer(customer)
-    reset(customer)
+    reset({
+      name: customer.name,
+      phone: customer.phone,
+      email: customer.email || '',
+      address: customer.address || '',
+      date_of_birth: customer.date_of_birth || '',
+      language_preference: customer.language_preference || 'en',
+      notes: customer.notes || ''
+    })
     setShowFormModal(true)
   }
 
@@ -185,16 +218,16 @@ export default function CustomersPage() {
     try {
       if (selectedCustomer) {
         await api.patch(`/customers/${selectedCustomer.id}/`, data)
-        toast.success('Customer updated')
+        toast.success('Client profile updated')
       } else {
         await api.post('/customers/', data)
-        toast.success('Customer created')
+        toast.success('New client registered in boutique CRM')
       }
       setShowFormModal(false)
       fetchCustomers()
     } catch (error: any) {
       if (error.response?.data?.phone) {
-        toast.error('Phone number already exists')
+        toast.error('Mobile number already assigned to an existing client')
       } else {
         toast.error(error.response?.data?.detail || 'Operation failed')
       }
@@ -207,12 +240,25 @@ export default function CustomersPage() {
     if (!selectedCustomer) return
     try {
       await api.delete(`/customers/${selectedCustomer.id}/`)
-      toast.success('Customer deleted')
+      toast.success('Client record archived')
       setShowDeleteModal(false)
       fetchCustomers()
     } catch (error) {
       toast.error('Failed to delete customer')
     }
+  }
+
+  const openWhatsApp = (phone?: string, name?: string) => {
+    if (!phone) {
+      toast.error('Phone number not available')
+      return
+    }
+    const cleanPhone = phone.replace(/\D/g, '')
+    const phoneWithCountry = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone
+    const msg = encodeURIComponent(
+      `Hello ${name || 'Valued Client'},\nGreetings from Meghani Watch Co. (Est. 1984), Vadodara.`
+    )
+    window.open(`https://wa.me/${phoneWithCountry}?text=${msg}`, '_blank')
   }
 
   const formatCurrency = (amount: number) => {
@@ -231,180 +277,174 @@ export default function CustomersPage() {
     })
   }
 
-  // Stats calculation
-  const stats = {
-    total: customers.length,
+  // Summary Metrics
+  const stats = useMemo(() => ({
+    total: totalItems || customers.length,
     totalPurchases: customers.reduce((sum, c) => sum + (c.total_purchases || 0), 0),
     totalPoints: customers.reduce((sum, c) => sum + (c.loyalty_points || 0), 0),
-    platinum: customers.filter(c => c.loyalty_points >= 5000).length,
-  }
+    platinum: customers.filter(c => (c.loyalty_points || 0) >= 5000).length,
+  }), [customers, totalItems])
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-        >
-          <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-            Customers
-          </h1>
-          <p className="text-sm sm:text-base text-gray-500 mt-1">Manage relationships and loyalty rewards</p>
-        </motion.div>
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-2 sm:gap-3"
-        >
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 bg-[#171613] border border-[#2A261F] rounded-xl flex items-center justify-center shadow-md">
+            <Users className="w-5 h-5 text-[#C9A45C]" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Clientele CRM & VIP Concierge</h1>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F] font-mono">
+                {stats.total} patrons
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-[#8D8980]">Client directories, purchase histories, and luxury loyalty tier programs</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <ExportButton 
             data={customers} 
             columns={customerExportColumns} 
-            filename={`customers_${new Date().toISOString().split('T')[0]}`}
+            filename={`meghani_clientele_${new Date().toISOString().split('T')[0]}`} 
           />
-          <Button onClick={openAddModal} icon={<Plus className="w-4 h-4" />} className="flex-1 sm:flex-none">
-            <span className="hidden sm:inline">Add Customer</span>
-            <span className="sm:hidden">Add</span>
+          <Button onClick={openAddModal} icon={<Plus className="w-4 h-4" />} className="shadow-gold">
+            <span>Register New Client</span>
           </Button>
-        </motion.div>
+        </div>
       </div>
 
-      {/* Stats Cards */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4"
-      >
-        <div className="bg-white rounded-xl p-3 sm:p-5 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-pink-500 to-rose-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-              <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+      {/* CRM Summary KPI Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#1F1E1A] border border-[#2A261F] flex items-center justify-center text-[#C9A45C]">
+              <Users className="w-5 h-5" />
             </div>
-            <div className="min-w-0">
-              <p className="text-xs sm:text-sm text-gray-500 truncate">Total</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.total}</p>
+            <div>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Total Clientele</p>
+              <p className="text-2xl font-bold font-mono text-[#F3EFE6]">{stats.total}</p>
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl p-3 sm:p-5 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-              <TrendingUp className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs sm:text-sm text-gray-500 truncate">Revenue</p>
-              <p className="text-lg sm:text-2xl font-bold text-gray-900">{formatCurrency(stats.totalPurchases)}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-3 sm:p-5 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-yellow-500 to-amber-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-              <Gift className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs sm:text-sm text-gray-500 truncate">Points</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.totalPoints.toLocaleString()}</p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-xl p-3 sm:p-5 border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-violet-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-              <Award className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs sm:text-sm text-gray-500 truncate">Platinum</p>
-              <p className="text-xl sm:text-2xl font-bold text-gray-900">{stats.platinum}</p>
-            </div>
-          </div>
-        </div>
-      </motion.div>
 
-      {/* Search */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="bg-white rounded-xl p-3 sm:p-4 border border-gray-100 shadow-sm"
-      >
+        <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-emerald-950/40 border border-emerald-800/40 flex items-center justify-center text-emerald-400">
+              <TrendingUp className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Cumulative Spend</p>
+              <p className="text-xl sm:text-2xl font-bold font-mono text-emerald-400">
+                {formatCurrency(stats.totalPurchases)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-950/40 border border-amber-800/40 flex items-center justify-center text-[#C9A45C]">
+              <Gift className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Loyalty Escrow</p>
+              <p className="text-2xl font-bold font-mono text-[#C9A45C]">{stats.totalPoints.toLocaleString()}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#C9A45C]/15 border border-[#C9A45C]/40 flex items-center justify-center text-[#E8D5A7]">
+              <Crown className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Platinum Tier</p>
+              <p className="text-2xl font-bold font-mono text-[#E8D5A7]">{stats.platinum} VIPs</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search & Layout Toggles */}
+      <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-4 shadow-xl">
         <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+          <div className="relative flex-1 group">
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8D8980] group-focus-within:text-[#C9A45C] transition-colors" />
             <input
               type="text"
-              placeholder="Search by name, phone, email..."
+              placeholder="Search clientele by name, phone number, email or loyalty rank..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 bg-gray-50 border-0 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none text-sm sm:text-base text-gray-900 placeholder-gray-400"
+              className="w-full pl-10 pr-4 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl 
+                       text-[#F3EFE6] placeholder-[#8D8980]/70 text-sm
+                       focus:border-[#C9A45C] focus:ring-1 focus:ring-[#C9A45C]
+                       transition-all outline-none"
             />
           </div>
-          <div className="hidden md:flex items-center bg-gray-100 rounded-lg p-1">
+
+          <div className="flex items-center bg-[#12110F] border border-[#2A261F] rounded-xl p-1 flex-shrink-0">
             <button
               onClick={() => setViewMode('grid')}
               className={clsx(
-                'p-2 rounded-lg transition-colors',
-                viewMode === 'grid' ? 'bg-white text-primary-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                'p-2 rounded-lg transition-all',
+                viewMode === 'grid' 
+                  ? 'bg-[#C9A45C] text-[#0B0B0A] font-semibold shadow-sm' 
+                  : 'text-[#8D8980] hover:text-[#F3EFE6]'
               )}
+              title="Card Grid"
             >
-              <LayoutGrid className="w-5 h-5" />
+              <LayoutGrid className="w-4 h-4" />
             </button>
             <button
               onClick={() => setViewMode('table')}
               className={clsx(
-                'p-2 rounded-lg transition-colors',
-                viewMode === 'table' ? 'bg-white text-primary-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'
+                'p-2 rounded-lg transition-all',
+                viewMode === 'table' 
+                  ? 'bg-[#C9A45C] text-[#0B0B0A] font-semibold shadow-sm' 
+                  : 'text-[#8D8980] hover:text-[#F3EFE6]'
               )}
+              title="Ledger Table"
             >
-              <List className="w-5 h-5" />
+              <List className="w-4 h-4" />
             </button>
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Customers Grid */}
+      {/* Customers Content */}
       {loading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-white rounded-xl p-4 sm:p-6 border border-gray-100 animate-pulse">
-              <div className="flex items-center gap-3 sm:gap-4 mb-4">
-                <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gray-200" />
-                <div className="flex-1">
-                  <div className="h-4 sm:h-5 bg-gray-200 rounded w-32 mb-2" />
-                  <div className="h-3 sm:h-4 bg-gray-200 rounded w-24" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 animate-pulse">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 rounded-xl bg-[#1F1E1A]" />
+                <div className="flex-1 space-y-2">
+                  <div className="h-4 bg-[#1F1E1A] rounded w-28" />
+                  <div className="h-3 bg-[#1F1E1A] rounded w-20" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3 sm:gap-4 pt-4 border-t border-gray-100">
-                <div className="h-10 sm:h-12 bg-gray-100 rounded-lg" />
-                <div className="h-10 sm:h-12 bg-gray-100 rounded-lg" />
-              </div>
+              <div className="h-16 bg-[#1F1E1A] rounded-xl" />
             </div>
           ))}
         </div>
       ) : customers.length === 0 ? (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-xl border border-gray-100 shadow-sm text-center py-12 sm:py-16 px-4"
-        >
-          <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-gray-100 rounded-2xl flex items-center justify-center mb-4">
-            <Users className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+        <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-12 text-center shadow-xl">
+          <div className="w-16 h-16 mx-auto bg-[#1F1E1A] border border-[#2A261F] rounded-2xl flex items-center justify-center mb-4">
+            <Users className="w-8 h-8 text-[#8D8980]" />
           </div>
-          <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">No customers yet</h3>
-          <p className="text-sm sm:text-base text-gray-500 mb-6">Start adding customers to manage relationships</p>
+          <h3 className="text-lg font-serif font-bold text-[#F3EFE6] mb-1">No Patrons Found</h3>
+          <p className="text-sm text-[#8D8980] mb-5">Start by adding your first client into the Meghani CRM roster.</p>
           <Button onClick={openAddModal} icon={<Plus className="w-4 h-4" />}>
-            Add First Customer
+            Register First Client
           </Button>
-        </motion.div>
+        </div>
       ) : viewMode === 'grid' ? (
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
-        >
-          <AnimatePresence mode="popLayout">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <AnimatePresence>
             {customers.map((customer, index) => {
               const loyalty = getLoyaltyTier(customer.loyalty_points || 0)
               const LoyaltyIcon = loyalty.icon
@@ -412,211 +452,208 @@ export default function CustomersPage() {
               return (
                 <motion.div
                   key={customer.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-lg hover:border-primary-200 transition-all duration-300 overflow-hidden"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ delay: index * 0.03 }}
+                  className="group bg-[#171613] rounded-2xl border border-[#2A261F] hover:border-[#C9A45C]/50 shadow-xl transition-all overflow-hidden flex flex-col justify-between"
                 >
-                  {/* Header with Loyalty Badge */}
-                  <div className="p-4 sm:p-5">
-                    <div className="flex items-start gap-3 sm:gap-4">
-                      <div className="relative flex-shrink-0">
-                        <div className={clsx(
-                          'w-12 h-12 sm:w-14 sm:h-14 rounded-lg sm:rounded-xl flex items-center justify-center text-lg sm:text-xl font-bold',
-                          'bg-gradient-to-br from-primary-500 to-primary-700 text-white'
-                        )}>
+                  <div className="p-5">
+                    {/* Header with Avatar and Tier */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-12 h-12 rounded-xl bg-[#1F1E1A] border border-[#2A261F] flex items-center justify-center font-serif font-bold text-lg text-[#C9A45C] flex-shrink-0">
                           {customer.name.charAt(0).toUpperCase()}
                         </div>
-                        <div className={clsx(
-                          'absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shadow-sm',
-                          loyalty.bg
-                        )}>
-                          <LoyaltyIcon className={clsx('w-2.5 h-2.5 sm:w-3 sm:h-3', loyalty.color)} />
+                        <div className="min-w-0">
+                          <h3 className="font-serif font-bold text-base text-[#F3EFE6] truncate group-hover:text-[#E8D5A7] transition-colors">
+                            {customer.name}
+                          </h3>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className={clsx('text-[10px] font-semibold px-2 py-0.5 rounded-full inline-flex items-center gap-1 border', loyalty.bg, loyalty.color, loyalty.border)}>
+                              <LoyaltyIcon className="w-2.5 h-2.5" />
+                              <span>{loyalty.tier}</span>
+                            </span>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-semibold text-gray-900 truncate group-hover:text-primary-600 transition-colors text-sm sm:text-base">
-                          {customer.name}
-                        </h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className={clsx(
-                            'text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 rounded-full',
-                            loyalty.bg, loyalty.color
-                          )}>
-                            {loyalty.tier}
-                          </span>
-                        </div>
+
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => openWhatsApp(customer.phone, customer.name)}
+                          className="p-1.5 hover:bg-emerald-950/40 text-emerald-400 border border-emerald-800/40 rounded-lg transition-colors"
+                          title="WhatsApp Chat"
+                        >
+                          <Send className="w-3.5 h-3.5" />
+                        </button>
                       </div>
                     </div>
 
-                    {/* Contact Info */}
-                    <div className="mt-3 sm:mt-4 space-y-1.5 sm:space-y-2">
-                      <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                        <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
-                        <span className="truncate">{customer.phone}</span>
+                    {/* Contact Details */}
+                    <div className="space-y-1.5 mb-4 text-xs">
+                      <div className="flex items-center gap-2 text-[#8D8980]">
+                        <Phone className="w-3.5 h-3.5 text-[#C9A45C] flex-shrink-0" />
+                        <span className="font-mono text-[#F3EFE6]">{customer.phone}</span>
                       </div>
                       {customer.email && (
-                        <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
-                          <Mail className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 flex-shrink-0" />
+                        <div className="flex items-center gap-2 text-[#8D8980]">
+                          <Mail className="w-3.5 h-3.5 text-[#8D8980] flex-shrink-0" />
                           <span className="truncate">{customer.email}</span>
                         </div>
                       )}
                     </div>
 
-                    {/* Stats */}
-                    <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100 grid grid-cols-2 gap-2 sm:gap-4">
-                      <div className="text-center p-1.5 sm:p-2 bg-gray-50 rounded-lg">
-                        <p className="text-[10px] sm:text-xs text-gray-500">Spent</p>
-                        <p className="font-bold text-gray-900 text-sm sm:text-base">{formatCurrency(customer.total_purchases || 0)}</p>
+                    {/* Financial & Loyalty Strip */}
+                    <div className="p-3 bg-[#12110F] border border-[#2A261F] rounded-xl grid grid-cols-2 gap-2 text-center">
+                      <div>
+                        <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Total Spent</span>
+                        <p className="font-mono font-bold text-sm text-[#F3EFE6] mt-0.5">
+                          {formatCurrency(customer.total_purchases || 0)}
+                        </p>
                       </div>
-                      <div className="text-center p-1.5 sm:p-2 bg-gray-50 rounded-lg">
-                        <p className="text-[10px] sm:text-xs text-gray-500">Points</p>
-                        <p className="font-bold text-yellow-600 text-sm sm:text-base">{(customer.loyalty_points || 0).toLocaleString()}</p>
+                      <div>
+                        <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Loyalty Points</span>
+                        <p className="font-mono font-bold text-sm text-[#C9A45C] mt-0.5">
+                          {(customer.loyalty_points || 0).toLocaleString()} pts
+                        </p>
                       </div>
                     </div>
                   </div>
 
                   {/* Actions */}
-                  <div className="px-4 sm:px-5 pb-4 sm:pb-5">
-                    <div className="flex gap-1.5 sm:gap-2">
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => openViewModal(customer)}
-                        className="flex-1 text-xs sm:text-sm"
-                      >
-                        <Eye className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" /> View
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => openEditModal(customer)}
-                        className="flex-1 text-xs sm:text-sm"
-                      >
-                        <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" /> Edit
-                      </Button>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        onClick={() => openDeleteModal(customer)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                      </Button>
-                    </div>
+                  <div className="px-5 pb-4 pt-1 flex items-center gap-2 border-t border-[#2A261F]/60">
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      onClick={() => openViewModal(customer)}
+                      className="flex-1"
+                    >
+                      <Eye className="w-3.5 h-3.5 mr-1" /> Dossier
+                    </Button>
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      onClick={() => openEditModal(customer)}
+                      className="flex-1"
+                    >
+                      <Edit className="w-3.5 h-3.5 mr-1" /> Edit
+                    </Button>
+                    <button
+                      onClick={() => openDeleteModal(customer)}
+                      className="p-2 text-[#8D8980] hover:text-rose-400 hover:bg-rose-950/30 rounded-lg transition-colors border border-[#2A261F]"
+                      title="Archive Record"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
                 </motion.div>
               )
             })}
           </AnimatePresence>
-        </motion.div>
+        </div>
       ) : (
-        /* Table View */
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden"
-        >
+        /* Ledger Table View */
+        <div className="bg-[#171613] rounded-2xl border border-[#2A261F] overflow-hidden shadow-xl">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px]">
-              <thead className="bg-gray-50 border-b border-gray-100">
+            <table className="w-full min-w-[850px]">
+              <thead className="bg-[#12110F] border-b border-[#2A261F]">
                 <tr>
-                  <th className="px-4 py-3 text-left">
-                    <SortableHeader label="Customer" field="name" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                  <th className="px-5 py-3.5 text-left">
+                    <SortableHeader label="Client Full Name" field="name" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Contact</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Loyalty</th>
-                  <th className="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Spent</th>
-                  <th className="px-4 py-3 text-left">
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Contact & Phone</th>
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">VIP Loyalty Tier</th>
+                  <th className="px-4 py-3.5 text-right text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Total Purchases</th>
+                  <th className="px-4 py-3.5 text-right">
                     <SortableHeader label="Points" field="loyalty_points" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-5 py-3.5 text-right text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-[#2A261F]">
                 {customers.map((customer, index) => {
                   const loyalty = getLoyaltyTier(customer.loyalty_points || 0)
                   return (
-                    <motion.tr
+                    <tr
                       key={customer.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: index * 0.03 }}
-                      className="hover:bg-gray-50 transition-colors"
+                      className="hover:bg-[#1F1E1A] transition-colors cursor-pointer"
+                      onClick={() => openViewModal(customer)}
                     >
-                      <td className="px-4 py-3">
+                      <td className="px-5 py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center text-white font-bold flex-shrink-0">
+                          <div className="w-9 h-9 rounded-lg bg-[#12110F] border border-[#2A261F] flex items-center justify-center font-serif font-bold text-xs text-[#C9A45C]">
                             {customer.name.charAt(0).toUpperCase()}
                           </div>
-                          <div className="min-w-0">
-                            <p className="font-semibold text-gray-900 text-sm truncate">{customer.name}</p>
-                            {customer.language_preference && (
-                              <p className="text-xs text-gray-500">{customer.language_preference === 'en' ? 'English' : customer.language_preference === 'hi' ? 'Hindi' : 'Gujarati'}</p>
-                            )}
+                          <div>
+                            <p className="font-serif font-bold text-sm text-[#F3EFE6]">{customer.name}</p>
+                            <p className="text-[11px] text-[#8D8980] font-mono">Member #{customer.id}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2 text-sm text-gray-700">
-                            <Phone className="w-3.5 h-3.5 text-gray-400" />
-                            <span>{customer.phone}</span>
-                          </div>
-                          {customer.email && (
-                            <div className="flex items-center gap-2 text-xs text-gray-500 truncate max-w-[200px]">
-                              <Mail className="w-3.5 h-3.5 text-gray-400" />
-                              <span className="truncate">{customer.email}</span>
-                            </div>
-                          )}
-                        </div>
+
+                      <td className="px-4 py-4">
+                        <p className="text-sm font-mono text-[#F3EFE6]">{customer.phone}</p>
+                        {customer.email && <p className="text-xs text-[#8D8980]">{customer.email}</p>}
                       </td>
-                      <td className="px-4 py-3">
-                        <span className={clsx(
-                          'text-xs font-medium px-2 py-1 rounded-full',
-                          loyalty.bg, loyalty.color
-                        )}>
+
+                      <td className="px-4 py-4">
+                        <span className={clsx('text-xs font-medium px-2.5 py-1 rounded-full inline-block border', loyalty.bg, loyalty.color, loyalty.border)}>
                           {loyalty.tier}
                         </span>
                       </td>
-                      <td className="px-4 py-3">
-                        <p className="font-semibold text-gray-900 text-sm">{formatCurrency(customer.total_purchases || 0)}</p>
+
+                      <td className="px-4 py-4 text-right font-mono font-bold text-sm text-[#F3EFE6]">
+                        {formatCurrency(customer.total_purchases || 0)}
                       </td>
-                      <td className="px-4 py-3">
-                        <p className="font-semibold text-yellow-600 text-sm">{(customer.loyalty_points || 0).toLocaleString()}</p>
+
+                      <td className="px-4 py-4 text-right font-mono font-bold text-sm text-[#C9A45C]">
+                        {(customer.loyalty_points || 0).toLocaleString()}
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center justify-end gap-1">
-                          <button onClick={() => openViewModal(customer)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-                            <Eye className="w-4 h-4 text-gray-500" />
+
+                      <td className="px-5 py-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                          <button
+                            onClick={() => openWhatsApp(customer.phone, customer.name)}
+                            className="p-1.5 hover:bg-emerald-950/40 text-emerald-400 rounded-lg transition-colors"
+                            title="WhatsApp"
+                          >
+                            <Send className="w-3.5 h-3.5" />
                           </button>
-                          <button onClick={() => openEditModal(customer)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-                            <Edit className="w-4 h-4 text-gray-500" />
+                          <button 
+                            onClick={() => openViewModal(customer)}
+                            className="p-1.5 hover:bg-[#2A261F] text-[#8D8980] hover:text-[#F3EFE6] rounded-lg transition-colors"
+                            title="Inspect Dossier"
+                          >
+                            <Eye className="w-4 h-4" />
                           </button>
-                          <button onClick={() => openDeleteModal(customer)} className="p-1.5 hover:bg-danger-50 rounded-lg transition-colors">
-                            <Trash2 className="w-4 h-4 text-danger-500" />
+                          <button 
+                            onClick={() => openEditModal(customer)}
+                            className="p-1.5 hover:bg-[#C9A45C]/15 text-[#C9A45C] rounded-lg transition-colors"
+                            title="Edit"
+                          >
+                            <Edit className="w-4 h-4" />
+                          </button>
+                          <button 
+                            onClick={() => openDeleteModal(customer)}
+                            className="p-1.5 hover:bg-rose-950/40 text-rose-400 rounded-lg transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
                       </td>
-                    </motion.tr>
+                    </tr>
                   )
                 })}
               </tbody>
             </table>
           </div>
-        </motion.div>
+        </div>
       )}
 
       {/* Pagination */}
       {!loading && customers.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="bg-white rounded-xl border border-gray-100 shadow-sm"
-        >
+        <div className="bg-[#171613] rounded-xl border border-[#2A261F] p-2">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -625,275 +662,314 @@ export default function CustomersPage() {
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
           />
-        </motion.div>
+        </div>
       )}
 
-      {/* Add/Edit Modal */}
-      <Modal isOpen={showFormModal} onClose={() => setShowFormModal(false)} title={selectedCustomer ? 'Edit Customer' : 'Add Customer'} size="lg">
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-5">
+      {/* Add / Edit Client Modal */}
+      <Modal 
+        isOpen={showFormModal} 
+        onClose={() => setShowFormModal(false)} 
+        title={selectedCustomer ? 'Update Client Dossier' : 'Register New Boutique Client'}
+        description={selectedCustomer ? `Editing CRM profile for ${selectedCustomer.name}` : 'Create a dedicated VIP customer record in the Meghani boutique roster'}
+        size="md"
+      >
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <Input 
+            label="Client Full Name *" 
+            placeholder="e.g. Dr. Rajesh Meghani" 
+            {...register('name')} 
+            error={errors.name?.message} 
+          />
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <Input 
-              label="Full Name" 
-              {...register('name')} 
-              error={errors.name?.message} 
-              icon={<Users className="w-4 h-4" />}
-              required
-            />
-            <Input 
-              label="Phone Number" 
+              label="Mobile Phone *" 
+              placeholder="e.g. 98250XXXXX" 
               {...register('phone')} 
               error={errors.phone?.message} 
-              placeholder="+91 XXXXXXXXXX"
-              icon={<Phone className="w-4 h-4" />}
-              required
             />
             <Input 
-              label="Email" 
-              type="email" 
+              label="Email Address" 
+              type="email"
+              placeholder="client@domain.com" 
               {...register('email')} 
-              error={errors.email?.message}
-              icon={<Mail className="w-4 h-4" />}
+              error={errors.email?.message} 
             />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <Input 
-              label="Date of Birth" 
-              type="date" 
-              {...register('date_of_birth')}
-              icon={<Calendar className="w-4 h-4" />}
+              label="Date of Birth / Anniversary" 
+              type="date"
+              {...register('date_of_birth')} 
             />
             <div>
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">Language Preference</label>
-              <select 
-                {...register('language_preference')} 
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 outline-none transition-all text-sm sm:text-base"
+              <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Language Preference</label>
+              <select
+                {...register('language_preference')}
+                className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-xs text-[#F3EFE6]"
               >
-                {languages.map((lang) => (
-                  <option key={lang.value} value={lang.value}>{lang.label}</option>
+                {languages.map((l) => (
+                  <option key={l.value} value={l.value} className="bg-[#171613]">{l.label}</option>
                 ))}
               </select>
             </div>
-            <div className="sm:col-span-2">
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
-                <MapPin className="w-4 h-4 inline mr-1" /> Address
-              </label>
-              <textarea 
-                {...register('address')} 
-                rows={2} 
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none transition-all text-sm sm:text-base" 
-                placeholder="Enter full address"
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">Notes</label>
-              <textarea 
-                {...register('notes')} 
-                rows={2} 
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none transition-all text-sm sm:text-base" 
-                placeholder="Any additional notes..."
-              />
-            </div>
           </div>
-          <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4 sm:pt-5 border-t border-gray-100">
-            <Button type="button" variant="secondary" onClick={() => setShowFormModal(false)} className="w-full sm:w-auto">Cancel</Button>
-            <Button type="submit" isLoading={isSubmitting} className="w-full sm:w-auto">{selectedCustomer ? 'Update Customer' : 'Create Customer'}</Button>
+
+          <div>
+            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Residential / Boutique Delivery Address</label>
+            <textarea
+              {...register('address')}
+              rows={2}
+              className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-xs text-[#F3EFE6] resize-none"
+              placeholder="Street, locality, city, pincode..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">VIP Notes & Horological Preferences</label>
+            <textarea
+              {...register('notes')}
+              rows={2}
+              className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-xs text-[#F3EFE6] resize-none"
+              placeholder="Collector of Swiss chronographs, prefers 38-40mm case sizes, gold dials..."
+            />
+          </div>
+
+          <div className="flex justify-end gap-2.5 pt-3 border-t border-[#2A261F]">
+            <Button type="button" variant="secondary" onClick={() => setShowFormModal(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" loading={isSubmitting} className="shadow-gold">
+              {selectedCustomer ? 'Save Changes' : 'Register Client'}
+            </Button>
           </div>
         </form>
       </Modal>
 
-      {/* View Modal (with Tabs) */}
-      <Modal isOpen={showViewModal} onClose={() => setShowViewModal(false)} title="Customer Details" size="lg">
+      {/* Client Profile Dossier Modal */}
+      <Modal 
+        isOpen={showViewModal} 
+        onClose={() => setShowViewModal(false)} 
+        title="Patron Dossier & Concierge Summary"
+        description="Comprehensive client purchase record, atelier service history, and loyalty awards"
+        size="lg"
+      >
         {selectedCustomer && (
-          <div className="space-y-4 sm:space-y-5">
-            {/* Customer Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 p-4 sm:p-5 bg-gradient-to-r from-primary-50 to-purple-50 rounded-xl">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-primary-500 to-primary-700 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
-                <span className="text-2xl sm:text-3xl font-bold text-white">{selectedCustomer.name.charAt(0).toUpperCase()}</span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{selectedCustomer.name}</h3>
-                <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2">
-                  <span className="flex items-center gap-1 text-xs sm:text-sm text-gray-600">
-                    <Phone className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> {selectedCustomer.phone}
-                  </span>
-                  {(() => {
-                    const loyalty = getLoyaltyTier(selectedCustomer.loyalty_points || 0)
-                    return (
-                      <span className={clsx('text-xs sm:text-sm font-medium px-2 sm:px-3 py-0.5 sm:py-1 rounded-full', loyalty.bg, loyalty.color)}>
-                        {loyalty.tier} Member
-                      </span>
-                    )
-                  })()}
+          <div className="space-y-5">
+            {/* Patron Profile Header */}
+            <div className="p-4 bg-[#12110F] border border-[#2A261F] rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-14 h-14 rounded-2xl bg-[#171613] border border-[#2A261F] flex items-center justify-center font-serif font-bold text-xl text-[#C9A45C]">
+                  {selectedCustomer.name.charAt(0).toUpperCase()}
+                </div>
+                <div>
+                  <h3 className="font-serif font-bold text-lg text-[#F3EFE6]">{selectedCustomer.name}</h3>
+                  <div className="flex items-center gap-2 mt-1">
+                    {(() => {
+                      const loyalty = getLoyaltyTier(selectedCustomer.loyalty_points || 0)
+                      return (
+                        <span className={clsx('text-xs font-semibold px-2.5 py-0.5 rounded-full border', loyalty.bg, loyalty.color, loyalty.border)}>
+                          {loyalty.tier}
+                        </span>
+                      )
+                    })()}
+                    <span className="text-xs text-[#8D8980] font-mono">Mobile: {selectedCustomer.phone}</span>
+                  </div>
                 </div>
               </div>
-              <div className="flex gap-4 sm:gap-6">
-                <div className="text-center">
-                  <p className="text-[10px] sm:text-xs text-gray-500">Points</p>
-                  <p className="text-xl sm:text-2xl font-bold text-yellow-600">{(selectedCustomer.loyalty_points || 0).toLocaleString()}</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-[10px] sm:text-xs text-gray-500">Spent</p>
-                  <p className="text-xl sm:text-2xl font-bold text-green-600">{formatCurrency(selectedCustomer.total_purchases || 0)}</p>
-                </div>
+
+              <div className="flex items-center gap-2">
+                <Button 
+                  size="sm" 
+                  variant="secondary"
+                  onClick={() => openWhatsApp(selectedCustomer.phone, selectedCustomer.name)}
+                  className="bg-emerald-950/40 text-emerald-400 border border-emerald-800/40 hover:bg-emerald-900/50"
+                >
+                  <Send className="w-3.5 h-3.5 mr-1" />
+                  <span>WhatsApp Concierge</span>
+                </Button>
               </div>
             </div>
 
-            {/* Tabs */}
-            <div className="flex gap-1 p-1 bg-gray-100 rounded-xl">
-              {(['info', 'purchases', 'repairs'] as const).map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setDetailTab(tab)}
-                  className={clsx(
-                    'flex-1 flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-4 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-medium transition-all',
-                    detailTab === tab ? 'bg-white shadow-sm text-primary-600' : 'text-gray-600 hover:text-gray-900'
-                  )}
-                >
-                  {tab === 'info' && 'Info'}
-                  {tab === 'purchases' && <><ShoppingCart className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> <span className="hidden xs:inline">Purchases</span><span className="xs:hidden">Buy</span></>}
-                  {tab === 'repairs' && <><Wrench className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> Repairs</>}
-                </button>
-              ))}
+            {/* Tabs Selector */}
+            <div className="flex items-center gap-1.5 p-1 bg-[#12110F] border border-[#2A261F] rounded-xl text-xs font-semibold">
+              <button
+                onClick={() => setDetailTab('info')}
+                className={clsx(
+                  'flex-1 py-2 px-3 rounded-lg transition-all',
+                  detailTab === 'info'
+                    ? 'bg-[#C9A45C] text-[#0B0B0A] shadow-md font-bold'
+                    : 'text-[#8D8980] hover:text-[#F3EFE6]'
+                )}
+              >
+                1. General Profile
+              </button>
+              <button
+                onClick={() => setDetailTab('purchases')}
+                className={clsx(
+                  'flex-1 py-2 px-3 rounded-lg transition-all',
+                  detailTab === 'purchases'
+                    ? 'bg-[#C9A45C] text-[#0B0B0A] shadow-md font-bold'
+                    : 'text-[#8D8980] hover:text-[#F3EFE6]'
+                )}
+              >
+                2. Purchase Invoices ({purchases.length})
+              </button>
+              <button
+                onClick={() => setDetailTab('repairs')}
+                className={clsx(
+                  'flex-1 py-2 px-3 rounded-lg transition-all',
+                  detailTab === 'repairs'
+                    ? 'bg-[#C9A45C] text-[#0B0B0A] shadow-md font-bold'
+                    : 'text-[#8D8980] hover:text-[#F3EFE6]'
+                )}
+              >
+                3. Atelier Tickets ({repairs.length})
+              </button>
             </div>
 
-            {/* Tab Content */}
-            <AnimatePresence mode="wait">
-              {detailTab === 'info' && (
-                <motion.div
-                  key="info"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="grid grid-cols-2 gap-2 sm:gap-5"
-                >
-                  <div className="p-3 sm:p-4 bg-gray-50 rounded-xl">
-                    <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">Email</p>
-                    <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{selectedCustomer.email || '-'}</p>
+            {/* TAB 1: Info */}
+            {detailTab === 'info' && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-[#12110F] border border-[#2A261F] rounded-xl text-center">
+                  <div>
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Total Lifetime Spend</span>
+                    <p className="font-mono font-bold text-base text-[#F3EFE6] mt-0.5">
+                      {formatCurrency(selectedCustomer.total_purchases || 0)}
+                    </p>
                   </div>
-                  <div className="p-3 sm:p-4 bg-gray-50 rounded-xl">
-                    <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">Date of Birth</p>
-                    <p className="font-medium text-gray-900 text-sm sm:text-base">{selectedCustomer.date_of_birth ? formatDate(selectedCustomer.date_of_birth) : '-'}</p>
+                  <div>
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Available Rewards</span>
+                    <p className="font-mono font-bold text-base text-[#C9A45C] mt-0.5">
+                      {(selectedCustomer.loyalty_points || 0).toLocaleString()} pts
+                    </p>
                   </div>
-                  <div className="p-3 sm:p-4 bg-gray-50 rounded-xl">
-                    <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">Language</p>
-                    <p className="font-medium text-gray-900 capitalize text-sm sm:text-base">{selectedCustomer.language_preference}</p>
+                  <div>
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Member Since</span>
+                    <p className="font-mono text-xs text-[#F3EFE6] mt-1">
+                      {formatDate(selectedCustomer.created_at)}
+                    </p>
                   </div>
-                  <div className="p-3 sm:p-4 bg-gray-50 rounded-xl">
-                    <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">Customer Since</p>
-                    <p className="font-medium text-gray-900 text-sm sm:text-base">{formatDate(selectedCustomer.created_at)}</p>
+                  <div>
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Date of Birth</span>
+                    <p className="font-mono text-xs text-[#F3EFE6] mt-1">
+                      {selectedCustomer.date_of_birth ? formatDate(selectedCustomer.date_of_birth) : 'Not specified'}
+                    </p>
                   </div>
-                  <div className="col-span-2 p-3 sm:p-4 bg-gray-50 rounded-xl">
-                    <p className="text-[10px] sm:text-xs text-gray-500 mb-0.5 sm:mb-1">Address</p>
-                    <p className="font-medium text-gray-900 text-sm sm:text-base">{selectedCustomer.address || '-'}</p>
-                  </div>
-                  {selectedCustomer.notes && (
-                    <div className="col-span-2 p-3 sm:p-4 bg-amber-50 rounded-xl border border-amber-100">
-                      <p className="text-[10px] sm:text-xs text-amber-700 mb-0.5 sm:mb-1">Notes</p>
-                      <p className="text-amber-900 text-sm sm:text-base">{selectedCustomer.notes}</p>
-                    </div>
-                  )}
-                </motion.div>
-              )}
+                </div>
 
-              {detailTab === 'purchases' && (
-                <motion.div
-                  key="purchases"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="max-h-56 sm:max-h-64 overflow-y-auto"
-                >
-                  {loadingDetails ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-                    </div>
-                  ) : purchases.length === 0 ? (
-                    <div className="text-center py-10 sm:py-12 bg-gray-50 rounded-xl">
-                      <ShoppingCart className="w-8 h-8 sm:w-10 sm:h-10 text-gray-300 mx-auto mb-2" />
-                      <p className="text-sm sm:text-base text-gray-500">No purchase history</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {purchases.map((sale: any) => (
-                        <div key={sale.id} className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-green-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{sale.invoice_number}</p>
-                              <p className="text-xs sm:text-sm text-gray-500">{formatDate(sale.sale_date)}</p>
-                            </div>
-                          </div>
-                          <p className="font-bold text-green-600 text-sm sm:text-base flex-shrink-0">{formatCurrency(sale.total_amount)}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </motion.div>
-              )}
+                {selectedCustomer.address && (
+                  <div className="p-3 bg-[#12110F] border border-[#2A261F] rounded-xl">
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block mb-1">Registered Address</span>
+                    <p className="text-xs text-[#F3EFE6]">{selectedCustomer.address}</p>
+                  </div>
+                )}
 
-              {detailTab === 'repairs' && (
-                <motion.div
-                  key="repairs"
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="max-h-56 sm:max-h-64 overflow-y-auto"
-                >
-                  {loadingDetails ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600 mx-auto"></div>
-                    </div>
-                  ) : repairs.length === 0 ? (
-                    <div className="text-center py-10 sm:py-12 bg-gray-50 rounded-xl">
-                      <Wrench className="w-8 h-8 sm:w-10 sm:h-10 text-gray-300 mx-auto mb-2" />
-                      <p className="text-sm sm:text-base text-gray-500">No repair history</p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {repairs.map((repair: any) => (
-                        <div key={repair.id} className="flex items-center justify-between p-3 sm:p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors">
-                          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
-                            <div className="w-8 h-8 sm:w-10 sm:h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                              <Wrench className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{repair.ticket_number}</p>
-                              <p className="text-xs sm:text-sm text-gray-500 truncate">{repair.item_type}</p>
-                            </div>
-                          </div>
-                          <Badge variant={repair.status === 'delivered' ? 'success' : 'warning'}>{repair.status}</Badge>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
+                {selectedCustomer.notes && (
+                  <div className="p-3 bg-[#12110F] border border-[#2A261F] rounded-xl">
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block mb-1">Concierge & Horological Notes</span>
+                    <p className="text-xs text-[#F3EFE6] leading-relaxed">{selectedCustomer.notes}</p>
+                  </div>
+                )}
+              </div>
+            )}
 
-            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-4 sm:pt-5 border-t border-gray-100">
-              <Button variant="secondary" onClick={() => setShowViewModal(false)} className="w-full sm:w-auto">Close</Button>
-              <Button onClick={() => { setShowViewModal(false); openEditModal(selectedCustomer); }} className="w-full sm:w-auto">
-                <Edit className="w-4 h-4 mr-1" /> Edit Customer
+            {/* TAB 2: Purchases */}
+            {detailTab === 'purchases' && (
+              <div className="space-y-3">
+                {purchases.length === 0 ? (
+                  <div className="p-8 text-center bg-[#12110F] border border-[#2A261F] rounded-xl">
+                    <Receipt className="w-8 h-8 text-[#8D8980] mx-auto mb-2" />
+                    <p className="text-xs text-[#8D8980]">No purchase invoices on record for this client yet.</p>
+                  </div>
+                ) : (
+                  <div className="border border-[#2A261F] rounded-xl overflow-hidden bg-[#12110F]">
+                    <table className="w-full text-xs">
+                      <thead className="bg-[#171613] border-b border-[#2A261F] text-[#8D8980]">
+                        <tr>
+                          <th className="px-4 py-2.5 text-left font-medium">Invoice #</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Date</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Tender</th>
+                          <th className="px-4 py-2.5 text-right font-medium">Amount</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#2A261F]">
+                        {purchases.map((sale: any) => (
+                          <tr key={sale.id} className="hover:bg-[#1F1E1A]/40">
+                            <td className="px-4 py-2.5 font-mono font-bold text-[#C9A45C]">{sale.invoice_number}</td>
+                            <td className="px-4 py-2.5 text-[#8D8980] font-mono">{formatDate(sale.sale_date)}</td>
+                            <td className="px-4 py-2.5 uppercase text-[11px] text-[#E8D5A7]">{sale.payment_mode}</td>
+                            <td className="px-4 py-2.5 text-right font-mono font-bold text-[#F3EFE6]">{formatCurrency(sale.total_amount)}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 3: Repairs */}
+            {detailTab === 'repairs' && (
+              <div className="space-y-3">
+                {repairs.length === 0 ? (
+                  <div className="p-8 text-center bg-[#12110F] border border-[#2A261F] rounded-xl">
+                    <Wrench className="w-8 h-8 text-[#8D8980] mx-auto mb-2" />
+                    <p className="text-xs text-[#8D8980]">No atelier restoration tickets on record for this client.</p>
+                  </div>
+                ) : (
+                  <div className="border border-[#2A261F] rounded-xl overflow-hidden bg-[#12110F]">
+                    <table className="w-full text-xs">
+                      <thead className="bg-[#171613] border-b border-[#2A261F] text-[#8D8980]">
+                        <tr>
+                          <th className="px-4 py-2.5 text-left font-medium">Ticket #</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Article</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Status</th>
+                          <th className="px-4 py-2.5 text-right font-medium">Charge</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#2A261F]">
+                        {repairs.map((rep: any) => (
+                          <tr key={rep.id} className="hover:bg-[#1F1E1A]/40">
+                            <td className="px-4 py-2.5 font-mono font-bold text-[#C9A45C]">{rep.ticket_number}</td>
+                            <td className="px-4 py-2.5 text-[#F3EFE6]">{rep.brand || ''} {rep.item_type}</td>
+                            <td className="px-4 py-2.5 uppercase text-[10px] text-[#E8D5A7] font-semibold">{rep.status}</td>
+                            <td className="px-4 py-2.5 text-right font-mono font-bold text-[#F3EFE6]">
+                              {formatCurrency(rep.repair_charge || rep.estimated_cost)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2.5 pt-3 border-t border-[#2A261F]">
+              <Button variant="secondary" onClick={() => setShowViewModal(false)}>
+                Dismiss
+              </Button>
+              <Button onClick={() => { setShowViewModal(false); openEditModal(selectedCustomer); }}>
+                <Edit className="w-4 h-4 mr-1.5" />
+                Edit Profile
               </Button>
             </div>
           </div>
         )}
       </Modal>
 
-      {/* Delete Modal */}
-      <Modal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} title="Delete Customer">
-        <div className="text-center py-4">
-          <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4">
-            <Trash2 className="w-7 h-7 sm:w-8 sm:h-8 text-red-600" />
-          </div>
-          <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">Delete &ldquo;{selectedCustomer?.name}&rdquo;?</h3>
-          <p className="text-sm sm:text-base text-gray-500 mb-6">This will also remove their purchase and repair history links. This action cannot be undone.</p>
-          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3">
-            <Button variant="secondary" onClick={() => setShowDeleteModal(false)} className="flex-1">Cancel</Button>
-            <Button variant="danger" onClick={handleDelete} className="flex-1">Delete Customer</Button>
-          </div>
-        </div>
-      </Modal>
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        title="Archive Client Profile"
+        message={`Are you certain you wish to archive the profile for "${selectedCustomer?.name}"? All transaction associations will remain permanently locked.`}
+        confirmText="Archive Client"
+        variant="danger"
+      />
     </div>
   )
 }

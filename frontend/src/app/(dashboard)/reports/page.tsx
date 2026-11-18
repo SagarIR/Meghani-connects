@@ -1,29 +1,43 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { BarChart3, TrendingUp, Package, Wrench, Wallet, Users, Download, Calendar, FileText } from 'lucide-react'
-import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { useEffect, useState, useMemo } from 'react'
+import { 
+  BarChart3, TrendingUp, Package, Wrench, Wallet, Users, Download, 
+  Calendar, FileText, Lock, ShieldCheck, ArrowUpRight, DollarSign,
+  PieChart as PieChartIcon, Layers
+} from 'lucide-react'
+import { 
+  LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, 
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
+} from 'recharts'
 import { api } from '@/services/api'
+import { useAuth } from '@/context/AuthContext'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
+import clsx from 'clsx'
+import toast from 'react-hot-toast'
 
 type ReportType = 'sales' | 'products' | 'repairs' | 'expenses' | 'customers' | 'inventory'
 
 const reportConfig = {
-  sales: { title: 'Sales Summary', icon: TrendingUp, color: '#3b82f6' },
-  products: { title: 'Product Performance', icon: Package, color: '#10b981' },
-  repairs: { title: 'Repair Income', icon: Wrench, color: '#f59e0b' },
-  expenses: { title: 'Expense Report', icon: Wallet, color: '#ef4444' },
-  customers: { title: 'Customer Loyalty', icon: Users, color: '#8b5cf6' },
-  inventory: { title: 'Inventory Status', icon: BarChart3, color: '#06b6d4' },
+  sales: { title: 'Sales & Revenue', icon: TrendingUp },
+  products: { title: 'Timepiece Performance', icon: Package },
+  repairs: { title: 'Atelier Service Income', icon: Wrench },
+  expenses: { title: 'Overheads & Expenses', icon: Wallet },
+  customers: { title: 'Clientele & Loyalty', icon: Users },
+  inventory: { title: 'Stock & Valuation', icon: BarChart3 },
 }
 
-const COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4']
+const LUXURY_PALETTE = ['#C9A45C', '#10b981', '#E8D5A7', '#38bdf8', '#fbbf24', '#f43f5e']
 
 export default function ReportsPage() {
+  const { user } = useAuth()
+  const isManagement = user?.role === 'admin' || user?.role === 'manager'
+
   const [activeReport, setActiveReport] = useState<ReportType>('sales')
   const [reportData, setReportData] = useState<any>(null)
   const [loading, setLoading] = useState(true)
+  const [downloadingFormat, setDownloadingFormat] = useState<string | null>(null)
   const [dateRange, setDateRange] = useState({
     start: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     end: new Date().toISOString().split('T')[0],
@@ -44,12 +58,14 @@ export default function ReportsPage() {
       setReportData(response.data)
     } catch (error) {
       console.error('Failed to fetch report:', error)
+      toast.error('Failed to compile report metrics')
     } finally {
       setLoading(false)
     }
   }
 
   const downloadReport = async (format: 'csv' | 'excel' | 'pdf') => {
+    setDownloadingFormat(format)
     try {
       const response = await api.get(`/analytics/reports/${activeReport}/export/${format}/`, {
         responseType: 'blob',
@@ -59,12 +75,17 @@ export default function ReportsPage() {
       const link = document.createElement('a')
       link.href = url
       const ext = format === 'excel' ? 'xlsx' : format
-      link.setAttribute('download', `${activeReport}_report.${ext}`)
+      link.setAttribute('download', `Meghani_${activeReport}_report_${new Date().toISOString().split('T')[0]}.${ext}`)
       document.body.appendChild(link)
       link.click()
       link.remove()
+      window.URL.revokeObjectURL(url)
+      toast.success(`${format.toUpperCase()} report exported successfully`)
     } catch (error) {
-      console.error('Failed to download:', error)
+      console.error('Failed to download report:', error)
+      toast.error(`Failed to export ${format.toUpperCase()} report`)
+    } finally {
+      setDownloadingFormat(null)
     }
   }
 
@@ -77,191 +98,265 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Reports & Analytics</h1>
-          <p className="text-sm sm:text-base text-gray-500 mt-1">View detailed business reports</p>
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 bg-[#171613] border border-[#2A261F] rounded-xl flex items-center justify-center shadow-md">
+            <BarChart3 className="w-5 h-5 text-[#C9A45C]" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Executive Intelligence & Audits</h1>
+              <span className="text-xs px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F] font-mono">
+                Real-Time
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm text-[#8D8980]">Strategic retail analytics, profit and loss, inventory health, and fiscal compliance</p>
+          </div>
+        </div>
+
+        {/* Date Filter & Export Controls */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {activeReport !== 'inventory' && (
+            <div className="flex items-center gap-2 bg-[#171613] border border-[#2A261F] rounded-xl px-3 py-1.5 shadow-sm">
+              <Calendar className="w-4 h-4 text-[#C9A45C] flex-shrink-0" />
+              <input
+                type="date"
+                value={dateRange.start}
+                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                className="bg-transparent text-xs text-[#F3EFE6] font-mono outline-none cursor-pointer"
+              />
+              <span className="text-xs text-[#8D8980]">to</span>
+              <input
+                type="date"
+                value={dateRange.end}
+                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                className="bg-transparent text-xs text-[#F3EFE6] font-mono outline-none cursor-pointer"
+              />
+            </div>
+          )}
+
+          <div className="flex items-center gap-1.5">
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={() => downloadReport('excel')}
+              loading={downloadingFormat === 'excel'}
+              className="text-xs"
+            >
+              <Download className="w-3.5 h-3.5 mr-1 text-emerald-400" /> Excel
+            </Button>
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={() => downloadReport('csv')}
+              loading={downloadingFormat === 'csv'}
+              className="text-xs"
+            >
+              <Download className="w-3.5 h-3.5 mr-1 text-[#C9A45C]" /> CSV
+            </Button>
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={() => downloadReport('pdf')}
+              loading={downloadingFormat === 'pdf'}
+              className="text-xs"
+            >
+              <FileText className="w-3.5 h-3.5 mr-1 text-rose-400" /> PDF
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Report Type Tabs */}
-      <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1 scrollbar-hide">
+      {/* Module Navigation Tabs */}
+      <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
         {(Object.keys(reportConfig) as ReportType[]).map((type) => {
           const config = reportConfig[type]
           const Icon = config.icon
+          const isActive = activeReport === type
+
           return (
             <button
               key={type}
               onClick={() => setActiveReport(type)}
-              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg font-medium transition-colors text-xs sm:text-sm whitespace-nowrap flex-shrink-0 ${
-                activeReport === type
-                  ? 'text-white'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-              style={{ backgroundColor: activeReport === type ? config.color : undefined }}
+              className={clsx(
+                'flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all text-xs whitespace-nowrap border',
+                isActive
+                  ? 'bg-[#C9A45C] text-[#0B0B0A] border-[#C9A45C] font-bold shadow-gold'
+                  : 'bg-[#171613] text-[#8D8980] border-[#2A261F] hover:text-[#F3EFE6] hover:bg-[#1F1E1A]'
+              )}
             >
-              <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-              <span className="hidden sm:inline">{config.title}</span>
-              <span className="sm:hidden">{config.title.split(' ')[0]}</span>
+              <Icon className="w-4 h-4" />
+              <span>{config.title}</span>
             </button>
           )
         })}
       </div>
 
-      {/* Date Range & Export */}
-      <div className="card">
-        <div className="flex flex-col gap-3 sm:gap-4">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
-            <Calendar className="w-5 h-5 text-gray-400 hidden sm:block" />
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-4 w-full sm:w-auto">
-              <input
-                type="date"
-                value={dateRange.start}
-                onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-sm"
-              />
-              <span className="text-gray-500 text-center text-sm">to</span>
-              <input
-                type="date"
-                value={dateRange.end}
-                onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 outline-none text-sm"
-              />
-            </div>
-          </div>
-          <div className="flex gap-2 overflow-x-auto">
-            <Button variant="secondary" size="sm" onClick={() => downloadReport('csv')} className="flex-shrink-0">
-              <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" /> CSV
-            </Button>
-            <Button variant="secondary" size="sm" onClick={() => downloadReport('excel')} className="flex-shrink-0">
-              <Download className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" /> Excel
-            </Button>
-            <Button variant="secondary" size="sm" onClick={() => downloadReport('pdf')} className="flex-shrink-0">
-              <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1" /> PDF
-            </Button>
-          </div>
-        </div>
-      </div>
-
       {/* Report Content */}
       {loading ? (
-        <div className="flex items-center justify-center h-48 sm:h-64">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+        <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-16 text-center">
+          <div className="w-8 h-8 border-2 border-[#C9A45C] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <p className="text-sm text-[#8D8980]">Compiling analytics dossier from database...</p>
         </div>
       ) : reportData ? (
-        <div className="space-y-4 sm:space-y-6">
-          {/* Sales Report */}
+        <div className="space-y-6">
+          {/* TAB 1: Sales & Revenue */}
           {activeReport === 'sales' && (
             <>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-                <div className="card text-center p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-gray-500">Total Sales</p>
-                  <p className="text-lg sm:text-2xl font-bold text-blue-600">{formatCurrency(reportData.summary?.total_sales || 0)}</p>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Gross Sales Invoiced</span>
+                  <p className="text-xl sm:text-2xl font-bold font-mono text-[#C9A45C] mt-1">
+                    {formatCurrency(reportData.summary?.total_sales || 0)}
+                  </p>
                 </div>
-                <div className="card text-center p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-gray-500">Total Profit</p>
-                  <p className="text-lg sm:text-2xl font-bold text-green-600">{formatCurrency(reportData.summary?.total_profit || 0)}</p>
+
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Gross Profit</span>
+                  {isManagement ? (
+                    <p className="text-xl sm:text-2xl font-bold font-mono text-emerald-400 mt-1">
+                      +{formatCurrency(reportData.summary?.total_profit || 0)}
+                    </p>
+                  ) : (
+                    <div className="flex items-center gap-1.5 mt-2 text-xs text-[#8D8980] font-mono">
+                      <Lock className="w-3.5 h-3.5 text-[#C9A45C]" />
+                      <span>Masked for Staff</span>
+                    </div>
+                  )}
                 </div>
-                <div className="card text-center p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-gray-500">Transactions</p>
-                  <p className="text-lg sm:text-2xl font-bold text-gray-900">{reportData.summary?.transaction_count || 0}</p>
+
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Transaction Volume</span>
+                  <p className="text-xl sm:text-2xl font-bold font-mono text-[#F3EFE6] mt-1">
+                    {reportData.summary?.transaction_count || 0}
+                  </p>
                 </div>
-                <div className="card text-center p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-gray-500">Avg. Sale</p>
-                  <p className="text-lg sm:text-2xl font-bold text-purple-600">{formatCurrency(reportData.summary?.average_sale || 0)}</p>
+
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Average Ticket</span>
+                  <p className="text-xl sm:text-2xl font-bold font-mono text-[#E8D5A7] mt-1">
+                    {formatCurrency(reportData.summary?.average_sale || 0)}
+                  </p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-                <div className="lg:col-span-2 card p-3 sm:p-4">
-                  <h3 className="font-medium text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">Daily Sales Trend</h3>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <LineChart data={reportData.daily_data || []}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" tickFormatter={(v) => new Date(v).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })} tick={{ fontSize: 10 }} />
-                      <YAxis tick={{ fontSize: 10 }} />
-                      <Tooltip formatter={(v: number) => formatCurrency(v)} />
-                      <Legend wrapperStyle={{ fontSize: '12px' }} />
-                      <Line type="monotone" dataKey="sales" stroke="#3b82f6" name="Sales" strokeWidth={2} />
-                      <Line type="monotone" dataKey="profit" stroke="#10b981" name="Profit" strokeWidth={2} />
-                    </LineChart>
-                  </ResponsiveContainer>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Daily Invoicing & Profit Curve</h3>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={reportData.daily_data || []}>
+                        <CartesianGrid stroke="#2A261F" strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="date" 
+                          stroke="#8D8980" 
+                          tickFormatter={(v) => new Date(v).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })} 
+                          tick={{ fontSize: 10 }} 
+                        />
+                        <YAxis stroke="#8D8980" tick={{ fontSize: 10 }} />
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: '#171613', borderColor: '#2A261F', borderRadius: '12px', color: '#F3EFE6' }}
+                          formatter={(v: number) => formatCurrency(v)} 
+                        />
+                        <Legend wrapperStyle={{ fontSize: '11px' }} />
+                        <Line type="monotone" dataKey="sales" stroke="#C9A45C" name="Turnover" strokeWidth={2.5} dot={false} />
+                        {isManagement && (
+                          <Line type="monotone" dataKey="profit" stroke="#10b981" name="Profit" strokeWidth={2} dot={false} />
+                        )}
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
-                <div className="card p-3 sm:p-4">
-                  <h3 className="font-medium text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">By Payment Mode</h3>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
-                      <Pie
-                        data={Object.entries(reportData.by_payment_mode || {}).map(([key, value]) => ({ name: key.toUpperCase(), value }))}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={40}
-                        outerRadius={70}
-                        dataKey="value"
-                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
-                        labelLine={false}
-                      >
-                        {Object.keys(reportData.by_payment_mode || {}).map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(v: number) => formatCurrency(v)} />
-                    </PieChart>
-                  </ResponsiveContainer>
+
+                <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Payment Method Split</h3>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={Object.entries(reportData.by_payment_mode || {}).map(([key, value]) => ({ name: key.toUpperCase(), value }))}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={45}
+                          outerRadius={75}
+                          dataKey="value"
+                        >
+                          {Object.keys(reportData.by_payment_mode || {}).map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={LUXURY_PALETTE[index % LUXURY_PALETTE.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: '#171613', borderColor: '#2A261F', borderRadius: '12px', color: '#F3EFE6' }}
+                          formatter={(v: number) => formatCurrency(v)} 
+                        />
+                        <Legend wrapperStyle={{ fontSize: '11px' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
               </div>
             </>
           )}
 
-          {/* Products Report */}
+          {/* TAB 2: Timepiece Performance */}
           {activeReport === 'products' && (
             <>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                <div className="card p-3 sm:p-4">
-                  <h3 className="font-medium text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">Top Selling Products</h3>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={(reportData.top_sellers || []).slice(0, 5)} layout="vertical">
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis type="number" tick={{ fontSize: 10 }} />
-                      <YAxis dataKey="product__name" type="category" width={80} tick={{ fontSize: 10 }} />
-                      <Tooltip formatter={(v: number) => v} />
-                      <Bar dataKey="sold" fill="#10b981" name="Units Sold" />
-                    </BarChart>
-                  </ResponsiveContainer>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Top Selling Timepieces</h3>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={(reportData.top_sellers || []).slice(0, 5)} layout="vertical">
+                        <CartesianGrid stroke="#2A261F" strokeDasharray="3 3" />
+                        <XAxis type="number" stroke="#8D8980" tick={{ fontSize: 10 }} />
+                        <YAxis dataKey="product__name" type="category" width={110} stroke="#8D8980" tick={{ fontSize: 10 }} />
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: '#171613', borderColor: '#2A261F', borderRadius: '12px', color: '#F3EFE6' }}
+                        />
+                        <Bar dataKey="sold" fill="#C9A45C" name="Units Sold" radius={[0, 6, 6, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
-                <div className="card p-3 sm:p-4">
-                  <h3 className="font-medium text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">Revenue by Category</h3>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
-                      <Pie
-                        data={Object.entries(reportData.by_category || {}).map(([key, value]: [string, any]) => ({ name: key, value: value.revenue }))}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={70}
-                        dataKey="value"
-                        label={({ name }) => name}
-                        labelLine={false}
-                      >
-                        {Object.keys(reportData.by_category || {}).map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(v: number) => formatCurrency(v)} />
-                    </PieChart>
-                  </ResponsiveContainer>
+
+                <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Revenue by Category</h3>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={Object.entries(reportData.by_category || {}).map(([key, value]: [string, any]) => ({ name: key, value: value.revenue }))}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={75}
+                          dataKey="value"
+                        >
+                          {Object.keys(reportData.by_category || {}).map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={LUXURY_PALETTE[index % LUXURY_PALETTE.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: '#171613', borderColor: '#2A261F', borderRadius: '12px', color: '#F3EFE6' }}
+                          formatter={(v: number) => formatCurrency(v)} 
+                        />
+                        <Legend wrapperStyle={{ fontSize: '11px' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
               </div>
 
-              <div className="card p-3 sm:p-4">
-                <h3 className="font-medium text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">Slow Moving Products (No Sales)</h3>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
+              {/* Slow Moving Inventory */}
+              <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
+                <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-3">Slow-Moving Inventory Alerts (Zero Sales in Period)</h3>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                   {(reportData.slow_movers || []).map((product: any) => (
-                    <div key={product.id} className="p-2 sm:p-3 bg-gray-50 rounded-lg">
-                      <p className="font-medium text-gray-900 text-sm sm:text-base truncate">{product.name}</p>
-                      <p className="text-xs sm:text-sm text-gray-500 truncate">{product.brand}</p>
-                      <p className="text-xs sm:text-sm">Stock: {product.stock}</p>
+                    <div key={product.id} className="p-3 bg-[#12110F] border border-[#2A261F] rounded-xl">
+                      <p className="font-medium text-sm text-[#F3EFE6] truncate">{product.name}</p>
+                      <p className="text-xs text-[#C9A45C] mt-0.5 truncate">{product.brand}</p>
+                      <span className="text-[11px] font-mono text-[#8D8980] block mt-1">Holding: {product.stock} units</span>
                     </div>
                   ))}
                 </div>
@@ -269,60 +364,61 @@ export default function ReportsPage() {
             </>
           )}
 
-          {/* Repairs Report */}
+          {/* TAB 3: Atelier Service Income */}
           {activeReport === 'repairs' && (
             <>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-                <div className="card text-center p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-gray-500">Total Repairs</p>
-                  <p className="text-lg sm:text-2xl font-bold text-orange-600">{reportData.summary?.total_repairs || 0}</p>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Service Tickets</span>
+                  <p className="text-xl sm:text-2xl font-bold font-mono text-[#F3EFE6] mt-1">{reportData.summary?.total_repairs || 0}</p>
                 </div>
-                <div className="card text-center p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-gray-500">Revenue</p>
-                  <p className="text-lg sm:text-2xl font-bold text-green-600">{formatCurrency(reportData.summary?.total_revenue || 0)}</p>
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Atelier Revenue</span>
+                  <p className="text-xl sm:text-2xl font-bold font-mono text-emerald-400 mt-1">{formatCurrency(reportData.summary?.total_revenue || 0)}</p>
                 </div>
-                <div className="card text-center p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-gray-500">Completed</p>
-                  <p className="text-lg sm:text-2xl font-bold text-blue-600">{reportData.summary?.completed || 0}</p>
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Discharged Ready</span>
+                  <p className="text-xl sm:text-2xl font-bold font-mono text-sky-400 mt-1">{reportData.summary?.completed || 0}</p>
                 </div>
-                <div className="card text-center p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-gray-500">Pending</p>
-                  <p className="text-lg sm:text-2xl font-bold text-yellow-600">{reportData.summary?.pending || 0}</p>
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Active On Bench</span>
+                  <p className="text-xl sm:text-2xl font-bold font-mono text-amber-400 mt-1">{reportData.summary?.pending || 0}</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                <div className="card p-3 sm:p-4">
-                  <h3 className="font-medium text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">By Status</h3>
-                  <ResponsiveContainer width="100%" height={220}>
-                    <PieChart>
-                      <Pie
-                        data={Object.entries(reportData.by_status || {}).map(([key, value]) => ({ name: key, value }))}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={60}
-                        dataKey="value"
-                        label
-                        labelLine={false}
-                      >
-                        {Object.keys(reportData.by_status || {}).map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip />
-                      <Legend wrapperStyle={{ fontSize: '11px' }} />
-                    </PieChart>
-                  </ResponsiveContainer>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Tickets by Workshop Stage</h3>
+                  <div className="h-60">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={Object.entries(reportData.by_status || {}).map(([key, value]) => ({ name: key.toUpperCase(), value }))}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={70}
+                          dataKey="value"
+                        >
+                          {Object.keys(reportData.by_status || {}).map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={LUXURY_PALETTE[index % LUXURY_PALETTE.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip contentStyle={{ backgroundColor: '#171613', borderColor: '#2A261F', borderRadius: '12px', color: '#F3EFE6' }} />
+                        <Legend wrapperStyle={{ fontSize: '11px' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
-                <div className="card p-3 sm:p-4">
-                  <h3 className="font-medium text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">By Item Type</h3>
-                  <div className="space-y-2 sm:space-y-3 max-h-56 overflow-y-auto">
+
+                <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Revenue by Horological Article</h3>
+                  <div className="space-y-2 max-h-60 overflow-y-auto">
                     {(reportData.by_item_type || []).map((item: any, idx: number) => (
-                      <div key={idx} className="flex items-center justify-between p-2 sm:p-3 bg-gray-50 rounded-lg">
-                        <span className="font-medium text-sm sm:text-base truncate mr-2">{item.item_type}</span>
-                        <div className="text-right flex-shrink-0">
-                          <p className="font-bold text-sm sm:text-base">{item.count} repairs</p>
-                          <p className="text-xs sm:text-sm text-green-600">{formatCurrency(item.revenue || 0)}</p>
+                      <div key={idx} className="flex items-center justify-between p-3 bg-[#12110F] border border-[#2A261F] rounded-xl text-xs">
+                        <span className="font-medium text-[#F3EFE6]">{item.item_type}</span>
+                        <div className="text-right">
+                          <p className="font-mono text-[#8D8980]">{item.count} repairs</p>
+                          <p className="font-mono font-bold text-emerald-400">{formatCurrency(item.revenue || 0)}</p>
                         </div>
                       </div>
                     ))}
@@ -332,108 +428,130 @@ export default function ReportsPage() {
             </>
           )}
 
-          {/* Expenses Report */}
+          {/* TAB 4: Expenses & Overheads */}
           {activeReport === 'expenses' && (
             <>
-              <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                <div className="card text-center p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-gray-500">Total Expenses</p>
-                  <p className="text-base sm:text-2xl font-bold text-red-600">{formatCurrency(reportData.summary?.total_expenses || 0)}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg text-center">
+                  <span className="text-xs text-[#8D8980] uppercase tracking-wider block">Operating Expenses</span>
+                  <p className="text-2xl font-bold font-mono text-rose-400 mt-1">{formatCurrency(reportData.summary?.total_expenses || 0)}</p>
                 </div>
-                <div className="card text-center p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-gray-500">Sales Profit</p>
-                  <p className="text-base sm:text-2xl font-bold text-green-600">{formatCurrency(reportData.summary?.sales_profit || 0)}</p>
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg text-center">
+                  <span className="text-xs text-[#8D8980] uppercase tracking-wider block">Gross Sales Margin</span>
+                  {isManagement ? (
+                    <p className="text-2xl font-bold font-mono text-emerald-400 mt-1">{formatCurrency(reportData.summary?.sales_profit || 0)}</p>
+                  ) : (
+                    <p className="text-xs font-mono text-[#8D8980] mt-3">Protected under Staff Role</p>
+                  )}
                 </div>
-                <div className="card text-center p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-gray-500">Net Profit</p>
-                  <p className={`text-base sm:text-2xl font-bold ${(reportData.summary?.net_profit || 0) >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                    {formatCurrency(reportData.summary?.net_profit || 0)}
-                  </p>
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg text-center">
+                  <span className="text-xs text-[#8D8980] uppercase tracking-wider block">Realized Net Profit</span>
+                  {isManagement ? (
+                    <p className={`text-2xl font-bold font-mono mt-1 ${(reportData.summary?.net_profit || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+                      {formatCurrency(reportData.summary?.net_profit || 0)}
+                    </p>
+                  ) : (
+                    <p className="text-xs font-mono text-[#8D8980] mt-3">Protected under Staff Role</p>
+                  )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                <div className="card p-3 sm:p-4">
-                  <h3 className="font-medium text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">Expenses by Category</h3>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
-                      <Pie
-                        data={Object.entries(reportData.by_category || {}).map(([key, value]: [string, any]) => ({ name: key, value: value.total }))}
-                        cx="50%"
-                        cy="50%"
-                        outerRadius={70}
-                        dataKey="value"
-                        label
-                        labelLine={false}
-                      >
-                        {Object.keys(reportData.by_category || {}).map((_, index) => (
-                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip formatter={(v: number) => formatCurrency(v)} />
-                      <Legend wrapperStyle={{ fontSize: '11px' }} />
-                    </PieChart>
-                  </ResponsiveContainer>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Expenses by Cost Center</h3>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={Object.entries(reportData.by_category || {}).map(([key, value]: [string, any]) => ({ name: key.toUpperCase(), value: value.total }))}
+                          cx="50%"
+                          cy="50%"
+                          outerRadius={75}
+                          dataKey="value"
+                        >
+                          {Object.keys(reportData.by_category || {}).map((_, index) => (
+                            <Cell key={`cell-${index}`} fill={LUXURY_PALETTE[index % LUXURY_PALETTE.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: '#171613', borderColor: '#2A261F', borderRadius: '12px', color: '#F3EFE6' }}
+                          formatter={(v: number) => formatCurrency(v)} 
+                        />
+                        <Legend wrapperStyle={{ fontSize: '11px' }} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
-                <div className="card p-3 sm:p-4">
-                  <h3 className="font-medium text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">Daily Expenses</h3>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={reportData.daily_data || []}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" tickFormatter={(v) => new Date(v).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })} tick={{ fontSize: 10 }} />
-                      <YAxis tick={{ fontSize: 10 }} />
-                      <Tooltip formatter={(v: number) => formatCurrency(v)} />
-                      <Bar dataKey="total" fill="#ef4444" name="Expenses" />
-                    </BarChart>
-                  </ResponsiveContainer>
+
+                <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Daily Outflow Disbursement</h3>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={reportData.daily_data || []}>
+                        <CartesianGrid stroke="#2A261F" strokeDasharray="3 3" />
+                        <XAxis 
+                          dataKey="date" 
+                          stroke="#8D8980" 
+                          tickFormatter={(v) => new Date(v).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })} 
+                          tick={{ fontSize: 10 }} 
+                        />
+                        <YAxis stroke="#8D8980" tick={{ fontSize: 10 }} />
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: '#171613', borderColor: '#2A261F', borderRadius: '12px', color: '#F3EFE6' }}
+                          formatter={(v: number) => formatCurrency(v)} 
+                        />
+                        <Bar dataKey="total" fill="#f43f5e" name="Disbursements" radius={[6, 6, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
               </div>
             </>
           )}
 
-          {/* Customers Report */}
+          {/* TAB 5: Clientele & Loyalty */}
           {activeReport === 'customers' && (
             <>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-                <div className="card text-center p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-gray-500">Total</p>
-                  <p className="text-lg sm:text-2xl font-bold text-purple-600">{reportData.summary?.total_customers || 0}</p>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Total Directory</span>
+                  <p className="text-2xl font-bold font-mono text-[#F3EFE6] mt-1">{reportData.summary?.total_customers || 0}</p>
                 </div>
-                <div className="card text-center p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-gray-500">New</p>
-                  <p className="text-lg sm:text-2xl font-bold text-green-600">{reportData.summary?.new_customers || 0}</p>
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">New Accessions</span>
+                  <p className="text-2xl font-bold font-mono text-emerald-400 mt-1">{reportData.summary?.new_customers || 0}</p>
                 </div>
-                <div className="card text-center p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-gray-500">Repeat</p>
-                  <p className="text-lg sm:text-2xl font-bold text-blue-600">{reportData.summary?.repeat_rate || 0}%</p>
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Patron Retention</span>
+                  <p className="text-2xl font-bold font-mono text-[#C9A45C] mt-1">{reportData.summary?.repeat_rate || 0}%</p>
                 </div>
-                <div className="card text-center p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-gray-500">Points</p>
-                  <p className="text-lg sm:text-2xl font-bold text-yellow-600">{reportData.summary?.total_loyalty_points || 0}</p>
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Loyalty Escrow</span>
+                  <p className="text-2xl font-bold font-mono text-[#E8D5A7] mt-1">{(reportData.summary?.total_loyalty_points || 0).toLocaleString()} pts</p>
                 </div>
               </div>
 
-              <div className="card p-3 sm:p-4">
-                <h3 className="font-medium text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">Top Customers by Spending</h3>
-                <div className="overflow-x-auto -mx-3 sm:mx-0">
-                  <table className="w-full min-w-[400px]">
-                    <thead className="bg-gray-50">
+              <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
+                <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Top Clientele by Cumulative Spend</h3>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs min-w-[550px]">
+                    <thead className="bg-[#12110F] border-b border-[#2A261F] text-[#8D8980]">
                       <tr>
-                        <th className="px-2 sm:px-4 py-2 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase">#</th>
-                        <th className="px-2 sm:px-4 py-2 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Customer</th>
-                        <th className="px-2 sm:px-4 py-2 text-left text-[10px] sm:text-xs font-medium text-gray-500 uppercase hidden sm:table-cell">Phone</th>
-                        <th className="px-2 sm:px-4 py-2 text-right text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Spent</th>
-                        <th className="px-2 sm:px-4 py-2 text-right text-[10px] sm:text-xs font-medium text-gray-500 uppercase">Points</th>
+                        <th className="px-4 py-2.5 text-left">#</th>
+                        <th className="px-4 py-2.5 text-left">Client Name</th>
+                        <th className="px-4 py-2.5 text-left">Phone</th>
+                        <th className="px-4 py-2.5 text-right">Cumulative Spend</th>
+                        <th className="px-4 py-2.5 text-right">Points</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-[#2A261F]">
                       {(reportData.top_customers || []).map((customer: any, idx: number) => (
-                        <tr key={customer.id}>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm">{idx + 1}</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 font-medium text-xs sm:text-sm">{customer.name}</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-gray-500 text-xs sm:text-sm hidden sm:table-cell">{customer.phone}</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-right font-bold text-green-600 text-xs sm:text-sm">{formatCurrency(customer.spent)}</td>
-                          <td className="px-2 sm:px-4 py-2 sm:py-3 text-right text-xs sm:text-sm">{customer.points}</td>
+                        <tr key={customer.id} className="hover:bg-[#1F1E1A]">
+                          <td className="px-4 py-3 font-mono text-[#8D8980]">{idx + 1}</td>
+                          <td className="px-4 py-3 font-serif font-bold text-[#F3EFE6]">{customer.name}</td>
+                          <td className="px-4 py-3 font-mono text-[#8D8980]">{customer.phone}</td>
+                          <td className="px-4 py-3 text-right font-mono font-bold text-[#C9A45C]">{formatCurrency(customer.spent)}</td>
+                          <td className="px-4 py-3 text-right font-mono text-[#E8D5A7]">{customer.points}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -443,54 +561,62 @@ export default function ReportsPage() {
             </>
           )}
 
-          {/* Inventory Report */}
+          {/* TAB 6: Inventory Valuation */}
           {activeReport === 'inventory' && (
             <>
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
-                <div className="card text-center p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-gray-500">Products</p>
-                  <p className="text-lg sm:text-2xl font-bold text-cyan-600">{reportData.summary?.total_products || 0}</p>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Timepiece SKUs</span>
+                  <p className="text-2xl font-bold font-mono text-[#F3EFE6] mt-1">{reportData.summary?.total_products || 0}</p>
                 </div>
-                <div className="card text-center p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-gray-500">Stock Value</p>
-                  <p className="text-base sm:text-2xl font-bold text-blue-600">{formatCurrency(reportData.summary?.stock_cost_value || 0)}</p>
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Inventory Valuation</span>
+                  {isManagement ? (
+                    <p className="text-xl sm:text-2xl font-bold font-mono text-[#C9A45C] mt-1">
+                      {formatCurrency(reportData.summary?.stock_cost_value || 0)}
+                    </p>
+                  ) : (
+                    <p className="text-xs font-mono text-[#8D8980] mt-3">Protected under Staff Role</p>
+                  )}
                 </div>
-                <div className="card text-center p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-gray-500">Low Stock</p>
-                  <p className="text-lg sm:text-2xl font-bold text-yellow-600">{reportData.summary?.low_stock_count || 0}</p>
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Low Stock Watch</span>
+                  <p className="text-2xl font-bold font-mono text-amber-400 mt-1">{reportData.summary?.low_stock_count || 0}</p>
                 </div>
-                <div className="card text-center p-3 sm:p-4">
-                  <p className="text-xs sm:text-sm text-gray-500">Out of Stock</p>
-                  <p className="text-lg sm:text-2xl font-bold text-red-600">{reportData.summary?.out_of_stock_count || 0}</p>
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Depleted SKUs</span>
+                  <p className="text-2xl font-bold font-mono text-rose-400 mt-1">{reportData.summary?.out_of_stock_count || 0}</p>
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                <div className="card p-3 sm:p-4">
-                  <h3 className="font-medium text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base">Stock by Category</h3>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={Object.entries(reportData.by_category || {}).map(([key, value]: [string, any]) => ({ category: key, stock: value.stock, value: value.value }))}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="category" tick={{ fontSize: 10 }} />
-                      <YAxis tick={{ fontSize: 10 }} />
-                      <Tooltip />
-                      <Bar dataKey="stock" fill="#06b6d4" name="Units" />
-                    </BarChart>
-                  </ResponsiveContainer>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Stock Distribution by Category</h3>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={Object.entries(reportData.by_category || {}).map(([key, value]: [string, any]) => ({ category: key, stock: value.stock }))}>
+                        <CartesianGrid stroke="#2A261F" strokeDasharray="3 3" />
+                        <XAxis dataKey="category" stroke="#8D8980" tick={{ fontSize: 10 }} />
+                        <YAxis stroke="#8D8980" tick={{ fontSize: 10 }} />
+                        <Tooltip contentStyle={{ backgroundColor: '#171613', borderColor: '#2A261F', borderRadius: '12px', color: '#F3EFE6' }} />
+                        <Bar dataKey="stock" fill="#C9A45C" name="In Stock Units" radius={[6, 6, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
-                <div className="card p-3 sm:p-4">
-                  <h3 className="font-medium text-gray-900 mb-3 sm:mb-4 text-sm sm:text-base flex items-center gap-2">
-                    <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
-                    Low Stock Alert
-                  </h3>
-                  <div className="space-y-2 max-h-56 sm:max-h-64 overflow-y-auto">
+
+                <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Restock Reorder Alerts</h3>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
                     {(reportData.low_stock_items || []).map((item: any) => (
-                      <div key={item.id} className="flex items-center justify-between p-2 sm:p-3 bg-yellow-50 rounded-lg">
-                        <div className="min-w-0 mr-2">
-                          <p className="font-medium text-sm sm:text-base truncate">{item.name}</p>
-                          <p className="text-xs sm:text-sm text-gray-500 truncate">{item.brand}</p>
+                      <div key={item.id} className="flex items-center justify-between p-3 bg-[#12110F] border border-[#2A261F] rounded-xl text-xs">
+                        <div className="min-w-0">
+                          <p className="font-medium text-[#F3EFE6] truncate">{item.name}</p>
+                          <p className="text-[11px] text-[#C9A45C] mt-0.5">{item.brand}</p>
                         </div>
-                        <Badge variant="warning">{item.stock} left</Badge>
+                        <span className="font-mono font-bold text-rose-400 bg-rose-950/40 px-2 py-0.5 rounded border border-rose-800/40">
+                          {item.stock} remaining
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -500,9 +626,8 @@ export default function ReportsPage() {
           )}
         </div>
       ) : (
-        <div className="card text-center py-10 sm:py-12">
-          <BarChart3 className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-gray-300 mb-4" />
-          <p className="text-sm sm:text-base text-gray-500">No data available</p>
+        <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-16 text-center">
+          <p className="text-sm text-[#8D8980]">No report records retrieved for the selected parameters.</p>
         </div>
       )}
     </div>

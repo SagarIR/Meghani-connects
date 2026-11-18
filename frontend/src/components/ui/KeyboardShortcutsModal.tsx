@@ -75,24 +75,24 @@ export default function KeyboardShortcutsModal() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               transition={{ duration: 0.2 }}
-              className="bg-white rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] sm:max-h-[80vh] overflow-hidden flex flex-col"
+              className="bg-[#171613] text-[#F3EFE6] border border-[#2A261F] rounded-xl sm:rounded-2xl shadow-2xl w-full max-w-2xl max-h-[85vh] sm:max-h-[80vh] overflow-hidden flex flex-col"
             >
               {/* Header */}
-              <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-100 flex-shrink-0">
+              <div className="flex items-center justify-between p-4 sm:p-6 border-b border-[#2A261F] bg-[#12110F]/80 flex-shrink-0">
                 <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-primary-500 to-primary-600 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0">
-                    <Keyboard className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-[#1F1E1A] border border-[#C9A45C]/40 rounded-lg sm:rounded-xl flex items-center justify-center flex-shrink-0 text-[#C9A45C]">
+                    <Keyboard className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div>
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-900">Keyboard Shortcuts</h2>
-                    <p className="text-xs sm:text-sm text-gray-500 hidden sm:block">Navigate faster with shortcuts</p>
+                    <h2 className="text-lg sm:text-xl font-bold font-serif text-[#F3EFE6] tracking-wide">Keyboard Navigation</h2>
+                    <p className="text-xs sm:text-sm text-[#8D8980] hidden sm:block">Tactile shortcuts for rapid boutique operations</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="p-1.5 sm:p-2 hover:bg-gray-100 rounded-lg sm:rounded-xl transition-colors"
+                  className="p-1.5 sm:p-2 text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#1F1E1A] rounded-lg sm:rounded-xl transition-colors"
                 >
-                  <X className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500" />
+                  <X className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
 
@@ -101,20 +101,20 @@ export default function KeyboardShortcutsModal() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
                   {shortcuts.map((section) => (
                     <div key={section.category}>
-                      <h3 className="text-xs sm:text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2 sm:mb-3">
+                      <h3 className="text-xs sm:text-sm font-semibold text-[#C9A45C] uppercase tracking-wider mb-2 sm:mb-3">
                         {section.category}
                       </h3>
                       <div className="space-y-1.5 sm:space-y-2">
                         {section.items.map((shortcut, index) => (
                           <div
                             key={index}
-                            className="flex items-center justify-between py-1.5 sm:py-2 px-2 sm:px-3 bg-gray-50 rounded-lg"
+                            className="flex items-center justify-between py-1.5 sm:py-2 px-2.5 sm:px-3 bg-[#1F1E1A] border border-[#2A261F] rounded-lg"
                           >
-                            <span className="text-xs sm:text-sm text-gray-700">{shortcut.description}</span>
+                            <span className="text-xs sm:text-sm text-[#F3EFE6]">{shortcut.description}</span>
                             <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
                               {shortcut.keys.map((key, i) => (
                                 <span key={i} className="flex items-center">
-                                  <kbd className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-white border border-gray-200 rounded-md text-[10px] sm:text-xs font-mono text-gray-700 shadow-sm">
+                                  <kbd className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-[#12110F] border border-[#2A261F] rounded-md text-[10px] sm:text-xs font-mono text-[#C9A45C] shadow-sm">
                                     {key === 'Ctrl' && typeof navigator !== 'undefined' && navigator.platform?.includes('Mac') ? (
                                       <Command className="w-2.5 h-2.5 sm:w-3 sm:h-3 inline" />
                                     ) : (
@@ -122,7 +122,7 @@ export default function KeyboardShortcutsModal() {
                                     )}
                                   </kbd>
                                   {i < shortcut.keys.length - 1 && (
-                                    <span className="text-gray-400 mx-0.5 sm:mx-1 text-[10px] sm:text-xs">+</span>
+                                    <span className="text-[#8D8980] mx-0.5 sm:mx-1 text-[10px] sm:text-xs">+</span>
                                   )}
                                 </span>
                               ))}
@@ -136,9 +136,9 @@ export default function KeyboardShortcutsModal() {
               </div>
 
               {/* Footer */}
-              <div className="p-3 sm:p-4 bg-gray-50 border-t border-gray-100 flex-shrink-0">
-                <p className="text-center text-xs sm:text-sm text-gray-500">
-                  Press <kbd className="px-1 sm:px-1.5 py-0.5 bg-white border border-gray-200 rounded text-[10px] sm:text-xs font-mono">Esc</kbd> to close
+              <div className="p-3 sm:p-4 bg-[#12110F] border-t border-[#2A261F] flex-shrink-0">
+                <p className="text-center text-xs sm:text-sm text-[#8D8980]">
+                  Press <kbd className="px-1.5 py-0.5 bg-[#1F1E1A] border border-[#2A261F] rounded text-[#C9A45C] font-mono text-xs">Shift + ?</kbd> anywhere to toggle this guide &bull; <kbd className="px-1.5 py-0.5 bg-[#1F1E1A] border border-[#2A261F] rounded text-[#8D8980] font-mono text-xs">Esc</kbd> to close
                 </p>
               </div>
             </motion.div>

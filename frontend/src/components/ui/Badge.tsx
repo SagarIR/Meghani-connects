@@ -13,27 +13,27 @@ interface BadgeProps {
 }
 
 const variants = {
-  primary: 'bg-primary-100 text-primary-700 border-primary-200',
-  success: 'bg-success-100 text-success-700 border-success-200',
-  warning: 'bg-warning-100 text-warning-700 border-warning-200',
-  danger: 'bg-danger-100 text-danger-700 border-danger-200',
-  gray: 'bg-gray-100 text-gray-700 border-gray-200',
-  outline: 'bg-transparent border-gray-300 text-gray-600',
-  info: 'bg-blue-100 text-blue-700 border-blue-200',
-  default: 'bg-gray-100 text-gray-700 border-gray-200',
-  luxury: 'bg-[#C9A04F]/10 text-[#C9A04F] border-[#C9A04F]/30',
+  primary: 'bg-[#C9A45C]/15 text-[#C9A45C] border-[#C9A45C]/30',
+  success: 'bg-emerald-950/60 text-emerald-300 border-emerald-800/50',
+  warning: 'bg-amber-950/60 text-amber-300 border-amber-800/50',
+  danger: 'bg-red-950/60 text-red-300 border-red-800/50',
+  gray: 'bg-[#1F1E1A] text-[#8D8980] border-[#2A261F]',
+  outline: 'bg-transparent border-[#2A261F] text-[#8D8980]',
+  info: 'bg-sky-950/60 text-sky-300 border-sky-800/50',
+  default: 'bg-[#1F1E1A] text-[#F3EFE6] border-[#2A261F]',
+  luxury: 'bg-gradient-to-r from-[#C9A45C]/20 to-[#E8D5A7]/10 text-[#C9A45C] border-[#C9A45C]/40 shadow-sm shadow-[#C9A45C]/10',
 }
 
 const dotColors = {
-  primary: 'bg-primary-500',
-  success: 'bg-success-500',
-  warning: 'bg-warning-500',
-  danger: 'bg-danger-500',
-  gray: 'bg-gray-500',
-  outline: 'bg-gray-500',
-  info: 'bg-blue-500',
-  default: 'bg-gray-500',
-  luxury: 'bg-[#C9A04F]',
+  primary: 'bg-[#C9A45C]',
+  success: 'bg-emerald-400',
+  warning: 'bg-amber-400',
+  danger: 'bg-red-400',
+  gray: 'bg-[#8D8980]',
+  outline: 'bg-[#8D8980]',
+  info: 'bg-sky-400',
+  default: 'bg-[#8D8980]',
+  luxury: 'bg-[#C9A45C]',
 }
 
 const sizes = {

@@ -8,10 +8,12 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { 
   Plus, Search, Package, Edit, Trash2, Eye, Filter, 
   Grid3X3, List, SortAsc, Tag, Box, Sparkles, Upload,
-  Image as ImageIcon, Sliders, ArrowRight, Loader2, CheckCircle2
+  Image as ImageIcon, Sliders, ArrowRight, Loader2, CheckCircle2,
+  Watch, ShieldCheck, AlertTriangle, Lock
 } from 'lucide-react'
 import { api } from '@/services/api'
 import { Product } from '@/types'
+import { useAuth } from '@/context/AuthContext'
 import Button from '@/components/ui/Button'
 import Badge, { StatusBadge } from '@/components/ui/Badge'
 import Input from '@/components/ui/Input'
@@ -51,14 +53,17 @@ const schema = yup.object({
 type FormData = yup.InferType<typeof schema>
 
 const categories = [
-  { value: 'analog', label: 'Analog Watch' },
+  { value: 'analog', label: 'Analog Timepiece' },
   { value: 'digital', label: 'Digital Watch' },
-  { value: 'smart', label: 'Smart Watch' },
+  { value: 'smart', label: 'Smart Wearable' },
   { value: 'wall', label: 'Wall Clock' },
-  { value: 'accessory', label: 'Accessory' },
+  { value: 'accessory', label: 'Horological Accessory' },
 ]
 
 export default function ProductsPage() {
+  const { user } = useAuth()
+  const isManagement = user?.role === 'admin' || user?.role === 'manager'
+
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -106,7 +111,6 @@ export default function ProductsPage() {
   const liveProfit = Number(watchedSelling) - Number(watchedCost)
   const liveMargin = Number(watchedCost) > 0 ? ((liveProfit / Number(watchedCost)) * 100).toFixed(1) : '0'
 
-  // Fetch available brands on mount
   useEffect(() => {
     fetchBrands()
   }, [])
@@ -121,7 +125,6 @@ export default function ProductsPage() {
     }
   }
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1)
   }, [debouncedSearch, category, sortField, sortDirection])
@@ -266,7 +269,7 @@ export default function ProductsPage() {
   const onFormError = (formErrors: any) => {
     if (formErrors.name || formErrors.cost_price || formErrors.selling_price || formErrors.stock || formErrors.category) {
       setActiveModalTab('general')
-      toast.error('Please fill in required fields in General & Pricing')
+      toast.error('Please complete required fields in General & Pricing')
     }
   }
 
@@ -311,10 +314,10 @@ export default function ProductsPage() {
 
       if (selectedProduct) {
         await api.patch(`/products/${selectedProduct.id}/`, payload)
-        toast.success('Product updated successfully')
+        toast.success('Timepiece record updated')
       } else {
         await api.post('/products/', payload)
-        toast.success('Product created successfully')
+        toast.success('New product cataloged successfully')
       }
       setShowFormModal(false)
       fetchProducts()
@@ -329,7 +332,7 @@ export default function ProductsPage() {
     if (!selectedProduct) return
     try {
       await api.delete(`/products/${selectedProduct.id}/`)
-      toast.success('Product deleted')
+      toast.success('Product deleted from inventory')
       setShowDeleteModal(false)
       fetchProducts()
     } catch (error) {
@@ -346,323 +349,416 @@ export default function ProductsPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-        <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-        >
-          <div className="flex items-center gap-2 sm:gap-3">
-            <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/25 flex-shrink-0">
-              <Package className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 bg-[#171613] border border-[#2A261F] rounded-xl flex items-center justify-center shadow-md">
+              <Package className="w-5 h-5 text-[#C9A45C]" />
             </div>
             <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Products</h1>
-              <p className="text-gray-500 text-xs sm:text-sm">Manage your product inventory</p>
+              <div className="flex items-center gap-2">
+                <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Timepiece & Inventory Catalog</h1>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F] font-mono">
+                  {totalItems} items
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm text-[#8D8980]">Manage luxury watches, clocks, accessories & stock valuation</p>
             </div>
           </div>
-        </motion.div>
+        </div>
         
-        <motion.div
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex items-center gap-2 sm:gap-3"
-        >
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
           <ExportButton 
             data={products} 
             columns={productExportColumns} 
-            filename={`products_${new Date().toISOString().split('T')[0]}`}
+            filename={`meghani_inventory_${new Date().toISOString().split('T')[0]}`}
           />
           <Button 
             variant="secondary" 
             onClick={() => setShowImportModal(true)} 
-            icon={<Upload className="w-4 h-4" />}
-            className="hidden sm:flex"
+            icon={<Upload className="w-4 h-4 text-[#C9A45C]" />}
+            className="hidden sm:inline-flex"
           >
-            Import
+            Import CSV
           </Button>
-          <Button onClick={openAddModal} icon={<Plus className="w-4 h-4" />} className="flex-1 sm:flex-none">
-            <span className="hidden sm:inline">Add Product</span>
-            <span className="sm:hidden">Add</span>
+          <Button 
+            onClick={openAddModal} 
+            icon={<Plus className="w-4 h-4" />} 
+            className="flex-1 sm:flex-none shadow-gold"
+          >
+            <span>Add Timepiece</span>
           </Button>
-        </motion.div>
+        </div>
       </div>
 
       {/* Filters & Controls */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-3 sm:p-4 shadow-card"
-      >
-        <div className="flex flex-col gap-3 sm:gap-4">
+      <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-4 shadow-xl">
+        <div className="flex flex-col md:flex-row gap-3">
           {/* Search */}
           <div className="flex-1 relative group">
-            <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-focus-within:text-primary-500 transition-colors" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8D8980] group-focus-within:text-[#C9A45C] transition-colors" />
             <input
               type="text"
-              placeholder="Search products..."
+              placeholder="Search by model, brand, reference number or barcode..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 sm:pl-12 pr-4 py-2.5 sm:py-3 bg-gray-50 border border-gray-200 rounded-xl 
-                       text-gray-900 placeholder-gray-400 text-sm sm:text-base
-                       focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
-                       transition-all duration-200 outline-none"
+              className="w-full pl-10 pr-4 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl 
+                       text-[#F3EFE6] placeholder-[#8D8980]/70 text-sm
+                       focus:border-[#C9A45C] focus:ring-1 focus:ring-[#C9A45C]
+                       transition-all outline-none"
             />
           </div>
 
-          <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5">
             {/* Category Filter */}
-            <div className="flex items-center gap-2 flex-1 overflow-hidden">
+            <div className="w-48">
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="flex-1 min-w-0 px-3 sm:px-4 py-2 sm:py-2.5 bg-gray-50 border border-gray-200 rounded-xl 
-                         focus:bg-white focus:border-primary-500 focus:ring-2 focus:ring-primary-500/20
-                         transition-all duration-200 outline-none cursor-pointer text-sm sm:text-base"
+                className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl 
+                         text-[#F3EFE6] text-sm focus:border-[#C9A45C] focus:ring-1 focus:ring-[#C9A45C]
+                         outline-none cursor-pointer"
               >
-                <option value="">All Categories</option>
+                <option value="">All Horological Classes</option>
                 {categories.map((cat) => (
-                  <option key={cat.value} value={cat.value}>{cat.label}</option>
+                  <option key={cat.value} value={cat.value} className="bg-[#171613] text-[#F3EFE6]">{cat.label}</option>
                 ))}
               </select>
             </div>
 
             {/* View Toggle */}
-            <div className="flex items-center bg-gray-100 rounded-lg sm:rounded-xl p-0.5 sm:p-1 flex-shrink-0">
+            <div className="flex items-center bg-[#12110F] border border-[#2A261F] rounded-xl p-1 flex-shrink-0">
               <button
                 onClick={() => setViewMode('grid')}
                 className={clsx(
-                  'p-2 sm:p-2.5 rounded-md sm:rounded-lg transition-all duration-200',
+                  'p-2 rounded-lg transition-all',
                   viewMode === 'grid' 
-                    ? 'bg-white shadow-sm text-primary-600' 
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'bg-[#C9A45C] text-[#0B0B0A] shadow-sm font-semibold' 
+                    : 'text-[#8D8980] hover:text-[#F3EFE6]'
                 )}
+                title="Grid Showcase"
               >
                 <Grid3X3 className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode('list')}
                 className={clsx(
-                  'p-2 sm:p-2.5 rounded-md sm:rounded-lg transition-all duration-200 hidden sm:block',
+                  'p-2 rounded-lg transition-all hidden sm:block',
                   viewMode === 'list' 
-                    ? 'bg-white shadow-sm text-primary-600' 
-                    : 'text-gray-500 hover:text-gray-700'
+                    ? 'bg-[#C9A45C] text-[#0B0B0A] shadow-sm font-semibold' 
+                    : 'text-[#8D8980] hover:text-[#F3EFE6]'
                 )}
+                title="Ledger Table"
               >
                 <List className="w-4 h-4" />
               </button>
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
 
-      {/* Products */}
+      {/* Products Content */}
       {loading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-3 sm:p-5 animate-pulse">
-              <div className="h-28 sm:h-40 bg-gray-100 rounded-lg sm:rounded-xl mb-3 sm:mb-4"></div>
-              <div className="h-3 sm:h-4 w-16 sm:w-20 bg-gray-100 rounded mb-2"></div>
-              <div className="h-4 sm:h-5 w-24 sm:w-32 bg-gray-100 rounded mb-2 sm:mb-3"></div>
-              <div className="h-5 sm:h-6 w-20 sm:w-24 bg-gray-100 rounded"></div>
+            <div key={i} className="bg-[#171613] rounded-2xl border border-[#2A261F] p-4 animate-pulse">
+              <div className="h-44 bg-[#1F1E1A] rounded-xl mb-4"></div>
+              <div className="h-3 w-20 bg-[#1F1E1A] rounded mb-2"></div>
+              <div className="h-5 w-36 bg-[#1F1E1A] rounded mb-3"></div>
+              <div className="h-6 w-24 bg-[#1F1E1A] rounded"></div>
             </div>
           ))}
         </div>
       ) : products.length === 0 ? (
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
+          initial={{ opacity: 0, scale: 0.98 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 p-10 sm:p-16 text-center shadow-card"
+          className="bg-[#171613] rounded-2xl border border-[#2A261F] p-12 text-center"
         >
-          <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-gray-100 rounded-xl sm:rounded-2xl flex items-center justify-center mb-4 sm:mb-6">
-            <Package className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+          <div className="w-16 h-16 mx-auto bg-[#1F1E1A] border border-[#2A261F] rounded-2xl flex items-center justify-center mb-4">
+            <Package className="w-8 h-8 text-[#8D8980]" />
           </div>
-          <h3 className="text-lg sm:text-xl font-bold text-gray-900 mb-2">No products found</h3>
-          <p className="text-sm sm:text-base text-gray-500 mb-6">Start by adding your first product to the inventory</p>
+          <h3 className="text-lg font-serif font-bold text-[#F3EFE6] mb-1">No Timepieces Found</h3>
+          <p className="text-sm text-[#8D8980] mb-6">Refine your search keywords or add a new piece to the catalog.</p>
           <Button onClick={openAddModal} icon={<Plus className="w-4 h-4" />}>
-            Add Your First Product
+            Add Timepiece to Inventory
           </Button>
         </motion.div>
-      ) : viewMode === 'grid' || (typeof window !== 'undefined' && window.innerWidth < 768) ? (
-        <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-6">
+      ) : viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           <AnimatePresence>
             {products.map((product, index) => (
               <motion.div
                 key={product.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ delay: index * 0.05 }}
-                whileHover={{ y: -4 }}
-                className="group bg-white rounded-xl sm:rounded-2xl border border-gray-100 overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300"
+                transition={{ delay: index * 0.03 }}
+                className="group bg-[#171613] rounded-2xl border border-[#2A261F] hover:border-[#C9A45C]/50 overflow-hidden shadow-xl transition-all duration-300 flex flex-col justify-between"
               >
-                {/* Product Image */}
-                <div className="relative h-28 sm:h-44 bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center overflow-hidden">
-                  {product.image ? (
-                    <img src={product.image} alt={product.name} className="h-full w-full object-cover" />
-                  ) : (
-                    <div className="flex flex-col items-center gap-1 sm:gap-2">
-                      <Package className="w-8 h-8 sm:w-12 sm:h-12 text-gray-300" />
-                      <span className="text-[10px] sm:text-xs text-gray-400 hidden sm:block">No image</span>
+                <div>
+                  {/* Product Image Canvas */}
+                  <div className="relative h-48 bg-[#12110F] border-b border-[#2A261F] flex items-center justify-center overflow-hidden">
+                    {product.image ? (
+                      <img 
+                        src={product.image} 
+                        alt={product.name} 
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      />
+                    ) : (
+                      <div className="flex flex-col items-center gap-2">
+                        <Watch className="w-10 h-10 text-[#2A261F] group-hover:text-[#C9A45C]/50 transition-colors" />
+                        <span className="text-[11px] text-[#8D8980]">No photo</span>
+                      </div>
+                    )}
+                    
+                    {/* Category pill */}
+                    <div className="absolute top-3 left-3">
+                      <span className="px-2.5 py-1 bg-[#0B0B0A]/85 backdrop-blur-md border border-[#2A261F] rounded-full text-[10px] font-medium text-[#E8D5A7]">
+                        {categories.find(c => c.value === product.category)?.label || product.category}
+                      </span>
                     </div>
-                  )}
-                  
-                  {/* Category badge */}
-                  <div className="absolute top-2 sm:top-3 left-2 sm:left-3">
-                    <span className="px-1.5 sm:px-2.5 py-0.5 sm:py-1 bg-white/90 backdrop-blur-sm rounded-full text-[10px] sm:text-xs font-medium text-gray-700 shadow-sm">
-                      {categories.find(c => c.value === product.category)?.label || product.category}
-                    </span>
+
+                    {/* Stock status pill */}
+                    <div className="absolute top-3 right-3">
+                      {product.stock <= 0 ? (
+                        <span className="px-2 py-0.5 bg-rose-950/80 border border-rose-800 text-rose-300 rounded-full text-[10px] font-semibold">
+                          Out of Stock
+                        </span>
+                      ) : product.is_low_stock || product.stock <= 3 ? (
+                        <span className="px-2 py-0.5 bg-amber-950/80 border border-amber-800 text-amber-300 rounded-full text-[10px] font-semibold flex items-center gap-1">
+                          <AlertTriangle className="w-2.5 h-2.5" />
+                          <span>Low ({product.stock})</span>
+                        </span>
+                      ) : (
+                        <span className="px-2 py-0.5 bg-emerald-950/80 border border-emerald-800 text-emerald-300 rounded-full text-[10px] font-mono">
+                          {product.stock} in stock
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Floating quick action buttons */}
+                    <div className="absolute bottom-2 right-2 flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => openViewModal(product)}
+                        className="p-2 bg-[#171613]/90 hover:bg-[#C9A45C] hover:text-[#0B0B0A] text-[#F3EFE6] border border-[#2A261F] rounded-lg transition-colors"
+                        title="View Details"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={() => openEditModal(product)}
+                        className="p-2 bg-[#171613]/90 hover:bg-[#C9A45C] hover:text-[#0B0B0A] text-[#F3EFE6] border border-[#2A261F] rounded-lg transition-colors"
+                        title="Edit Record"
+                      >
+                        <Edit className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
-                  {/* Quick actions */}
-                  <div className="absolute top-2 sm:top-3 right-2 sm:right-3 flex gap-1 sm:gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => openEditModal(product)}
-                      className="p-1.5 sm:p-2 bg-white/90 backdrop-blur-sm rounded-md sm:rounded-lg text-gray-600 hover:text-primary-600 hover:bg-white shadow-sm transition-all"
-                    >
-                      <Edit className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                    </button>
-                  </div>
+                  {/* Product Metadata */}
+                  <div className="p-4">
+                    <p className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider mb-1 truncate">
+                      {product.brand || 'Luxury Horology'}
+                    </p>
+                    <h3 className="font-serif font-bold text-[#F3EFE6] text-base line-clamp-1 group-hover:text-[#E8D5A7] transition-colors">
+                      {product.name}
+                    </h3>
+                    {product.barcode && (
+                      <p className="text-[11px] font-mono text-[#8D8980] mt-0.5 truncate">
+                        REF: {product.barcode}
+                      </p>
+                    )}
+                    
+                    {/* Pricing Grid */}
+                    <div className="mt-4 pt-3 border-t border-[#2A261F] flex items-end justify-between">
+                      <div>
+                        <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Retail Price</span>
+                        <p className="text-xl font-bold font-mono text-[#C9A45C]">{formatCurrency(product.selling_price)}</p>
+                      </div>
 
-                  {/* Low stock indicator */}
-                  {product.is_low_stock && (
-                    <div className="absolute bottom-2 sm:bottom-3 left-2 sm:left-3 right-2 sm:right-3">
-                      <div className="px-2 sm:px-3 py-1 sm:py-1.5 bg-warning-500/90 backdrop-blur-sm rounded-md sm:rounded-lg text-[10px] sm:text-xs font-medium text-white flex items-center gap-1 sm:gap-1.5">
-                        <Sparkles className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
-                        <span className="hidden sm:inline">Low Stock -</span> {product.stock} left
+                      {/* RBAC Protected Cost / Profit */}
+                      <div className="text-right">
+                        <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Cost / Margin</span>
+                        {isManagement ? (
+                          <div>
+                            <p className="text-xs font-mono text-[#8D8980]">
+                              CP: {formatCurrency(product.cost_price)}
+                            </p>
+                            <p className="text-xs font-mono font-semibold text-emerald-400">
+                              +{formatCurrency(product.profit_margin || (product.selling_price - product.cost_price))}
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-end gap-1 text-[11px] text-[#8D8980] font-mono">
+                            <Lock className="w-3 h-3 text-[#C9A45C]" />
+                            <span>Confidential</span>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  )}
+                  </div>
                 </div>
 
-                {/* Product Info */}
-                <div className="p-3 sm:p-5">
-                  <p className="text-xs sm:text-sm font-medium text-primary-600 mb-0.5 sm:mb-1 truncate">{product.brand || 'Unbranded'}</p>
-                  <h3 className="font-bold text-gray-900 text-sm sm:text-base line-clamp-1 group-hover:text-primary-600 transition-colors">
-                    {product.name}
-                  </h3>
-                  
-                  <div className="flex items-end justify-between mt-2 sm:mt-4">
-                    <div>
-                      <p className="text-lg sm:text-2xl font-bold text-gray-900">{formatCurrency(product.selling_price)}</p>
-                      <p className="text-[10px] sm:text-xs text-gray-500 line-through hidden sm:block">{formatCurrency(product.cost_price)}</p>
-                    </div>
-                    <div className="text-right hidden sm:block">
-                      <p className="text-sm font-semibold text-success-600">
-                        +{formatCurrency(product.profit_margin || 0)}
-                      </p>
-                      <p className="text-xs text-gray-500">profit</p>
-                    </div>
+                {/* Stock Bar & Actions */}
+                <div className="px-4 pb-4 pt-2 border-t border-[#2A261F]/60">
+                  <div className="flex items-center justify-between text-xs text-[#8D8980] mb-1.5">
+                    <span>Stock Level</span>
+                    <span className="font-mono text-[#F3EFE6] font-medium">{product.stock} units</span>
+                  </div>
+                  <div className="w-full h-1.5 bg-[#12110F] rounded-full overflow-hidden border border-[#2A261F]">
+                    <div 
+                      className={clsx(
+                        'h-full rounded-full transition-all',
+                        product.stock > 10 ? 'bg-emerald-500' :
+                        product.stock > 3 ? 'bg-amber-500' : 'bg-rose-500'
+                      )}
+                      style={{ width: `${Math.min((product.stock / 25) * 100, 100)}%` }}
+                    />
                   </div>
 
-                  {/* Stock bar */}
-                  <div className="mt-2 sm:mt-4 pt-2 sm:pt-4 border-t border-gray-100">
-                    <div className="flex items-center justify-between text-xs sm:text-sm mb-1 sm:mb-2">
-                      <span className="text-gray-500">Stock</span>
-                      <span className="font-semibold text-gray-900">{product.stock}</span>
-                    </div>
-                    <div className="w-full h-1.5 sm:h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div 
-                        className={clsx(
-                          'h-full rounded-full transition-all',
-                          product.stock > 20 ? 'bg-success-500' :
-                          product.stock > 5 ? 'bg-warning-500' : 'bg-danger-500'
-                        )}
-                        style={{ width: `${Math.min((product.stock / 50) * 100, 100)}%` }}
-                      />
-                    </div>
+                  <div className="flex items-center gap-2 mt-3 pt-2">
+                    <button
+                      onClick={() => openViewModal(product)}
+                      className="flex-1 py-1.5 text-xs text-[#8D8980] hover:text-[#F3EFE6] bg-[#1F1E1A] hover:bg-[#2A261F] border border-[#2A261F] rounded-lg transition-colors"
+                    >
+                      Inspect
+                    </button>
+                    <button
+                      onClick={() => openEditModal(product)}
+                      className="flex-1 py-1.5 text-xs text-[#C9A45C] hover:text-[#0B0B0A] bg-[#C9A45C]/10 hover:bg-[#C9A45C] border border-[#C9A45C]/30 rounded-lg transition-colors font-medium"
+                    >
+                      Edit
+                    </button>
                   </div>
-
-                  {/* Delete button - hidden on mobile */}
-                  <button
-                    onClick={() => openDeleteModal(product)}
-                    className="hidden sm:block mt-4 w-full py-2.5 text-sm font-medium text-gray-500 hover:text-danger-600 hover:bg-danger-50 rounded-xl transition-all"
-                  >
-                    <Trash2 className="w-4 h-4 inline mr-1.5" />
-                    Delete
-                  </button>
                 </div>
               </motion.div>
             ))}
           </AnimatePresence>
         </div>
       ) : (
-        /* List/Table View - Hidden on mobile, shown on md+ */
-        <div className="hidden md:block bg-white rounded-xl sm:rounded-2xl border border-gray-100 overflow-hidden shadow-card">
+        /* Ledger Table View */
+        <div className="bg-[#171613] rounded-2xl border border-[#2A261F] overflow-hidden shadow-xl">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[700px]">
-              <thead className="bg-gray-50 border-b border-gray-100">
+            <table className="w-full min-w-[800px]">
+              <thead className="bg-[#12110F] border-b border-[#2A261F]">
                 <tr>
-                  <th className="px-4 py-3 text-left">
-                    <SortableHeader label="Product" field="name" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                  <th className="px-5 py-3.5 text-left">
+                    <SortableHeader label="Timepiece & Reference" field="name" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
-                  <th className="px-4 py-3 text-left">
+                  <th className="px-4 py-3.5 text-left">
                     <SortableHeader label="Category" field="category" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
-                  <th className="px-4 py-3 text-left">
-                    <SortableHeader label="Price" field="selling_price" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                  <th className="px-4 py-3.5 text-right">
+                    <SortableHeader label="Retail Price" field="selling_price" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
-                  <th className="px-4 py-3 text-left">
+                  <th className="px-4 py-3.5 text-right">
+                    <span className="text-xs font-semibold text-[#8D8980] uppercase tracking-wider">
+                      {isManagement ? 'Wholesale / Margin' : 'Margin Access'}
+                    </span>
+                  </th>
+                  <th className="px-4 py-3.5 text-center">
                     <SortableHeader label="Stock" field="stock" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
-                  <th className="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">Actions</th>
+                  <th className="px-5 py-3.5 text-right text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-[#2A261F]">
                 {products.map((product, index) => (
                   <motion.tr
                     key={product.id}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
-                    transition={{ delay: index * 0.03 }}
-                    className="hover:bg-gray-50 transition-colors"
+                    transition={{ delay: index * 0.02 }}
+                    className="hover:bg-[#1F1E1A] transition-colors"
                   >
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3.5">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <div className="w-11 h-11 bg-[#12110F] border border-[#2A261F] rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
                           {product.image ? (
-                            <img src={product.image} alt="" className="w-full h-full object-cover rounded-lg" />
+                            <img src={product.image} alt="" className="w-full h-full object-cover" />
                           ) : (
-                            <Package className="w-5 h-5 text-gray-400" />
+                            <Watch className="w-5 h-5 text-[#8D8980]" />
                           )}
                         </div>
                         <div className="min-w-0">
-                          <p className="font-semibold text-gray-900 text-sm truncate">{product.name}</p>
-                          <p className="text-xs text-gray-500 truncate">{product.brand || 'Unbranded'}</p>
+                          <p className="font-serif font-bold text-[#F3EFE6] text-sm truncate">{product.name}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-xs font-medium text-[#C9A45C]">{product.brand || 'Unbranded'}</span>
+                            {product.barcode && (
+                              <span className="text-[11px] font-mono text-[#8D8980]">| {product.barcode}</span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-4 py-3">
-                      <Badge variant="gray">{product.category}</Badge>
+                    <td className="px-4 py-3.5">
+                      <span className="px-2.5 py-1 bg-[#1F1E1A] border border-[#2A261F] text-[#E8D5A7] rounded-full text-xs">
+                        {categories.find(c => c.value === product.category)?.label || product.category}
+                      </span>
                     </td>
-                    <td className="px-4 py-3">
-                      <p className="font-semibold text-gray-900 text-sm">{formatCurrency(product.selling_price)}</p>
-                      <p className="text-xs text-success-600">+{formatCurrency(product.profit_margin || 0)}</p>
+                    <td className="px-4 py-3.5 text-right">
+                      <p className="font-mono font-bold text-[#C9A45C] text-sm">{formatCurrency(product.selling_price)}</p>
+                      {product.warranty_months ? (
+                        <p className="text-[10px] text-[#8D8980]">{product.warranty_months}M Warranty</p>
+                      ) : null}
                     </td>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
+                    <td className="px-4 py-3.5 text-right">
+                      {isManagement ? (
+                        <div>
+                          <p className="text-xs font-mono text-[#8D8980]">CP: {formatCurrency(product.cost_price)}</p>
+                          <p className="text-xs font-mono font-medium text-emerald-400">
+                            +{formatCurrency(product.profit_margin || (product.selling_price - product.cost_price))}
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-end gap-1 text-xs text-[#8D8980] font-mono">
+                          <Lock className="w-3 h-3 text-[#C9A45C]" />
+                          <span>Masked</span>
+                        </div>
+                      )}
+                    </td>
+                    <td className="px-4 py-3.5 text-center">
+                      <div className="inline-flex items-center gap-1.5">
                         <span className={clsx(
-                          'font-semibold text-sm',
-                          product.stock > 10 ? 'text-gray-900' : 'text-danger-600'
+                          'font-mono font-bold text-sm',
+                          product.stock > 10 ? 'text-emerald-400' :
+                          product.stock > 3 ? 'text-amber-400' : 'text-rose-400'
                         )}>
                           {product.stock}
                         </span>
-                        {product.is_low_stock && <Badge variant="warning">Low</Badge>}
+                        {product.stock <= 3 && (
+                          <Badge variant="warning" size="sm">Low</Badge>
+                        )}
                       </div>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-5 py-3.5 text-right">
                       <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => openViewModal(product)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-                          <Eye className="w-4 h-4 text-gray-500" />
+                        <button 
+                          onClick={() => openViewModal(product)} 
+                          className="p-1.5 hover:bg-[#2A261F] text-[#8D8980] hover:text-[#F3EFE6] rounded-lg transition-colors"
+                          title="View"
+                        >
+                          <Eye className="w-4 h-4" />
                         </button>
-                        <button onClick={() => openEditModal(product)} className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors">
-                          <Edit className="w-4 h-4 text-gray-500" />
+                        <button 
+                          onClick={() => openEditModal(product)} 
+                          className="p-1.5 hover:bg-[#C9A45C]/15 text-[#C9A45C] rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <Edit className="w-4 h-4" />
                         </button>
-                        <button onClick={() => openDeleteModal(product)} className="p-1.5 hover:bg-danger-50 rounded-lg transition-colors">
-                          <Trash2 className="w-4 h-4 text-danger-500" />
-                        </button>
+                        {isManagement && (
+                          <button 
+                            onClick={() => openDeleteModal(product)} 
+                            className="p-1.5 hover:bg-rose-950/40 text-rose-400 rounded-lg transition-colors"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </motion.tr>
@@ -675,11 +771,7 @@ export default function ProductsPage() {
 
       {/* Pagination */}
       {!loading && products.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="bg-white rounded-xl border border-gray-100 shadow-sm"
-        >
+        <div className="bg-[#171613] rounded-xl border border-[#2A261F] p-2">
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
@@ -688,34 +780,34 @@ export default function ProductsPage() {
             onPageChange={handlePageChange}
             onPageSizeChange={handlePageSizeChange}
           />
-        </motion.div>
+        </div>
       )}
 
-      {/* Add/Edit Modal */}
+      {/* Add / Edit Timepiece Modal */}
       <Modal 
         isOpen={showFormModal} 
         onClose={() => setShowFormModal(false)} 
-        title={selectedProduct ? 'Edit Product' : 'Add New Product'}
-        description={selectedProduct ? 'Update product information and horological details' : 'Add a new timepiece or accessory to inventory'}
+        title={selectedProduct ? 'Update Timepiece Record' : 'Catalog New Timepiece'}
+        description={selectedProduct ? `Editing specifications for ${selectedProduct.name}` : 'Register a new luxury watch or accessory into the boutique repository'}
         size="xl"
       >
         <form onSubmit={handleSubmit(onSubmit, onFormError)} className="space-y-4">
           {/* Modal Tabs Header */}
-          <div className="flex items-center gap-1.5 p-1 bg-gray-100 rounded-xl">
+          <div className="flex items-center gap-1.5 p-1 bg-[#12110F] border border-[#2A261F] rounded-xl">
             <button
               type="button"
               onClick={() => setActiveModalTab('general')}
               className={clsx(
-                "flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs sm:text-sm font-semibold rounded-lg transition-all",
+                "flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all",
                 activeModalTab === 'general'
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-900 hover:bg-white/50"
+                  ? "bg-[#C9A45C] text-[#0B0B0A] shadow-md"
+                  : "text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#1F1E1A]"
               )}
             >
-              <Tag className="w-4 h-4 text-primary-600" />
-              <span>General & Pricing</span>
+              <Tag className="w-3.5 h-3.5" />
+              <span>1. General & Pricing</span>
               {(errors.name || errors.cost_price || errors.selling_price || errors.stock || errors.category) && (
-                <span className="w-2 h-2 rounded-full bg-danger-500" />
+                <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
               )}
             </button>
 
@@ -723,16 +815,16 @@ export default function ProductsPage() {
               type="button"
               onClick={() => setActiveModalTab('media')}
               className={clsx(
-                "flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs sm:text-sm font-semibold rounded-lg transition-all",
+                "flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all",
                 activeModalTab === 'media'
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-900 hover:bg-white/50"
+                  ? "bg-[#C9A45C] text-[#0B0B0A] shadow-md"
+                  : "text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#1F1E1A]"
               )}
             >
-              <ImageIcon className="w-4 h-4 text-primary-600" />
-              <span>Photo & Description</span>
+              <ImageIcon className="w-3.5 h-3.5" />
+              <span>2. Media & Story</span>
               {watchedImage && (
-                <span className="w-2 h-2 rounded-full bg-success-500" />
+                <span className="w-2 h-2 rounded-full bg-emerald-400" />
               )}
             </button>
 
@@ -740,26 +832,26 @@ export default function ProductsPage() {
               type="button"
               onClick={() => setActiveModalTab('specs')}
               className={clsx(
-                "flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs sm:text-sm font-semibold rounded-lg transition-all",
+                "flex-1 flex items-center justify-center gap-2 py-2 px-3 text-xs font-semibold rounded-lg transition-all",
                 activeModalTab === 'specs'
-                  ? "bg-white text-gray-900 shadow-sm"
-                  : "text-gray-500 hover:text-gray-900 hover:bg-white/50"
+                  ? "bg-[#C9A45C] text-[#0B0B0A] shadow-md"
+                  : "text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#1F1E1A]"
               )}
             >
-              <Sliders className="w-4 h-4 text-primary-600" />
-              <span>Website & Specs</span>
+              <Sliders className="w-3.5 h-3.5" />
+              <span>3. Horological Specs</span>
             </button>
           </div>
 
           {/* TAB 1: General & Pricing */}
           {activeModalTab === 'general' && (
             <div className="space-y-4 pt-1">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Product Name */}
                 <div className="sm:col-span-2">
                   <Input 
-                    label="Product Name *" 
-                    placeholder="e.g. Titan Neo Splash Quartz Watch" 
+                    label="Timepiece Full Name *" 
+                    placeholder="e.g. Tissot PRX Powermatic 80 Blue Dial" 
                     {...register('name')} 
                     error={errors.name?.message} 
                   />
@@ -768,7 +860,7 @@ export default function ProductsPage() {
                 {/* Brand Selection */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700">Brand</label>
+                    <label className="block text-xs font-medium text-[#F3EFE6]">Brand / Maison</label>
                     <button
                       type="button"
                       onClick={() => {
@@ -779,9 +871,9 @@ export default function ProductsPage() {
                           setValue('brand', '')
                         }
                       }}
-                      className="text-xs text-primary-600 hover:text-primary-700 font-semibold"
+                      className="text-xs text-[#C9A45C] hover:underline font-semibold"
                     >
-                      {isCustomBrand ? "Choose from list" : "+ Custom Brand"}
+                      {isCustomBrand ? "Select from list" : "+ Custom Brand"}
                     </button>
                   </div>
                   {isCustomBrand ? (
@@ -800,35 +892,35 @@ export default function ProductsPage() {
                           setValue('brand', e.target.value)
                         }
                       }}
-                      className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none text-sm text-gray-900 font-medium"
+                      className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6]"
                     >
                       <option value="">Select a brand...</option>
                       {availableBrands.map((b) => (
-                        <option key={b.id || b.name} value={b.name}>{b.name}</option>
+                        <option key={b.id || b.name} value={b.name} className="bg-[#171613]">{b.name}</option>
                       ))}
-                      <option value="__custom__">+ Enter custom brand...</option>
+                      <option value="__custom__" className="bg-[#171613] text-[#C9A45C]">+ Enter custom brand...</option>
                     </select>
                   )}
                 </div>
 
                 {/* Category */}
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1.5">Category *</label>
+                  <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Category *</label>
                   <select 
                     {...register('category')} 
-                    className="w-full px-3.5 py-2.5 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none text-sm text-gray-900 font-medium"
+                    className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6]"
                   >
                     {categories.map((cat) => (
-                      <option key={cat.value} value={cat.value}>{cat.label}</option>
+                      <option key={cat.value} value={cat.value} className="bg-[#171613]">{cat.label}</option>
                     ))}
                   </select>
                 </div>
 
-                {/* Barcode & SKU */}
+                {/* Barcode & Reference */}
                 <div>
                   <Input 
-                    label="Barcode / SKU" 
-                    placeholder="Scan barcode or enter SKU" 
+                    label="Barcode / Reference Number" 
+                    placeholder="Scan barcode or enter ref SKU" 
                     {...register('barcode')} 
                   />
                 </div>
@@ -836,28 +928,34 @@ export default function ProductsPage() {
                 {/* Supplier Name */}
                 <div>
                   <Input 
-                    label="Supplier / Distributor" 
-                    placeholder="e.g. Titan Company Ltd" 
+                    label="Authorized Distributor / Vendor" 
+                    placeholder="e.g. Swatch Group India Ltd" 
                     {...register('supplier_name')} 
                   />
                 </div>
 
-                {/* Cost Price */}
+                {/* Cost Price - RBAC Protected */}
                 <div>
                   <Input 
-                    label="Cost Price (₹) *" 
+                    label="Wholesale Cost Price (₹) *" 
                     type="number" 
                     step="any"
                     placeholder="0" 
+                    disabled={!isManagement}
                     {...register('cost_price')} 
                     error={errors.cost_price?.message} 
                   />
+                  {!isManagement && (
+                    <p className="text-[10px] text-amber-400 mt-1 flex items-center gap-1">
+                      <Lock className="w-3 h-3" /> Cost price editing requires Manager authority
+                    </p>
+                  )}
                 </div>
 
                 {/* Selling Price */}
                 <div>
                   <Input 
-                    label="Selling Price (₹) *" 
+                    label="Retail Selling Price (₹) *" 
                     type="number" 
                     step="any"
                     placeholder="0" 
@@ -866,28 +964,30 @@ export default function ProductsPage() {
                   />
                 </div>
 
-                {/* Real-time Profit & Margin Pill */}
-                <div className="sm:col-span-2 p-3 bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-xl flex items-center justify-between">
-                  <span className="text-xs font-semibold text-gray-600">Calculated Profit & Margin:</span>
-                  <div className="flex items-center gap-2">
-                    <span className={clsx(
-                      "text-xs font-bold px-2.5 py-1 rounded-md border",
-                      liveProfit >= 0 
-                        ? "bg-emerald-50 text-emerald-700 border-emerald-200" 
-                        : "bg-rose-50 text-rose-700 border-rose-200"
-                    )}>
-                      Profit: {formatCurrency(liveProfit)}
-                    </span>
-                    <span className="text-xs font-medium text-gray-500">
-                      Markup: <strong className="text-gray-900">{liveMargin}%</strong>
-                    </span>
+                {/* Real-time Profit & Margin Pill (Visible to Management) */}
+                {isManagement && (
+                  <div className="sm:col-span-2 p-3 bg-[#12110F] border border-[#2A261F] rounded-xl flex items-center justify-between">
+                    <span className="text-xs font-semibold text-[#8D8980]">Calculated Gross Margin:</span>
+                    <div className="flex items-center gap-2">
+                      <span className={clsx(
+                        "text-xs font-bold font-mono px-2.5 py-1 rounded-md border",
+                        liveProfit >= 0 
+                          ? "bg-emerald-950/40 text-emerald-400 border-emerald-800/50" 
+                          : "bg-rose-950/40 text-rose-400 border-rose-800/50"
+                      )}>
+                        Profit: {formatCurrency(liveProfit)}
+                      </span>
+                      <span className="text-xs font-mono text-[#8D8980]">
+                        Markup: <strong className="text-[#F3EFE6]">{liveMargin}%</strong>
+                      </span>
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Stock Quantity */}
                 <div>
                   <Input 
-                    label="Stock Quantity *" 
+                    label="Stock Quantity Available *" 
                     type="number" 
                     placeholder="0" 
                     {...register('stock')} 
@@ -895,10 +995,10 @@ export default function ProductsPage() {
                   />
                 </div>
 
-                {/* Warranty (Months) */}
+                {/* Warranty */}
                 <div>
                   <Input 
-                    label="Warranty (Months)" 
+                    label="Official Warranty (Months)" 
                     type="number" 
                     placeholder="24" 
                     {...register('warranty_months')} 
@@ -908,34 +1008,34 @@ export default function ProductsPage() {
             </div>
           )}
 
-          {/* TAB 2: Photo & Description */}
+          {/* TAB 2: Photo & Story */}
           {activeModalTab === 'media' && (
             <div className="space-y-4 pt-1">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs sm:text-sm font-semibold text-gray-800">Product Primary Photo</label>
+                  <label className="block text-xs font-semibold text-[#F3EFE6]">Timepiece Studio Photograph</label>
                   <button
                     type="button"
                     onClick={() => setShowUrlInput(!showUrlInput)}
-                    className="text-xs text-primary-600 hover:text-primary-700 font-medium"
+                    className="text-xs text-[#C9A45C] hover:underline font-medium"
                   >
-                    {showUrlInput ? "Upload image file instead" : "Or paste image link"}
+                    {showUrlInput ? "Upload local file" : "Paste external web link"}
                   </button>
                 </div>
 
                 {showUrlInput ? (
                   <div className="space-y-1.5">
                     <Input 
-                      placeholder="https://example.com/watch-image.jpg" 
+                      placeholder="https://images.example.com/tissot-prx.webp" 
                       {...register('image')} 
                     />
-                    <p className="text-xs text-gray-500">Direct HTTPS link to the product photo.</p>
+                    <p className="text-xs text-[#8D8980]">Direct secure HTTPS link to high-resolution product photography.</p>
                   </div>
                 ) : (
                   <div>
                     {watchedImage ? (
-                      <div className="p-4 border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50 flex items-center gap-4">
-                        <div className="w-24 h-24 rounded-xl overflow-hidden bg-white border border-gray-200 flex-shrink-0 shadow-sm">
+                      <div className="p-4 border border-[#2A261F] rounded-2xl bg-[#12110F] flex items-center gap-4">
+                        <div className="w-24 h-24 rounded-xl overflow-hidden bg-[#171613] border border-[#2A261F] flex-shrink-0">
                           <img 
                             src={watchedImage} 
                             alt="Product preview" 
@@ -946,12 +1046,12 @@ export default function ProductsPage() {
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-gray-900">Image Attached</p>
-                          <p className="text-xs text-gray-500 truncate mt-0.5">{watchedImage}</p>
+                          <p className="text-sm font-semibold text-[#F3EFE6]">Photo Attached</p>
+                          <p className="text-xs text-[#8D8980] truncate mt-0.5 font-mono">{watchedImage}</p>
                           <div className="flex items-center gap-2 mt-3">
-                            <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 hover:border-gray-300 rounded-lg text-xs font-semibold text-gray-700 shadow-2xs hover:bg-gray-50 transition-all">
-                              <Upload className="w-3.5 h-3.5 text-gray-500" />
-                              <span>Replace Image</span>
+                            <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1.5 bg-[#1F1E1A] border border-[#2A261F] hover:border-[#C9A45C]/40 rounded-lg text-xs font-semibold text-[#F3EFE6] transition-all">
+                              <Upload className="w-3.5 h-3.5 text-[#C9A45C]" />
+                              <span>Replace</span>
                               <input 
                                 type="file" 
                                 accept="image/png,image/jpeg,image/webp,image/avif" 
@@ -963,7 +1063,7 @@ export default function ProductsPage() {
                             <button
                               type="button"
                               onClick={() => setValue('image', '')}
-                              className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-rose-50 border border-rose-200 hover:bg-rose-100 rounded-lg text-xs font-semibold text-rose-700 transition-all"
+                              className="inline-flex items-center gap-1 px-2.5 py-1.5 bg-rose-950/40 border border-rose-800/40 rounded-lg text-xs font-semibold text-rose-300 transition-all"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                               <span>Remove</span>
@@ -975,8 +1075,8 @@ export default function ProductsPage() {
                       <label className={clsx(
                         "border-2 border-dashed rounded-2xl p-6 flex flex-col items-center justify-center text-center cursor-pointer transition-all",
                         isUploadingImage 
-                          ? "bg-primary-50/50 border-primary-300 pointer-events-none" 
-                          : "border-gray-300 bg-gray-50/60 hover:bg-gray-50 hover:border-primary-400"
+                          ? "bg-[#C9A45C]/10 border-[#C9A45C] pointer-events-none" 
+                          : "border-[#2A261F] bg-[#12110F]/60 hover:bg-[#12110F] hover:border-[#C9A45C]/50"
                       )}>
                         <input 
                           type="file" 
@@ -987,20 +1087,20 @@ export default function ProductsPage() {
                         />
                         {isUploadingImage ? (
                           <div className="py-2 flex flex-col items-center gap-2">
-                            <Loader2 className="w-8 h-8 text-primary-600 animate-spin" />
-                            <p className="text-sm font-semibold text-primary-700">Uploading photo to server...</p>
-                            <p className="text-xs text-gray-500">Processing file securely</p>
+                            <Loader2 className="w-8 h-8 text-[#C9A45C] animate-spin" />
+                            <p className="text-sm font-semibold text-[#C9A45C]">Uploading asset to cloud storage...</p>
+                            <p className="text-xs text-[#8D8980]">Optimizing image fidelity</p>
                           </div>
                         ) : (
-                          <div className="py-1 flex flex-col items-center gap-2">
-                            <div className="w-12 h-12 rounded-full bg-primary-100/60 flex items-center justify-center text-primary-600 mb-1">
+                          <div className="py-2 flex flex-col items-center gap-2">
+                            <div className="w-12 h-12 rounded-full bg-[#1F1E1A] border border-[#2A261F] flex items-center justify-center text-[#C9A45C] mb-1">
                               <Upload className="w-6 h-6" />
                             </div>
                             <div>
-                              <span className="text-sm font-bold text-primary-600 hover:underline">Click to upload photo</span>
-                              <span className="text-sm text-gray-600"> or drag and drop</span>
+                              <span className="text-sm font-bold text-[#C9A45C] hover:underline">Click to upload studio photo</span>
+                              <span className="text-sm text-[#8D8980]"> or drag and drop</span>
                             </div>
-                            <p className="text-xs text-gray-400">PNG, JPG, WEBP or AVIF up to 5MB</p>
+                            <p className="text-xs text-[#8D8980]/80">PNG, JPG, WEBP or AVIF up to 5MB</p>
                           </div>
                         )}
                       </label>
@@ -1011,12 +1111,12 @@ export default function ProductsPage() {
 
               {/* Product Description */}
               <div>
-                <label className="block text-xs sm:text-sm font-semibold text-gray-800 mb-1.5">Description & Story</label>
+                <label className="block text-xs font-semibold text-[#F3EFE6] mb-1.5">Description & Horological Provenance</label>
                 <textarea 
                   {...register('description')} 
                   rows={4} 
-                  placeholder="Provide a detailed description of the watch craftsmanship, dial styling, target audience, and key selling points..."
-                  className="w-full px-3.5 py-3 bg-white border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 outline-none transition-all text-sm text-gray-900 resize-none"
+                  placeholder="Detail the watch craftsmanship, dial styling, movement complexity, and heritage storytelling..."
+                  className="w-full px-3.5 py-3 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6] resize-none"
                 />
               </div>
             </div>
@@ -1026,80 +1126,80 @@ export default function ProductsPage() {
           {activeModalTab === 'specs' && (
             <div className="space-y-4 pt-1">
               {/* Public Website Visibility Settings */}
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-3">
+              <div className="p-4 bg-[#12110F] border border-[#2A261F] rounded-xl space-y-3">
                 <div>
-                  <p className="text-xs font-bold text-slate-800 uppercase tracking-wider">Public Website Badges & Visibility</p>
-                  <p className="text-xs text-slate-500 mt-0.5">Control how this watch appears to online visitors on the showcase portal.</p>
+                  <p className="text-xs font-bold text-[#C9A45C] uppercase tracking-wider">Showcase Portal Badges</p>
+                  <p className="text-xs text-[#8D8980] mt-0.5">Control how this watch is featured on the Meghani public client portal.</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <label className="flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-primary-300 transition-colors">
+                  <label className="flex items-start gap-3 p-3 bg-[#171613] border border-[#2A261F] rounded-xl cursor-pointer hover:border-[#C9A45C]/40 transition-colors">
                     <input 
                       type="checkbox" 
                       {...register('is_featured')} 
-                      className="w-4 h-4 mt-0.5 rounded text-primary-600 focus:ring-primary-500" 
+                      className="w-4 h-4 mt-0.5 accent-[#C9A45C]" 
                     />
                     <div>
-                      <p className="text-xs font-bold text-gray-900">Featured Showcase</p>
-                      <p className="text-[11px] text-gray-500 mt-0.5">Show in hero and featured collections</p>
+                      <p className="text-xs font-bold text-[#F3EFE6]">Featured Hero</p>
+                      <p className="text-[11px] text-[#8D8980] mt-0.5">Feature in flagship carousel</p>
                     </div>
                   </label>
 
-                  <label className="flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-primary-300 transition-colors">
+                  <label className="flex items-start gap-3 p-3 bg-[#171613] border border-[#2A261F] rounded-xl cursor-pointer hover:border-[#C9A45C]/40 transition-colors">
                     <input 
                       type="checkbox" 
                       {...register('is_new_arrival')} 
-                      className="w-4 h-4 mt-0.5 rounded text-primary-600 focus:ring-primary-500" 
+                      className="w-4 h-4 mt-0.5 accent-[#C9A45C]" 
                     />
                     <div>
-                      <p className="text-xs font-bold text-gray-900">New Arrival Badge</p>
-                      <p className="text-[11px] text-gray-500 mt-0.5">Display NEW badge on card</p>
+                      <p className="text-xs font-bold text-[#F3EFE6]">New Arrival</p>
+                      <p className="text-[11px] text-[#8D8980] mt-0.5">Highlight as latest accession</p>
                     </div>
                   </label>
 
-                  <label className="flex items-start gap-3 p-3 bg-white border border-gray-200 rounded-xl cursor-pointer hover:border-primary-300 transition-colors">
+                  <label className="flex items-start gap-3 p-3 bg-[#171613] border border-[#2A261F] rounded-xl cursor-pointer hover:border-[#C9A45C]/40 transition-colors">
                     <input 
                       type="checkbox" 
                       {...register('price_visible')} 
-                      className="w-4 h-4 mt-0.5 rounded text-primary-600 focus:ring-primary-500" 
+                      className="w-4 h-4 mt-0.5 accent-[#C9A45C]" 
                     />
                     <div>
-                      <p className="text-xs font-bold text-gray-900">Price Visible</p>
-                      <p className="text-[11px] text-gray-500 mt-0.5">Show price (uncheck for On Request)</p>
+                      <p className="text-xs font-bold text-[#F3EFE6]">Display Price</p>
+                      <p className="text-[11px] text-[#8D8980] mt-0.5">Uncheck for Price On Request</p>
                     </div>
                   </label>
                 </div>
               </div>
 
               {/* Horological Specifications */}
-              <div className="p-4 bg-gray-50 border border-gray-200 rounded-xl space-y-3">
+              <div className="p-4 bg-[#12110F] border border-[#2A261F] rounded-xl space-y-3">
                 <div>
-                  <p className="text-xs font-bold text-gray-800 uppercase tracking-wider">Technical Horological Specifications</p>
-                  <p className="text-xs text-gray-500 mt-0.5">Optional specifications displayed in the watch specifications table on the public site.</p>
+                  <p className="text-xs font-bold text-[#E8D5A7] uppercase tracking-wider">Technical Horological Specifications</p>
+                  <p className="text-xs text-[#8D8980] mt-0.5">Technical specifications displayed on client inspection certificates.</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <Input label="Movement / Calibre" placeholder="e.g. Automatic Calibre 8200 / Quartz" {...register('movement')} />
-                  <Input label="Case Diameter" placeholder="e.g. 42 mm" {...register('caseDiameter')} />
-                  <Input label="Case Material" placeholder="e.g. 316L Stainless Steel / Rose Gold PVD" {...register('caseMaterial')} />
-                  <Input label="Dial Glass" placeholder="e.g. Anti-Reflective Sapphire Crystal" {...register('glass')} />
+                  <Input label="Movement / Calibre" placeholder="e.g. Automatic Calibre 8200 / Swiss Quartz" {...register('movement')} />
+                  <Input label="Case Diameter" placeholder="e.g. 40.5 mm" {...register('caseDiameter')} />
+                  <Input label="Case Material" placeholder="e.g. 316L Stainless Steel / Gold PVD" {...register('caseMaterial')} />
+                  <Input label="Dial Crystal / Glass" placeholder="e.g. Anti-Reflective Sapphire Crystal" {...register('glass')} />
                   <Input label="Water Resistance" placeholder="e.g. 100m / 10 ATM" {...register('waterResistance')} />
-                  <Input label="Strap Material" placeholder="e.g. Genuine Calfskin Leather / Metal Mesh" {...register('strapMaterial')} />
+                  <Input label="Strap / Bracelet" placeholder="e.g. Genuine Alligator Leather / Metal Link" {...register('strapMaterial')} />
                 </div>
               </div>
             </div>
           )}
 
-          {/* Fixed Bottom Action Bar */}
-          <div className="flex items-center justify-between pt-4 mt-5 border-t border-gray-100">
-            <div className="flex items-center gap-1.5 text-xs text-gray-500">
-              <span>Section:</span>
-              <span className="font-semibold text-gray-800 capitalize">
-                {activeModalTab === 'general' ? '1. General & Pricing' : activeModalTab === 'media' ? '2. Photo & Details' : '3. Website & Specs'}
-              </span>
+          {/* Modal Footer Controls */}
+          <div className="flex items-center justify-between pt-4 border-t border-[#2A261F]">
+            <div className="text-xs text-[#8D8980]">
+              <span>Section: </span>
+              <strong className="text-[#C9A45C]">
+                {activeModalTab === 'general' ? '1. General & Pricing' : activeModalTab === 'media' ? '2. Media & Story' : '3. Specifications'}
+              </strong>
             </div>
 
-            <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-2">
               <Button 
                 type="button" 
                 variant="secondary" 
@@ -1118,7 +1218,7 @@ export default function ProductsPage() {
                   }}
                   className="flex items-center gap-1"
                 >
-                  <span>Next Tab</span>
+                  <span>Next Step</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Button>
               )}
@@ -1126,75 +1226,128 @@ export default function ProductsPage() {
               <Button 
                 type="submit" 
                 loading={isSubmitting}
-                className="bg-primary-600 hover:bg-primary-700 text-white font-semibold shadow-sm"
+                className="shadow-gold"
               >
-                {selectedProduct ? 'Update Product' : 'Create Product'}
+                {selectedProduct ? 'Update Timepiece' : 'Save Timepiece'}
               </Button>
             </div>
           </div>
         </form>
       </Modal>
 
-      {/* View Modal */}
-      <Modal isOpen={showViewModal} onClose={() => setShowViewModal(false)} title="Product Details" size="md">
+      {/* Inspect View Modal */}
+      <Modal 
+        isOpen={showViewModal} 
+        onClose={() => setShowViewModal(false)} 
+        title="Timepiece Inspection Dossier" 
+        size="md"
+      >
         {selectedProduct && (
-          <div className="space-y-4 sm:space-y-6">
-            {/* Product header */}
-            <div className="flex items-start gap-3 sm:gap-4">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gray-100 rounded-xl sm:rounded-2xl flex items-center justify-center flex-shrink-0">
+          <div className="space-y-5">
+            {/* Header banner */}
+            <div className="flex items-start gap-4 p-3.5 bg-[#12110F] border border-[#2A261F] rounded-xl">
+              <div className="w-20 h-20 bg-[#171613] border border-[#2A261F] rounded-xl flex items-center justify-center flex-shrink-0 overflow-hidden">
                 {selectedProduct.image ? (
-                  <img src={selectedProduct.image} alt="" className="w-full h-full object-cover rounded-xl sm:rounded-2xl" />
+                  <img src={selectedProduct.image} alt="" className="w-full h-full object-cover" />
                 ) : (
-                  <Package className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400" />
+                  <Watch className="w-8 h-8 text-[#C9A45C]" />
                 )}
               </div>
-              <div className="min-w-0">
-                <p className="text-xs sm:text-sm font-medium text-primary-600">{selectedProduct.brand || 'Unbranded'}</p>
-                <h3 className="text-lg sm:text-xl font-bold text-gray-900 truncate">{selectedProduct.name}</h3>
-                <Badge variant="gray" className="mt-1 sm:mt-2">{selectedProduct.category}</Badge>
+              <div className="min-w-0 flex-1">
+                <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider">{selectedProduct.brand || 'Luxury Horology'}</span>
+                <h3 className="text-lg font-serif font-bold text-[#F3EFE6] leading-tight truncate">{selectedProduct.name}</h3>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#E8D5A7] border border-[#2A261F] text-[11px]">
+                    {categories.find(c => c.value === selectedProduct.category)?.label || selectedProduct.category}
+                  </span>
+                  {selectedProduct.barcode && (
+                    <span className="text-[11px] font-mono text-[#8D8980]">REF: {selectedProduct.barcode}</span>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Details grid */}
-            <div className="grid grid-cols-2 gap-2 sm:gap-4 p-3 sm:p-4 bg-gray-50 rounded-xl">
+            {/* Financial & Stock Matrix */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-[#12110F] border border-[#2A261F] rounded-xl">
               <div>
-                <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase mb-0.5 sm:mb-1">Cost</p>
-                <p className="font-bold text-gray-900 text-sm sm:text-base">{formatCurrency(selectedProduct.cost_price)}</p>
+                <p className="text-[10px] text-[#8D8980] uppercase tracking-wider">Retail Price</p>
+                <p className="font-mono font-bold text-[#C9A45C] text-base">{formatCurrency(selectedProduct.selling_price)}</p>
               </div>
+
               <div>
-                <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase mb-0.5 sm:mb-1">Selling</p>
-                <p className="font-bold text-gray-900 text-sm sm:text-base">{formatCurrency(selectedProduct.selling_price)}</p>
+                <p className="text-[10px] text-[#8D8980] uppercase tracking-wider">Current Stock</p>
+                <p className="font-mono font-bold text-[#F3EFE6] text-base">{selectedProduct.stock} units</p>
               </div>
+
               <div>
-                <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase mb-0.5 sm:mb-1">Stock</p>
-                <p className="font-bold text-gray-900 text-sm sm:text-base">{selectedProduct.stock} units</p>
+                <p className="text-[10px] text-[#8D8980] uppercase tracking-wider">Warranty</p>
+                <p className="font-mono font-medium text-[#F3EFE6] text-sm">{selectedProduct.warranty_months} months</p>
               </div>
-              <div>
-                <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase mb-0.5 sm:mb-1">Profit</p>
-                <p className="font-bold text-success-600 text-sm sm:text-base">{formatCurrency(selectedProduct.profit_margin || 0)}</p>
-              </div>
-              <div>
-                <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase mb-0.5 sm:mb-1">Warranty</p>
-                <p className="font-bold text-gray-900 text-sm sm:text-base">{selectedProduct.warranty_months} months</p>
-              </div>
-              <div>
-                <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase mb-0.5 sm:mb-1">Barcode</p>
-                <p className="font-bold text-gray-900 font-mono text-xs sm:text-base truncate">{selectedProduct.barcode || '-'}</p>
-              </div>
+
+              {isManagement ? (
+                <>
+                  <div>
+                    <p className="text-[10px] text-[#8D8980] uppercase tracking-wider">Wholesale Cost</p>
+                    <p className="font-mono text-sm text-[#8D8980]">{formatCurrency(selectedProduct.cost_price)}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-[10px] text-[#8D8980] uppercase tracking-wider">Gross Profit</p>
+                    <p className="font-mono font-bold text-emerald-400 text-sm">
+                      +{formatCurrency(selectedProduct.profit_margin || (selectedProduct.selling_price - selectedProduct.cost_price))}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-[10px] text-[#8D8980] uppercase tracking-wider">Distributor</p>
+                    <p className="text-xs text-[#F3EFE6] truncate">{selectedProduct.supplier_name || 'Direct Import'}</p>
+                  </div>
+                </>
+              ) : (
+                <div className="col-span-3 p-2 bg-[#1F1E1A] rounded-lg border border-[#2A261F] flex items-center gap-2 text-xs text-[#8D8980]">
+                  <Lock className="w-3.5 h-3.5 text-[#C9A45C]" />
+                  <span>Wholesale cost and margins are protected under Staff role restrictions.</span>
+                </div>
+              )}
             </div>
 
-            {selectedProduct.description && (
-              <div>
-                <p className="text-[10px] sm:text-xs font-medium text-gray-500 uppercase mb-1 sm:mb-2">Description</p>
-                <p className="text-gray-700 text-sm sm:text-base">{selectedProduct.description}</p>
+            {/* Specifications List */}
+            {selectedProduct.specifications && Object.keys(selectedProduct.specifications).length > 0 && (
+              <div className="p-4 bg-[#12110F] border border-[#2A261F] rounded-xl space-y-2">
+                <p className="text-xs font-semibold text-[#E8D5A7] uppercase tracking-wider">Horological Specifications</p>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  {Object.entries(selectedProduct.specifications).map(([key, value]) => (
+                    value ? (
+                      <div key={key} className="p-2 bg-[#171613] rounded border border-[#2A261F]">
+                        <span className="text-[#8D8980] capitalize block text-[10px]">{key.replace(/([A-Z])/g, ' $1')}</span>
+                        <span className="font-medium text-[#F3EFE6]">{String(value)}</span>
+                      </div>
+                    ) : null
+                  ))}
+                </div>
               </div>
             )}
 
-            <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-3 sm:pt-4 border-t border-gray-100">
-              <Button variant="secondary" onClick={() => setShowViewModal(false)} className="w-full sm:w-auto">Close</Button>
-              <Button onClick={() => { setShowViewModal(false); openEditModal(selectedProduct); }} className="w-full sm:w-auto">
-                <Edit className="w-4 h-4 mr-1 sm:mr-2" />
-                Edit
+            {/* Description */}
+            {selectedProduct.description && (
+              <div className="p-3.5 bg-[#12110F] border border-[#2A261F] rounded-xl">
+                <p className="text-xs font-semibold text-[#8D8980] uppercase tracking-wider mb-1">Product Story & Details</p>
+                <p className="text-xs text-[#F3EFE6]/80 leading-relaxed">{selectedProduct.description}</p>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-2 pt-2 border-t border-[#2A261F]">
+              <Button variant="secondary" onClick={() => setShowViewModal(false)}>
+                Close
+              </Button>
+              <Button 
+                onClick={() => { 
+                  setShowViewModal(false)
+                  openEditModal(selectedProduct)
+                }}
+              >
+                <Edit className="w-4 h-4 mr-1.5" />
+                Edit Record
               </Button>
             </div>
           </div>
@@ -1206,9 +1359,9 @@ export default function ProductsPage() {
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
-        title="Delete Product"
-        message={`Are you sure you want to delete "${selectedProduct?.name}"? This action cannot be undone.`}
-        confirmText="Delete"
+        title="Delete Timepiece from Catalog"
+        message={`Are you certain you wish to delete "${selectedProduct?.name}"? All inventory history linked to this SKU will be permanently archived.`}
+        confirmText="Confirm Delete"
         variant="danger"
       />
 

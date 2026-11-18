@@ -38,8 +38,8 @@ export default function SortableHeader({
     <button
       onClick={handleClick}
       className={clsx(
-        'flex items-center gap-1 text-left text-xs font-semibold uppercase tracking-wider transition-colors group',
-        isActive ? 'text-primary-600' : 'text-gray-500 hover:text-gray-700',
+        'flex items-center gap-1.5 text-left text-xs font-semibold uppercase tracking-wider transition-colors group',
+        isActive ? 'text-[#C9A45C]' : 'text-[#8D8980] hover:text-[#F3EFE6]',
         className
       )}
     >

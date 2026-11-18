@@ -4,10 +4,9 @@ import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
   AlertTriangle, Package, Clock, Shield, Cake, 
-  ChevronRight, Bell, RefreshCw, X
+  ChevronRight, Bell, ChevronDown, CheckCircle2
 } from 'lucide-react'
 import { api } from '@/services/api'
-import Badge from '@/components/ui/Badge'
 import clsx from 'clsx'
 
 interface LowStockItem {
@@ -69,22 +68,11 @@ export default function AlertsWidget() {
   const getTotalAlerts = () => {
     if (!alerts) return 0
     return (
-      alerts.low_stock.length +
-      alerts.overdue_repairs.length +
-      alerts.expiring_warranties.length +
-      alerts.birthdays_today.length
+      (alerts.low_stock?.length || 0) +
+      (alerts.overdue_repairs?.length || 0) +
+      (alerts.expiring_warranties?.length || 0) +
+      (alerts.birthdays_today?.length || 0)
     )
-  }
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    const today = new Date()
-    const diffDays = Math.ceil((date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
-    
-    if (diffDays < 0) return `${Math.abs(diffDays)} days overdue`
-    if (diffDays === 0) return 'Today'
-    if (diffDays === 1) return 'Tomorrow'
-    return `${diffDays} days`
   }
 
   const tabs = [
@@ -92,46 +80,38 @@ export default function AlertsWidget() {
       id: 'stock', 
       label: 'Low Stock', 
       icon: Package, 
-      count: alerts?.low_stock.length || 0,
-      color: 'text-red-600',
-      bg: 'bg-red-100'
+      count: alerts?.low_stock?.length || 0,
+      pill: 'bg-red-950/60 text-red-300 border-red-800/50'
+    },
+    { 
+      id: 'repairs', 
+      label: 'Servicing Overdue', 
+      icon: Clock, 
+      count: alerts?.overdue_repairs?.length || 0,
+      pill: 'bg-amber-950/60 text-amber-300 border-amber-800/50'
     },
     { 
       id: 'warranty', 
       label: 'Warranties', 
       icon: Shield, 
-      count: alerts?.expiring_warranties.length || 0,
-      color: 'text-orange-600',
-      bg: 'bg-orange-100'
-    },
-    { 
-      id: 'repairs', 
-      label: 'Overdue', 
-      icon: Clock, 
-      count: alerts?.overdue_repairs.length || 0,
-      color: 'text-yellow-600',
-      bg: 'bg-yellow-100'
+      count: alerts?.expiring_warranties?.length || 0,
+      pill: 'bg-sky-950/60 text-sky-300 border-sky-800/50'
     },
     { 
       id: 'birthdays', 
-      label: 'Birthdays', 
+      label: 'VIP Birthdays', 
       icon: Cake, 
-      count: alerts?.birthdays_today.length || 0,
-      color: 'text-pink-600',
-      bg: 'bg-pink-100'
+      count: alerts?.birthdays_today?.length || 0,
+      pill: 'bg-purple-950/60 text-purple-300 border-purple-800/50'
     },
   ]
 
   if (loading) {
     return (
-      <div className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-card p-4 sm:p-6">
-        <div className="animate-pulse">
-          <div className="h-6 bg-gray-200 rounded w-32 mb-4"></div>
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-12 bg-gray-100 rounded-lg"></div>
-            ))}
-          </div>
+      <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-4 sm:p-5 shadow-xl">
+        <div className="animate-pulse space-y-3">
+          <div className="h-5 bg-[#1F1E1A] rounded w-40"></div>
+          <div className="h-10 bg-[#1F1E1A] rounded-xl"></div>
         </div>
       </div>
     )
@@ -140,43 +120,37 @@ export default function AlertsWidget() {
   const totalAlerts = getTotalAlerts()
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-xl sm:rounded-2xl border border-gray-100 shadow-card overflow-hidden"
-    >
-      {/* Header */}
+    <div className="bg-[#171613] rounded-2xl border border-[#2A261F] shadow-xl overflow-hidden">
+      {/* Accordion Header */}
       <div 
-        className="flex items-center justify-between p-4 sm:p-5 cursor-pointer hover:bg-gray-50 transition-colors"
+        className="flex items-center justify-between p-4 sm:p-5 cursor-pointer hover:bg-[#1F1E1A]/50 transition-colors select-none"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center gap-3">
           <div className={clsx(
-            'w-10 h-10 rounded-xl flex items-center justify-center',
-            totalAlerts > 0 ? 'bg-red-100' : 'bg-green-100'
+            'w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center border',
+            totalAlerts > 0 ? 'bg-amber-950/60 border-amber-800/50 text-amber-400' : 'bg-emerald-950/60 border-emerald-800/50 text-emerald-400'
           )}>
-            <Bell className={clsx('w-5 h-5', totalAlerts > 0 ? 'text-red-600' : 'text-green-600')} />
+            <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <h3 className="font-semibold text-gray-900">Alerts & Notifications</h3>
-            <p className="text-sm text-gray-500">
-              {totalAlerts > 0 ? `${totalAlerts} items need attention` : 'All clear!'}
+            <h3 className="font-serif font-bold text-sm sm:text-base text-[#F3EFE6]">Boutique Intelligence Alerts</h3>
+            <p className="text-[11px] font-mono text-[#8D8980]">
+              {totalAlerts > 0 ? `${totalAlerts} items requiring staff action` : 'Operational inventory & repairs in optimal status'}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {totalAlerts > 0 && (
-            <span className="w-6 h-6 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">
-              {totalAlerts > 9 ? '9+' : totalAlerts}
+            <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-[#C9A45C]/20 border border-[#C9A45C]/40 text-[#C9A45C]">
+              {totalAlerts} Active
             </span>
           )}
-          <motion.div animate={{ rotate: isExpanded ? 90 : 0 }}>
-            <ChevronRight className="w-5 h-5 text-gray-400" />
-          </motion.div>
+          <ChevronDown className={clsx('w-4 h-4 text-[#8D8980] transition-transform duration-200', isExpanded && 'rotate-180')} />
         </div>
       </div>
 
-      {/* Content */}
+      {/* Accordion Content */}
       <AnimatePresence>
         {isExpanded && (
           <motion.div
@@ -185,123 +159,117 @@ export default function AlertsWidget() {
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            {/* Tabs */}
-            <div className="flex border-t border-b border-gray-100 overflow-x-auto scrollbar-hide">
+            {/* Filter Tabs */}
+            <div className="flex border-t border-b border-[#2A261F] bg-[#12110F] overflow-x-auto scrollbar-hide">
               {tabs.map(tab => {
                 const Icon = tab.icon
+                const isActive = activeTab === tab.id
                 return (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id as any)}
                     className={clsx(
-                      'flex-1 min-w-[80px] flex flex-col items-center gap-1 py-3 px-2 transition-colors relative',
-                      activeTab === tab.id ? 'bg-gray-50' : 'hover:bg-gray-50'
+                      'flex-1 min-w-[120px] flex items-center justify-center gap-2 py-3 px-3 transition-colors border-b-2 text-xs font-medium',
+                      isActive 
+                        ? 'border-[#C9A45C] text-[#C9A45C] bg-[#1F1E1A]/80 font-bold' 
+                        : 'border-transparent text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#171613]'
                     )}
                   >
-                    <div className={clsx('w-8 h-8 rounded-lg flex items-center justify-center', tab.bg)}>
-                      <Icon className={clsx('w-4 h-4', tab.color)} />
-                    </div>
-                    <span className="text-xs font-medium text-gray-600">{tab.label}</span>
-                    {tab.count > 0 && (
-                      <span className={clsx(
-                        'absolute top-2 right-2 w-5 h-5 rounded-full text-[10px] font-bold flex items-center justify-center',
-                        tab.bg, tab.color
-                      )}>
-                        {tab.count}
-                      </span>
-                    )}
-                    {activeTab === tab.id && (
-                      <motion.div
-                        layoutId="activeTab"
-                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600"
-                      />
-                    )}
+                    <Icon className="w-3.5 h-3.5" />
+                    <span>{tab.label}</span>
+                    <span className={clsx('text-[10px] font-mono px-1.5 py-0.2 rounded-full border', tab.pill)}>
+                      {tab.count}
+                    </span>
                   </button>
                 )
               })}
             </div>
 
-            {/* Alert List */}
-            <div className="p-4 sm:p-5 max-h-64 overflow-y-auto">
-              {/* Low Stock */}
+            {/* Alert Items List */}
+            <div className="p-4 sm:p-5 max-h-60 overflow-y-auto divide-y divide-[#2A261F]/60">
               {activeTab === 'stock' && (
-                <div className="space-y-2">
-                  {alerts?.low_stock.length === 0 ? (
-                    <p className="text-center text-gray-500 text-sm py-4">No low stock items</p>
-                  ) : (
-                    alerts?.low_stock.map(item => (
-                      <div key={item.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                alerts?.low_stock && alerts.low_stock.length > 0 ? (
+                  <div className="space-y-2">
+                    {alerts.low_stock.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between py-2 text-xs">
                         <div>
-                          <p className="font-medium text-gray-900 text-sm">{item.name}</p>
-                          <p className="text-xs text-gray-500">{item.brand || 'Unbranded'}</p>
+                          <p className="font-semibold text-[#F3EFE6]">{item.name}</p>
+                          <p className="text-[11px] text-[#8D8980]">{item.brand || 'Boutique'}</p>
                         </div>
-                        <Badge variant="danger">{item.stock} left</Badge>
+                        <span className="font-mono text-red-400 bg-red-950/60 border border-red-800/40 px-2 py-0.5 rounded-full font-bold">
+                          Stock: {item.stock} left
+                        </span>
                       </div>
-                    ))
-                  )}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center py-4 text-xs text-[#8D8980]">No low stock alerts</p>
+                )
               )}
 
-              {/* Warranties */}
-              {activeTab === 'warranty' && (
-                <div className="space-y-2">
-                  {alerts?.expiring_warranties.length === 0 ? (
-                    <p className="text-center text-gray-500 text-sm py-4">No expiring warranties</p>
-                  ) : (
-                    alerts?.expiring_warranties.map(item => (
-                      <div key={item.id} className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
-                        <div>
-                          <p className="font-medium text-gray-900 text-sm">{item.product__name}</p>
-                          <p className="text-xs text-gray-500">{item.customer__name}</p>
-                        </div>
-                        <Badge variant="warning">{formatDate(item.expiry_date)}</Badge>
-                      </div>
-                    ))
-                  )}
-                </div>
-              )}
-
-              {/* Overdue Repairs */}
               {activeTab === 'repairs' && (
-                <div className="space-y-2">
-                  {alerts?.overdue_repairs.length === 0 ? (
-                    <p className="text-center text-gray-500 text-sm py-4">No overdue repairs</p>
-                  ) : (
-                    alerts?.overdue_repairs.map(item => (
-                      <div key={item.id} className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                alerts?.overdue_repairs && alerts.overdue_repairs.length > 0 ? (
+                  <div className="space-y-2">
+                    {alerts.overdue_repairs.map((r) => (
+                      <div key={r.id} className="flex items-center justify-between py-2 text-xs">
                         <div>
-                          <p className="font-medium text-gray-900 text-sm">{item.ticket_number}</p>
-                          <p className="text-xs text-gray-500">{item.customer__name} - {item.item_type}</p>
+                          <p className="font-semibold text-[#F3EFE6]">{r.ticket_number} • {r.item_type}</p>
+                          <p className="text-[11px] text-[#8D8980]">Client: {r.customer__name || 'Walk-in'}</p>
                         </div>
-                        <Badge variant="warning">{formatDate(item.expected_delivery)}</Badge>
+                        <span className="font-mono text-amber-300 bg-amber-950/60 border border-amber-800/40 px-2 py-0.5 rounded-full">
+                          Due: {r.expected_delivery || 'Immediate'}
+                        </span>
                       </div>
-                    ))
-                  )}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center py-4 text-xs text-[#8D8980]">All repair tickets are on schedule</p>
+                )
               )}
 
-              {/* Birthdays */}
-              {activeTab === 'birthdays' && (
-                <div className="space-y-2">
-                  {alerts?.birthdays_today.length === 0 ? (
-                    <p className="text-center text-gray-500 text-sm py-4">No birthdays today</p>
-                  ) : (
-                    alerts?.birthdays_today.map(item => (
-                      <div key={item.id} className="flex items-center justify-between p-3 bg-pink-50 rounded-lg">
+              {activeTab === 'warranty' && (
+                alerts?.expiring_warranties && alerts.expiring_warranties.length > 0 ? (
+                  <div className="space-y-2">
+                    {alerts.expiring_warranties.map((w) => (
+                      <div key={w.id} className="flex items-center justify-between py-2 text-xs">
                         <div>
-                          <p className="font-medium text-gray-900 text-sm">{item.name}</p>
-                          <p className="text-xs text-gray-500">{item.phone}</p>
+                          <p className="font-semibold text-[#F3EFE6]">{w.product__name}</p>
+                          <p className="text-[11px] text-[#8D8980]">Client: {w.customer__name}</p>
                         </div>
-                        <Badge variant="info">Birthday!</Badge>
+                        <span className="font-mono text-sky-300 bg-sky-950/60 border border-sky-800/40 px-2 py-0.5 rounded-full">
+                          Expires: {w.expiry_date}
+                        </span>
                       </div>
-                    ))
-                  )}
-                </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center py-4 text-xs text-[#8D8980]">No warranty expirations this week</p>
+                )
+              )}
+
+              {activeTab === 'birthdays' && (
+                alerts?.birthdays_today && alerts.birthdays_today.length > 0 ? (
+                  <div className="space-y-2">
+                    {alerts.birthdays_today.map((b) => (
+                      <div key={b.id} className="flex items-center justify-between py-2 text-xs">
+                        <div>
+                          <p className="font-semibold text-[#F3EFE6]">{b.name}</p>
+                          <p className="text-[11px] font-mono text-[#8D8980]">{b.phone}</p>
+                        </div>
+                        <span className="font-mono text-purple-300 bg-purple-950/60 border border-purple-800/40 px-2.5 py-0.5 rounded-full font-bold">
+                          Birthday Today!
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-center py-4 text-xs text-[#8D8980]">No VIP client birthdays today</p>
+                )
               )}
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.div>
+    </div>
   )
 }

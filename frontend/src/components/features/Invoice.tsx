@@ -117,24 +117,29 @@ export default function Invoice({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden">
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4">
+      <div className="bg-[#171613] border border-[#2A261F] text-[#F3EFE6] rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-900">Invoice Preview</h2>
+        <div className="flex items-center justify-between p-4 border-b border-[#2A261F] bg-[#12110F]/80">
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={handlePrint} icon={<Printer className="w-4 h-4" />}>
-              Print
+            <h2 className="font-serif font-bold text-lg text-[#F3EFE6]">Receipt Preview</h2>
+            <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[#C9A45C]/15 text-[#C9A45C] font-semibold">
+              {data.invoice_number}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="luxury" onClick={handlePrint} icon={<Printer className="w-4 h-4" />}>
+              Print Receipt
             </Button>
-            <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-lg transition-colors">
-              <X className="w-5 h-5 text-gray-500" />
+            <button onClick={onClose} className="p-2 text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#1F1E1A] rounded-xl transition-colors">
+              <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
         {/* Invoice Content */}
-        <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)]">
-          <div ref={printRef} className="bg-white">
+        <div className="p-4 overflow-y-auto max-h-[calc(90vh-80px)] bg-[#0B0B0A]/40 flex justify-center">
+          <div ref={printRef} className="bg-white text-gray-900 rounded-xl p-5 shadow-lg max-w-[80mm] w-full font-mono text-xs">
             {/* Business Header */}
             <div className="text-center pb-4 border-b-2 border-dashed border-gray-300">
               <h1 className="text-xl font-bold text-gray-900">{businessName}</h1>

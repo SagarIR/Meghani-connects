@@ -149,7 +149,7 @@ export default function BulkImport({ isOpen, onClose, onSuccess, type }: BulkImp
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+        className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
         onClick={onClose}
       >
         <motion.div
@@ -157,47 +157,49 @@ export default function BulkImport({ isOpen, onClose, onSuccess, type }: BulkImp
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 20 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="bg-white rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden"
+          className="bg-[#171613] border border-[#2A261F] rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
+          <div className="flex items-center justify-between px-6 py-4 border-b border-[#2A261F]">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary-100 rounded-xl flex items-center justify-center">
-                <FileUp className="w-5 h-5 text-primary-600" />
+              <div className="w-10 h-10 bg-[#C9A45C]/15 border border-[#C9A45C]/30 rounded-xl flex items-center justify-center">
+                <FileUp className="w-5 h-5 text-[#C9A45C]" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">
                   Bulk Import {type.charAt(0).toUpperCase() + type.slice(1)}
                 </h2>
-                <p className="text-sm text-gray-500">Upload Excel or CSV file</p>
+                <p className="text-xs text-[#8D8980]">Upload structured Excel (.xlsx) or CSV catalog</p>
               </div>
             </div>
             <button
               onClick={onClose}
-              className="w-10 h-10 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+              className="w-9 h-9 rounded-xl bg-[#1F1E1A] hover:bg-[#2A261F] border border-[#2A261F] flex items-center justify-center transition-colors"
             >
-              <X className="w-5 h-5 text-gray-500" />
+              <X className="w-4 h-4 text-[#8D8980] hover:text-[#F3EFE6]" />
             </button>
           </div>
 
-          <div className="p-6 space-y-6">
+          <div className="p-6 space-y-5">
             {/* Download Template */}
-            <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl">
+            <div className="flex items-center justify-between p-4 bg-[#1F1E1A] border border-[#2A261F] rounded-xl">
               <div className="flex items-center gap-3">
-                <FileSpreadsheet className="w-5 h-5 text-blue-600" />
+                <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-400" />
+                </div>
                 <div>
-                  <p className="font-medium text-blue-800">Download Template</p>
-                  <p className="text-sm text-blue-600">Use our template for correct format</p>
+                  <p className="text-sm font-semibold text-[#F3EFE6]">Standard Import Template</p>
+                  <p className="text-xs text-[#8D8980]">Pre-formatted columns with field validations</p>
                 </div>
               </div>
               <Button 
                 variant="secondary" 
                 size="sm" 
                 onClick={downloadTemplate}
-                icon={<Download className="w-4 h-4" />}
+                icon={<Download className="w-3.5 h-3.5 text-[#C9A45C]" />}
               >
-                Template
+                Download
               </Button>
             </div>
 
@@ -208,10 +210,10 @@ export default function BulkImport({ isOpen, onClose, onSuccess, type }: BulkImp
               onDrop={handleDrop}
               className={`border-2 border-dashed rounded-xl p-8 text-center transition-all cursor-pointer ${
                 isDragging 
-                  ? 'border-primary-500 bg-primary-50' 
+                  ? 'border-[#C9A45C] bg-[#C9A45C]/10' 
                   : file 
-                    ? 'border-green-500 bg-green-50'
-                    : 'border-gray-300 hover:border-primary-400 hover:bg-gray-50'
+                    ? 'border-emerald-500/50 bg-emerald-950/20'
+                    : 'border-[#2A261F] hover:border-[#C9A45C]/40 bg-[#12110F]/60'
               }`}
               onClick={() => fileInputRef.current?.click()}
             >
@@ -225,11 +227,11 @@ export default function BulkImport({ isOpen, onClose, onSuccess, type }: BulkImp
               
               {file ? (
                 <div className="space-y-2">
-                  <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-                    <FileSpreadsheet className="w-8 h-8 text-green-600" />
+                  <div className="w-14 h-14 bg-emerald-500/15 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto">
+                    <FileSpreadsheet className="w-7 h-7 text-emerald-400" />
                   </div>
-                  <p className="font-medium text-gray-900">{file.name}</p>
-                  <p className="text-sm text-gray-500">
+                  <p className="font-medium text-[#F3EFE6] text-sm">{file.name}</p>
+                  <p className="text-xs text-[#8D8980] font-mono">
                     {(file.size / 1024).toFixed(1)} KB
                   </p>
                   <button
@@ -237,34 +239,34 @@ export default function BulkImport({ isOpen, onClose, onSuccess, type }: BulkImp
                       e.stopPropagation()
                       resetForm()
                     }}
-                    className="text-sm text-red-600 hover:text-red-700"
+                    className="text-xs text-rose-400 hover:text-rose-300 font-medium"
                   >
                     Remove file
                   </button>
                 </div>
               ) : (
                 <div className="space-y-2">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto">
-                    <Upload className="w-8 h-8 text-gray-400" />
+                  <div className="w-14 h-14 bg-[#1F1E1A] border border-[#2A261F] rounded-full flex items-center justify-center mx-auto">
+                    <Upload className="w-6 h-6 text-[#C9A45C]" />
                   </div>
-                  <p className="font-medium text-gray-700">Drop your file here</p>
-                  <p className="text-sm text-gray-500">or click to browse</p>
-                  <p className="text-xs text-gray-400">Excel (.xlsx) or CSV files up to 10MB</p>
+                  <p className="font-medium text-[#F3EFE6] text-sm">Drop your catalog file here</p>
+                  <p className="text-xs text-[#8D8980]">or click to select from your workstation</p>
+                  <p className="text-[11px] text-[#8D8980]/80">Excel (.xlsx) or CSV files up to 10MB</p>
                 </div>
               )}
             </div>
 
             {/* Options */}
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 cursor-pointer">
+            <div className="flex items-center gap-3 p-3 bg-[#12110F] border border-[#2A261F] rounded-xl">
+              <label className="flex items-center gap-2.5 cursor-pointer select-none">
                 <input
                   type="checkbox"
                   checked={updateExisting}
                   onChange={(e) => setUpdateExisting(e.target.checked)}
-                  className="w-4 h-4 text-primary-600 rounded border-gray-300 focus:ring-primary-500"
+                  className="w-4 h-4 text-[#C9A45C] bg-[#171613] rounded border-[#2A261F] focus:ring-[#C9A45C] accent-[#C9A45C]"
                 />
-                <span className="text-sm text-gray-700">
-                  Update existing {type} (match by barcode)
+                <span className="text-xs text-[#F3EFE6] font-medium">
+                  Update existing {type} (matches by unique barcode / identifier)
                 </span>
               </label>
             </div>
@@ -274,45 +276,47 @@ export default function BulkImport({ isOpen, onClose, onSuccess, type }: BulkImp
               <motion.div
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className={`p-4 rounded-xl ${
-                  result.success ? 'bg-green-50' : 'bg-red-50'
+                className={`p-4 rounded-xl border ${
+                  result.success 
+                    ? 'bg-emerald-950/30 border-emerald-800/40' 
+                    : 'bg-rose-950/30 border-rose-800/40'
                 }`}
               >
                 {result.success ? (
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                      <span className="font-medium text-green-800">Import Complete</span>
+                      <CheckCircle className="w-4 h-4 text-emerald-400" />
+                      <span className="font-semibold text-emerald-300 text-sm">Batch Ingestion Completed</span>
                     </div>
-                    <div className="grid grid-cols-3 gap-4 text-center">
-                      <div className="p-3 bg-white rounded-lg">
-                        <p className="text-2xl font-bold text-green-600">{result.imported}</p>
-                        <p className="text-xs text-gray-500">Imported</p>
+                    <div className="grid grid-cols-3 gap-3 text-center">
+                      <div className="p-2.5 bg-[#171613] border border-[#2A261F] rounded-lg">
+                        <p className="text-xl font-bold font-mono text-emerald-400">{result.imported}</p>
+                        <p className="text-[11px] text-[#8D8980]">Imported</p>
                       </div>
-                      <div className="p-3 bg-white rounded-lg">
-                        <p className="text-2xl font-bold text-blue-600">{result.updated}</p>
-                        <p className="text-xs text-gray-500">Updated</p>
+                      <div className="p-2.5 bg-[#171613] border border-[#2A261F] rounded-lg">
+                        <p className="text-xl font-bold font-mono text-[#C9A45C]">{result.updated}</p>
+                        <p className="text-[11px] text-[#8D8980]">Updated</p>
                       </div>
-                      <div className="p-3 bg-white rounded-lg">
-                        <p className="text-2xl font-bold text-gray-600">{result.skipped}</p>
-                        <p className="text-xs text-gray-500">Skipped</p>
+                      <div className="p-2.5 bg-[#171613] border border-[#2A261F] rounded-lg">
+                        <p className="text-xl font-bold font-mono text-[#8D8980]">{result.skipped}</p>
+                        <p className="text-[11px] text-[#8D8980]">Skipped</p>
                       </div>
                     </div>
                     
                     {result.errors.length > 0 && (
-                      <div className="mt-4">
-                        <p className="text-sm font-medium text-orange-700 mb-2">
-                          <AlertCircle className="w-4 h-4 inline mr-1" />
-                          {result.total_errors} errors found
+                      <div className="mt-3 pt-3 border-t border-[#2A261F]">
+                        <p className="text-xs font-semibold text-amber-400 mb-1.5 flex items-center gap-1">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          <span>{result.total_errors} validation warning(s)</span>
                         </p>
-                        <div className="max-h-32 overflow-y-auto space-y-1">
+                        <div className="max-h-28 overflow-y-auto space-y-1 font-mono text-[11px]">
                           {result.errors.slice(0, 5).map((err, i) => (
-                            <p key={i} className="text-xs text-orange-600">
+                            <p key={i} className="text-amber-300/80">
                               Row {err.row}: {err.error}
                             </p>
                           ))}
                           {result.total_errors > 5 && (
-                            <p className="text-xs text-orange-600">
+                            <p className="text-amber-400/60">
                               ...and {result.total_errors - 5} more errors
                             </p>
                           )}
@@ -322,15 +326,15 @@ export default function BulkImport({ isOpen, onClose, onSuccess, type }: BulkImp
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <XCircle className="w-5 h-5 text-red-600" />
-                    <span className="text-red-800">{result.error}</span>
+                    <XCircle className="w-4 h-4 text-rose-400 flex-shrink-0" />
+                    <span className="text-xs text-rose-300 font-medium">{result.error}</span>
                   </div>
                 )}
               </motion.div>
             )}
 
             {/* Actions */}
-            <div className="flex gap-3">
+            <div className="flex gap-3 pt-2">
               <Button
                 variant="secondary"
                 className="flex-1"
@@ -343,9 +347,9 @@ export default function BulkImport({ isOpen, onClose, onSuccess, type }: BulkImp
                   variant="primary"
                   className="flex-1"
                   onClick={resetForm}
-                  icon={<RefreshCw className="w-4 h-4" />}
+                  icon={<RefreshCw className="w-3.5 h-3.5" />}
                 >
-                  Import More
+                  Import Another File
                 </Button>
               ) : (
                 <Button
@@ -354,9 +358,9 @@ export default function BulkImport({ isOpen, onClose, onSuccess, type }: BulkImp
                   onClick={handleUpload}
                   disabled={!file || isUploading}
                   loading={isUploading}
-                  icon={<Upload className="w-4 h-4" />}
+                  icon={<Upload className="w-3.5 h-3.5" />}
                 >
-                  {isUploading ? 'Importing...' : 'Import'}
+                  {isUploading ? 'Ingesting Data...' : 'Start Ingestion'}
                 </Button>
               )}
             </div>
