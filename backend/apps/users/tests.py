@@ -27,6 +27,15 @@ class UserRbacAndSecurityTests(TestCase):
             role='staff'
         )
 
+        # Create a store manager user
+        self.manager_user = User.objects.create_user(
+            username='manager_alex',
+            name='Floor Manager',
+            email='manager@meghani.com',
+            password='ManagerPassword123!',
+            role='manager'
+        )
+
     def test_unauthenticated_cannot_access_users(self):
         """Unauthenticated requests to user management must be blocked with 401"""
         response = self.client.get('/api/users/')
@@ -118,3 +127,68 @@ class UserRbacAndSecurityTests(TestCase):
         }
         fail_res = self.client.post('/api/users/change-password/', fail_payload)
         self.assertEqual(fail_res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_staff_cannot_change_own_role_via_profile(self):
+        """Staff user cannot escalate role via profile update"""
+        self.client.force_authenticate(user=self.staff_user)
+        res = self.client.patch('/api/users/update_profile/', {'role': 'admin'})
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.staff_user.refresh_from_db()
+        self.assertEqual(self.staff_user.role, 'staff')
+
+    def test_admin_cannot_change_own_role(self):
+        """Admin user cannot demote or modify their own role"""
+        self.client.force_authenticate(user=self.admin_user)
+        res = self.client.patch(f'/api/users/{self.admin_user.id}/', {'role': 'staff'})
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.admin_user.refresh_from_db()
+        self.assertEqual(self.admin_user.role, 'admin')
+
+    def test_admin_cannot_delete_own_account(self):
+        """Admin user cannot delete their own account"""
+        self.client.force_authenticate(user=self.admin_user)
+        res = self.client.delete(f'/api/users/{self.admin_user.id}/')
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertTrue(User.objects.filter(id=self.admin_user.id).exists())
+
+    def test_admin_can_update_other_user_role(self):
+        """Admin user can promote another user's role"""
+        self.client.force_authenticate(user=self.admin_user)
+        res = self.client.patch(f'/api/users/{self.staff_user.id}/', {'role': 'manager'})
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        self.staff_user.refresh_from_db()
+        self.assertEqual(self.staff_user.role, 'manager')
+
+    def test_manager_cannot_manage_users(self):
+        """Manager user receives 403 Forbidden on UserViewSet administrative CRUD"""
+        self.client.force_authenticate(user=self.manager_user)
+        # Cannot list users
+        list_res = self.client.get('/api/users/')
+        self.assertEqual(list_res.status_code, status.HTTP_403_FORBIDDEN)
+
+        # Cannot create users
+        create_res = self.client.post('/api/users/', {
+            'username': 'temp_user',
+            'name': 'Temp User',
+            'email': 'temp@meghani.com',
+            'password': 'TempPassword123!',
+            'role': 'staff'
+        })
+        self.assertEqual(create_res.status_code, status.HTTP_403_FORBIDDEN)
+
+        # Cannot delete users
+        del_res = self.client.delete(f'/api/users/{self.staff_user.id}/')
+        self.assertEqual(del_res.status_code, status.HTTP_403_FORBIDDEN)
+
+    def test_manager_can_access_self_profile_and_change_password(self):
+        """Manager user has full access to self profile and password update"""
+        self.client.force_authenticate(user=self.manager_user)
+        me_res = self.client.get('/api/users/me/')
+        self.assertEqual(me_res.status_code, status.HTTP_200_OK)
+        self.assertEqual(me_res.data['username'], 'manager_alex')
+
+        pw_res = self.client.post('/api/users/change-password/', {
+            'current_password': 'ManagerPassword123!',
+            'new_password': 'NewManagerPassword789!'
+        })
+        self.assertEqual(pw_res.status_code, status.HTTP_200_OK)

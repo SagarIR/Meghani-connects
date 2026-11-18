@@ -1,27 +1,43 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from .models import User
-from .serializers import UserSerializer, UserCreateSerializer, UserUpdateSerializer, ChangePasswordSerializer
-from .permissions import IsAdmin
+from .serializers import (
+    UserSerializer, UserCreateSerializer, UserUpdateSerializer,
+    UserAdminUpdateSerializer, ChangePasswordSerializer
+)
+from .permissions import CanManageUsers
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
+    """
+    User Management ViewSet with RBAC enforcement via CanManageUsers.
+    - Admins can list, create, update, and delete users.
+    - Non-admin staff cannot list or modify other users.
+    - All authenticated users can view/update their own profile and change their password.
+    """
+    queryset = User.objects.all().order_by('-created_at')
     serializer_class = UserSerializer
-
-    def get_permissions(self):
-        if self.action in ['me', 'update_profile', 'change_password']:
-            return [IsAuthenticated()]
-        return [IsAdmin()]
+    permission_classes = [CanManageUsers]
 
     def get_serializer_class(self):
         if self.action == 'create':
             return UserCreateSerializer
         if self.action in ['update', 'partial_update']:
+            return UserAdminUpdateSerializer
+        if self.action == 'update_profile':
             return UserUpdateSerializer
         return UserSerializer
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance == request.user:
+            return Response(
+                {'error': 'You cannot delete your own account.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        return super().destroy(request, *args, **kwargs)
 
     @action(detail=False, methods=['get'])
     def me(self, request):

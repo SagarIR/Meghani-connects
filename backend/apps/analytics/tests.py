@@ -123,3 +123,13 @@ class AnalyticsSecurityAndCeleryTests(TestCase):
         self.assertEqual(admin_res.status_code, status.HTTP_200_OK)
         self.assertIsNotNone(admin_res.data['today']['profit'])
         self.assertEqual(admin_res.data['today']['profit'], Decimal('4000.00'))
+
+    def test_staff_cannot_view_sales_report(self):
+        """Staff user receives 403 Forbidden on analytical sales reports"""
+        self.client.force_authenticate(user=self.staff)
+        res = self.client.get('/api/analytics/reports/sales/')
+        self.assertEqual(res.status_code, status.HTTP_403_FORBIDDEN)
+
+        self.client.force_authenticate(user=self.admin)
+        admin_res = self.client.get('/api/analytics/reports/sales/')
+        self.assertEqual(admin_res.status_code, status.HTTP_200_OK)

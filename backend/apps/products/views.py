@@ -177,6 +177,7 @@ class ProductExportTemplateView(APIView):
     """
     Download sample Excel template for product import.
     """
+    permission_classes = [IsAuthenticated]
     
     def get(self, request):
         """Download sample import template."""
@@ -204,12 +205,16 @@ class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
     Excludes internal confidential fields (cost_price, supplier_name, profit_margin).
     Strictly respects price visibility (returns None if price_visible=False).
     """
-    permission_classes = [AllowAny]
     serializer_class = PublicProductSerializer
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'brand', 'category', 'description']
     ordering_fields = ['name', 'selling_price', 'created_at']
     ordering = ['-created_at']
+
+    def get_permissions(self):
+        if self.action in ['add_gallery_image', 'delete_gallery_image']:
+            return [CanManageProducts()]
+        return [AllowAny()]
 
     def get_queryset(self):
         queryset = Product.objects.filter(is_active=True)
@@ -319,7 +324,7 @@ class BrandViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             return [AllowAny()]
-        return [IsAuthenticated()]
+        return [CanManageProducts()]
 
     def get_queryset(self):
         if self.request.user and self.request.user.is_authenticated:
@@ -343,7 +348,7 @@ class CategoryViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             return [AllowAny()]
-        return [IsAuthenticated()]
+        return [CanManageProducts()]
 
     def get_queryset(self):
         if self.request.user and self.request.user.is_authenticated:

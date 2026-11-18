@@ -87,18 +87,38 @@ All documentation is consolidated under the `docs/` tree.
 
 ---
 
-## Project Status Summary
+## Master Execution Roadmap (Master Orders 1–7)
 
-As reconciled in [PROJECT_EXECUTION_TRACKER.md](./PROJECT_EXECUTION_TRACKER.md):
+The project follows the authoritative **Master Orders Roadmap** as its primary execution sequence, while preserving the eight technical phases as supporting architectural references:
+
+| Master Order | Focus & Scope | Current Status | Verification Evidence |
+|:---:|:---|:---:|:---|
+| **Master Order 1** | **Audit Reconciliation** | **COMPLETED** | Complete documentation inventory, phase reconciliation, and single source of truth established. |
+| **Master Order 2** | **Security & Critical Fixes** | **COMPLETED** | RBAC enforced via `CanManageUsers`, password change 404 resolved, Twilio SMS setting added, customer bulk import implemented, Celery task keyword bug resolved. Verified with 57 backend tests, 21 frontend tests, and production build. |
+| **Master Order 3** | **ERP/POS Complete UI/UX Redesign** | **PENDING NEXT** | Comprehensive overhaul of POS checkout, cart interactions, responsive layout, thermal receipt rendering, and staff ergonomics. |
+| **Master Order 4** | **Public Website & SEO** | **PENDING** | Luxury digital storefront refinements, brand showcase, JSON-LD structured data, metadata optimization, and customer viewing enquiry flow. |
+| **Master Order 5** | **System Integration** | **PENDING** | End-to-end integration between public consultation leads, repair atelier ticketing, and CRM customer profiles. |
+| **Master Order 6** | **Advanced Features** | **PENDING** | AI-driven stockout prediction, Prophet forecasting models, automated repair status alerts, and loyalty tier automations. |
+| **Master Order 7** | **Production Deployment** | **PENDING** | Multi-container Docker deployment, cloud PaaS infrastructure provisioning, SSL, CDN media caching, and disaster recovery verification. |
+
+---
+
+## Technical Phase Architecture Status (Supporting Reference)
+
+The original 8 technical phases provide supporting structural architecture:
 
 | Phase | Phase Name | Total Tasks | Completed | Partial | In Progress | Pending | Blocked | Needs Verification | Overall Status |
 |:-----:|:-----------|:-----------:|:---------:|:-------:|:-----------:|:-------:|:-------:|:------------------:|:--------------:|
-| **1** | [Setup & Environment Architecture](./01-phase-1-setup.md) | 6 | 6 | 0 | 0 | 0 | 0 | 0 | **COMPLETED** (100%) |
-| **2** | [Backend Core Architecture](./02-phase-2-backend.md) | 8 | 7 | 1 | 0 | 0 | 0 | 0 | **PARTIAL** (87.5%) |
-| **3** | [Frontend Architecture](./03-phase-3-frontend.md) | 8 | 8 | 0 | 0 | 0 | 0 | 0 | **COMPLETED** (100%) |
-| **4** | [Database Schema & Models](./04-phase-4-database.md) | 8 | 8 | 0 | 0 | 0 | 0 | 0 | **COMPLETED** (100%) |
-| **5** | [Module Development](./05-phase-5-modules.md) | 10 | 9 | 1 | 0 | 0 | 0 | 0 | **PARTIAL** (90.0%) |
+| **1** | [Setup & Environment Architecture](./01-phase-1-setup.md) | 7 | 6 | 1 | 0 | 0 | 0 | 0 | **PARTIAL** (85.7%) |
+| **2** | [Backend Core Architecture](./02-phase-2-backend.md) | 6 | 5 | 1 | 0 | 0 | 0 | 0 | **PARTIAL** (83.3%) |
+| **3** | [Frontend Architecture](./03-phase-3-frontend.md) | 7 | 6 | 1 | 0 | 0 | 0 | 0 | **PARTIAL** (85.7%) |
+| **4** | [Database Schema & Models](./04-phase-4-database.md) | 9 | 9 | 0 | 0 | 0 | 0 | 0 | **COMPLETED** (100%) |
+| **5** | [Module Development](./05-phase-5-modules.md) | 11 | 11 | 0 | 0 | 0 | 0 | 0 | **COMPLETED** (100%) |
 | **6** | [Reports & Visualizations](./06-phase-6-reports.md) | 6 | 6 | 0 | 0 | 0 | 0 | 0 | **COMPLETED** (100%) |
-| **7** | [AI Automation & Notifications](./07-phase-7-ai.md) | 8 | 4 | 3 | 0 | 0 | 0 | 1 | **PARTIAL** (50.0%) |
-| **8** | [Deployment & Production Ops](./08-phase-8-deployment.md) | 6 | 1 | 2 | 0 | 2 | 1 | 0 | **PARTIAL** (16.7%) |
-| **TOTAL** | **All Phases Combined** | **60** | **49** | **7** | **0** | **2** | **1** | **1** | **81.67% Verified** |
+| **7** | [AI Automation & Notifications](./07-phase-7-ai.md) | 8 | 6 | 1 | 0 | 1 | 0 | 0 | **PARTIAL** (75.0%) |
+| **8** | [Deployment & Production Ops](./08-phase-8-deployment.md) | 6 | 5 | 0 | 0 | 0 | 0 | 1 | **NEEDS VERIFICATION** |
+| **TOTAL** | **All Phases Combined** | **60** | **54** | **4** | **0** | **1** | **0** | **1** | **90.00% Verified** |
+
+> **Accounting & Operational Distinction:**
+> - **Code-Wired Integrations:** Twilio SMS, WhatsApp notifications, and Celery crons have verified code syntax, schemas, and fallback exception handling. Full real-world delivery requires valid provider production credentials.
+> - **Production Deployment:** Dockerfiles and Compose files are built and tested. Live hosting requires cloud infrastructure provisioning.

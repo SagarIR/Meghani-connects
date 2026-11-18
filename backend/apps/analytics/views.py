@@ -191,6 +191,7 @@ class AlertsView(APIView):
 
 class SalesReportView(APIView):
     """Detailed sales report"""
+    permission_classes = [CanViewReports]
     
     def get(self, request):
         start_date = request.query_params.get('start_date')
@@ -305,6 +306,7 @@ class ProfitReportView(APIView):
 
 class ProductPerformanceView(APIView):
     """Product performance report"""
+    permission_classes = [CanViewReports]
     
     def get(self, request):
         start_date = request.query_params.get('start_date')
@@ -317,6 +319,7 @@ class ProductPerformanceView(APIView):
 
 class RepairIncomeView(APIView):
     """Repair income report"""
+    permission_classes = [CanViewReports]
     
     def get(self, request):
         start_date = request.query_params.get('start_date')
@@ -341,6 +344,7 @@ class ExpenseReportView(APIView):
 
 class CustomerLoyaltyView(APIView):
     """Customer loyalty report"""
+    permission_classes = [CanViewReports]
     
     def get(self, request):
         start_date = request.query_params.get('start_date')
@@ -352,6 +356,7 @@ class CustomerLoyaltyView(APIView):
 
 class InventoryReportView(APIView):
     """Inventory status report"""
+    permission_classes = [CanViewReports]
     
     def get(self, request):
         data = InventoryReport.generate()

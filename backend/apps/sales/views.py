@@ -69,7 +69,7 @@ class SaleViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def today(self, request):
-        """Get today's sales summary"""
+        """Get today's sales summary (masks profit for non-admin staff)"""
         today = timezone.now().date()
         sales = Sale.objects.filter(sale_date__date=today)
         
@@ -79,17 +79,18 @@ class SaleViewSet(viewsets.ModelViewSet):
             count=Count('id')
         )
         
+        is_admin = request.user.is_superuser or getattr(request.user, 'role', '') in ['admin', 'manager']
         return Response({
             'date': today,
             'total_sales': summary['total_sales'] or 0,
-            'total_profit': summary['total_profit'] or 0,
+            'total_profit': (summary['total_profit'] or 0) if is_admin else None,
             'transaction_count': summary['count'] or 0,
             'average_sale': (summary['total_sales'] or 0) / max(summary['count'] or 1, 1)
         })
 
     @action(detail=False, methods=['get'])
     def summary(self, request):
-        """Get sales summary for date range"""
+        """Get sales summary for date range (masks profit for non-admin staff)"""
         days = int(request.query_params.get('days', 7))
         start_date = timezone.now().date() - timedelta(days=days)
         
@@ -117,14 +118,20 @@ class SaleViewSet(viewsets.ModelViewSet):
             count=Count('id')
         )
         
+        is_admin = request.user.is_superuser or getattr(request.user, 'role', '') in ['admin', 'manager']
+        daily_list = list(daily)
+        if not is_admin:
+            for item in daily_list:
+                item['profit'] = None
+
         return Response({
             'period': {'start': start_date, 'end': timezone.now().date()},
             'summary': {
                 'total_sales': summary['total_sales'] or 0,
-                'total_profit': summary['total_profit'] or 0,
+                'total_profit': (summary['total_profit'] or 0) if is_admin else None,
                 'transaction_count': summary['count'] or 0,
             },
-            'daily': list(daily),
+            'daily': daily_list,
             'by_payment_mode': list(by_payment)
         })
 

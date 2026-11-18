@@ -2,15 +2,21 @@ from rest_framework import viewsets, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.views import APIView
+from rest_framework.parsers import MultiPartParser, FormParser
+from django.http import HttpResponse
+from io import BytesIO
 from django.db.models import Q, Sum
 from django.utils import timezone
 from .models import Customer, Enquiry
 from .serializers import CustomerSerializer, CustomerListSerializer, CustomerLoyaltySerializer, EnquirySerializer
+from .import_service import CustomerImportService
 
 
 class CustomerViewSet(viewsets.ModelViewSet):
     queryset = Customer.objects.all()
     serializer_class = CustomerSerializer
+    permission_classes = [IsAuthenticated]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['name', 'phone', 'email']
     ordering_fields = ['name', 'loyalty_points', 'created_at']
@@ -167,4 +173,75 @@ class EnquiryViewSet(viewsets.ModelViewSet):
             'customer_name': customer.name,
             'created': created
         })
+
+
+class CustomerImportView(APIView):
+    """
+    Import customers from Excel (.xlsx/.xls) or CSV (.csv) file.
+    Supports ?update_existing=true to update existing records by phone.
+    """
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+
+    def post(self, request):
+        file = request.FILES.get('file')
+        if not file:
+            return Response(
+                {
+                    'success': False,
+                    'error': 'No file uploaded',
+                    'imported': 0,
+                    'updated': 0,
+                    'skipped': 0,
+                    'errors': [],
+                    'total_errors': 0
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        update_existing = request.query_params.get('update_existing', 'false').lower() == 'true'
+        service = CustomerImportService()
+
+        filename = file.name.lower()
+        if filename.endswith('.xlsx') or filename.endswith('.xls'):
+            result = service.import_from_excel(file, update_existing)
+        elif filename.endswith('.csv'):
+            result = service.import_from_csv(file, update_existing)
+        else:
+            return Response(
+                {
+                    'success': False,
+                    'error': 'Unsupported file format. Please upload an Excel (.xlsx) or CSV (.csv) file.',
+                    'imported': 0,
+                    'updated': 0,
+                    'skipped': 0,
+                    'errors': [],
+                    'total_errors': 0
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        status_code = status.HTTP_200_OK if result.get('success') else status.HTTP_400_BAD_REQUEST
+        return Response(result, status=status_code)
+
+
+class CustomerExportTemplateView(APIView):
+    """
+    Download sample Excel template for customer bulk import.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        wb = CustomerImportService.get_sample_template()
+        buffer = BytesIO()
+        wb.save(buffer)
+        buffer.seek(0)
+
+        response = HttpResponse(
+            buffer.getvalue(),
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename="customer_import_template.xlsx"'
+        return response
+
 

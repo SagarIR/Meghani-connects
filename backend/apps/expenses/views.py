@@ -1,7 +1,7 @@
-from rest_framework import viewsets, filters
+from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from apps.users.permissions import IsAdmin
+from apps.users.permissions import IsManagerOrAbove, IsAdmin
 from django.db.models import Sum
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
@@ -13,11 +13,20 @@ from .serializers import ExpenseSerializer, ExpenseListSerializer
 class ExpenseViewSet(viewsets.ModelViewSet):
     queryset = Expense.objects.all()
     serializer_class = ExpenseSerializer
-    permission_classes = [IsAdmin]
+    permission_classes = [IsManagerOrAbove]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ['description', 'vendor_name']
     ordering_fields = ['date', 'amount', 'category']
     ordering = ['-date', '-created_at']
+
+    def destroy(self, request, *args, **kwargs):
+        is_admin = request.user.is_superuser or getattr(request.user, 'role', '') == 'admin'
+        if not is_admin:
+            return Response(
+                {'error': 'Only administrators are authorized to delete expense records.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().destroy(request, *args, **kwargs)
 
     def get_serializer_class(self):
         if self.action == 'list':

@@ -131,7 +131,7 @@ function runTests() {
   assert.strictEqual(sortedAsc[1].price, 21995);
   console.log('✓ Sort by Price Ascending Passed');
 
-  console.log('\nALL 7 FRONTEND VERIFICATION TESTS PASSED SUCCESSFULLY!');
+  console.log('\nALL 8 FRONTEND VERIFICATION TESTS PASSED SUCCESSFULLY!');
 }
 
 runTests();

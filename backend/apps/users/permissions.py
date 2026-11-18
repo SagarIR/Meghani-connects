@@ -152,22 +152,33 @@ class CanViewReports(permissions.BasePermission):
 
 
 class CanManageUsers(permissions.BasePermission):
-    """Permission to manage users (admin only)."""
+    """
+    Permission to manage users (admin only for user management, self-access for profile/password).
+    - Admins and superusers can perform full CRUD across all users.
+    - Authenticated non-admin staff are strictly restricted to self actions:
+      'me', 'update_profile', and 'change_password'.
+    - Unauthorized access (such as staff listing/modifying other users) is denied.
+    """
     
     def has_permission(self, request, view):
         if not request.user or not request.user.is_authenticated:
             return False
         
-        if request.method in permissions.SAFE_METHODS:
-            # Allow users to view their own profile
+        # Admin and superuser have unrestricted access
+        if request.user.is_superuser or getattr(request.user, 'role', '') == 'admin':
             return True
         
-        return request.user.is_superuser or getattr(request.user, 'role', '') == 'admin'
+        # Non-admins are strictly limited to self-service endpoints
+        allowed_self_actions = ['me', 'update_profile', 'change_password']
+        return getattr(view, 'action', None) in allowed_self_actions
     
     def has_object_permission(self, request, view, obj):
-        # Users can always edit their own profile
-        if obj == request.user:
+        # Admin and superuser can access any object
+        if request.user.is_superuser or getattr(request.user, 'role', '') == 'admin':
             return True
         
-        # Only admins can edit other users
-        return request.user.is_superuser or getattr(request.user, 'role', '') == 'admin'
+        # Non-admins can only access their own user object on self-service actions
+        if obj == request.user and getattr(view, 'action', None) in ['me', 'update_profile', 'change_password']:
+            return True
+            
+        return False

@@ -4,6 +4,7 @@ Core views - Health check, system status, and audit logs
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
+from apps.users.permissions import IsManagerOrAbove
 from rest_framework.generics import ListAPIView
 from rest_framework import filters
 from django_filters.rest_framework import DjangoFilterBackend
@@ -392,7 +393,7 @@ class OfferViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             return [AllowAny()]
-        return [IsAuthenticated()]
+        return [IsManagerOrAbove()]
 
     def get_queryset(self):
         if self.request.user and self.request.user.is_authenticated:
@@ -410,7 +411,7 @@ class GalleryItemViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             return [AllowAny()]
-        return [IsAuthenticated()]
+        return [IsManagerOrAbove()]
 
     def get_queryset(self):
         qs = GalleryItem.objects.all() if (self.request.user and self.request.user.is_authenticated) else GalleryItem.objects.filter(is_active=True)
@@ -430,7 +431,7 @@ class MilestoneViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             return [AllowAny()]
-        return [IsAuthenticated()]
+        return [IsManagerOrAbove()]
 
     def get_queryset(self):
         return Milestone.objects.all().order_by('display_order', 'year')

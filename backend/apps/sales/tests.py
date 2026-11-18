@@ -333,3 +333,33 @@ class SalesTransactionIntegrityTests(TestCase):
         self.assertEqual(res.data['business']['phone'], '+91 91066 80191')
         self.assertEqual(res.data['business']['gst'], self.settings.gst_number)
         self.assertEqual(res.data['payment_details'], {'cash': 5000.0, 'upi': 3500.0})
+
+    def test_staff_sales_today_and_summary_masks_profit(self):
+        """Staff user receives sales volume but profit is masked as None on today/summary endpoints"""
+        Sale.objects.create(
+            invoice_number='INV-TEST-PROFIT',
+            total_amount=Decimal('8500.00'),
+            profit=Decimal('3500.00'),
+            payment_mode='cash',
+            customer=self.customer,
+            created_by=self.staff
+        )
+        # Staff inspection
+        self.client.force_authenticate(user=self.staff)
+        today_res = self.client.get('/api/sales/today/')
+        self.assertEqual(today_res.status_code, status.HTTP_200_OK)
+        self.assertEqual(today_res.data['total_sales'], Decimal('8500.00'))
+        self.assertIsNone(today_res.data['total_profit'])
+
+        summary_res = self.client.get('/api/sales/summary/?days=7')
+        self.assertEqual(summary_res.status_code, status.HTTP_200_OK)
+        self.assertEqual(summary_res.data['summary']['total_sales'], Decimal('8500.00'))
+        self.assertIsNone(summary_res.data['summary']['total_profit'])
+        for day in summary_res.data['daily']:
+            self.assertIsNone(day['profit'])
+
+        # Admin inspection
+        self.client.force_authenticate(user=self.admin)
+        admin_today = self.client.get('/api/sales/today/')
+        self.assertEqual(admin_today.status_code, status.HTTP_200_OK)
+        self.assertEqual(admin_today.data['total_profit'], Decimal('3500.00'))
