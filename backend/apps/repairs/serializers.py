@@ -39,19 +39,32 @@ class RepairStatusSerializer(serializers.Serializer):
 
 
 class RepairCreateSerializer(serializers.ModelSerializer):
+    customer = serializers.PrimaryKeyRelatedField(queryset=Customer.objects.all(), required=False)
+    customer_id = serializers.IntegerField(write_only=True, required=False)
     customer_phone = serializers.CharField(write_only=True, required=False)
     customer_name = serializers.CharField(write_only=True, required=False)
 
     class Meta:
         model = Repair
         fields = [
-            'customer', 'customer_phone', 'customer_name',
+            'id', 'ticket_number', 'customer', 'customer_id', 'customer_phone', 'customer_name',
             'item_type', 'brand', 'model_number', 'serial_number',
-            'issue_description', 'estimated_cost', 'advance_paid',
-            'expected_delivery', 'notes'
+            'issue_description', 'estimated_cost', 'repair_charge', 'advance_paid',
+            'expected_delivery', 'notes', 'status'
         ]
+        read_only_fields = ['id', 'ticket_number', 'status']
 
     def validate(self, data):
+        # Support customer_id if provided
+        if not data.get('customer') and data.get('customer_id'):
+            cid = data.pop('customer_id')
+            try:
+                data['customer'] = Customer.objects.get(id=cid)
+            except Customer.DoesNotExist:
+                raise serializers.ValidationError({'customer': 'Customer not found'})
+        elif data.get('customer_id'):
+            data.pop('customer_id', None)
+
         # If customer not provided, try to find/create by phone
         if not data.get('customer') and data.get('customer_phone'):
             phone = data.pop('customer_phone')

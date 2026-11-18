@@ -7,6 +7,7 @@ from django.db.models.functions import TruncDate
 from django.utils import timezone
 from django.http import HttpResponse
 from datetime import timedelta
+from decimal import Decimal
 from .models import Sale, SaleItem, Warranty
 from .serializers import (
     SaleSerializer, SaleListSerializer, SaleCreateSerializer,
@@ -117,6 +118,20 @@ class SaleViewSet(viewsets.ModelViewSet):
             total=Sum('total_amount'),
             count=Count('id')
         )
+
+        # Authoritative tender reconciliation resolving mixed split tenders
+        tender_breakdown = {'cash': Decimal('0.00'), 'upi': Decimal('0.00'), 'card': Decimal('0.00')}
+        for s in sales.only('payment_mode', 'total_amount', 'payment_details'):
+            if s.payment_mode in tender_breakdown:
+                tender_breakdown[s.payment_mode] += Decimal(str(s.total_amount))
+            elif s.payment_mode == 'mixed' and isinstance(s.payment_details, dict):
+                for method, amt in s.payment_details.items():
+                    m = method.lower()
+                    if m in tender_breakdown:
+                        try:
+                            tender_breakdown[m] += Decimal(str(amt or 0))
+                        except Exception:
+                            pass
         
         is_admin = request.user.is_superuser or getattr(request.user, 'role', '') in ['admin', 'manager']
         daily_list = list(daily)
@@ -132,7 +147,8 @@ class SaleViewSet(viewsets.ModelViewSet):
                 'transaction_count': summary['count'] or 0,
             },
             'daily': daily_list,
-            'by_payment_mode': list(by_payment)
+            'by_payment_mode': list(by_payment),
+            'tender_breakdown': {k: float(v) for k, v in tender_breakdown.items()}
         })
 
     @action(detail=True, methods=['get'])

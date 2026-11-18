@@ -363,3 +363,49 @@ class SalesTransactionIntegrityTests(TestCase):
         admin_today = self.client.get('/api/sales/today/')
         self.assertEqual(admin_today.status_code, status.HTTP_200_OK)
         self.assertEqual(admin_today.data['total_profit'], Decimal('3500.00'))
+
+    def test_loyalty_point_redemption_in_pos_transaction(self):
+        """Redeeming loyalty points applies atomic discount, updates customer points, and awards points on net paid amount"""
+        self.client.force_authenticate(user=self.staff)
+        # Customer has 50 points -> 50 * 0.50 = Rs 25 discount
+        payload = {
+            'customer_id': self.customer.id,
+            'items': [{'product_id': self.product.id, 'quantity': 1, 'unit_price': '8500.00'}],
+            'points_to_redeem': 50,
+            'payment_mode': 'cash',
+        }
+        res = self.client.post('/api/sales/', payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Decimal(str(res.data['total_amount'])), Decimal('8475.00'))
+        self.assertEqual(Decimal(str(res.data['discount'])), Decimal('25.00'))
+
+        # Verify Customer points balance
+        self.customer.refresh_from_db()
+        # 50 redeemed -> 0, then 8475 earned -> int(8475/100)*1 = 84 points
+        self.assertEqual(self.customer.loyalty_points, 84)
+
+    def test_idempotent_checkout_prevents_duplicate_sales(self):
+        """Submitting checkout with identical idempotency_key returns existing sale without double-decrementing stock"""
+        self.client.force_authenticate(user=self.staff)
+        initial_stock = self.product.stock
+        payload = {
+            'customer_id': self.customer.id,
+            'items': [{'product_id': self.product.id, 'quantity': 1, 'unit_price': '8500.00'}],
+            'payment_mode': 'cash',
+            'idempotency_key': 'idemp-uuid-unique-9988'
+        }
+        res1 = self.client.post('/api/sales/', payload, format='json')
+        self.assertEqual(res1.status_code, status.HTTP_201_CREATED)
+        inv1 = res1.data['invoice_number']
+
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.stock, initial_stock - 1)
+
+        # Immediate retry
+        res2 = self.client.post('/api/sales/', payload, format='json')
+        self.assertEqual(res2.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(res2.data['invoice_number'], inv1)
+
+        # Stock must NOT be decremented again
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.stock, initial_stock - 1)

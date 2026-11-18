@@ -231,3 +231,106 @@ def generate_inventory_health_report():
     )
     
     return f"Inventory health score: {health['health_score']}%"
+
+
+@shared_task
+def dispatch_daily_executive_summary():
+    """
+    Daily executive business alert dispatched to managers at close of business (21:00).
+    Aggregates daily sales, transactions, gross margins, low stock alerts, and open anomalies.
+    Fails safely without crashing if Twilio or email is unconfigured.
+    """
+    from apps.sales.models import Sale
+    from apps.core.settings_models import BusinessSettings
+    from apps.users.models import User
+    from apps.analytics.models import AnalyticsCache, BusinessAnomaly, ReorderRecommendation
+
+    today = timezone.now().date()
+    sales_today = Sale.objects.filter(sale_date__date=today)
+    summary = sales_today.aggregate(
+        total=Sum('total_amount'),
+        profit=Sum('profit'),
+        count=Count('id')
+    )
+    total_rev = float(summary['total'] or 0.0)
+    total_profit = float(summary['profit'] or 0.0)
+    trans_count = int(summary['count'] or 0)
+
+    critical_reorders = ReorderRecommendation.objects.filter(urgency='critical', status='pending').count()
+    open_anomalies = BusinessAnomaly.objects.filter(status='open').count()
+
+    message = (
+        f"Meghani Watch Co. Daily Summary ({today.strftime('%d-%b-%Y')}):\n"
+        f"• Revenue: ₹{total_rev:,.2f} ({trans_count} sales)\n"
+        f"• Gross Profit: ₹{total_profit:,.2f}\n"
+        f"• Critical Restock Alerts: {critical_reorders}\n"
+        f"• Open Anomaly Signals: {open_anomalies}"
+    )
+
+    # Cache for dashboard
+    AnalyticsCache.objects.update_or_create(
+        metric_name='daily_executive_summary',
+        defaults={
+            'metric_value': {
+                'date': str(today),
+                'revenue': total_rev,
+                'profit': total_profit,
+                'transactions': trans_count,
+                'critical_reorders': critical_reorders,
+                'open_anomalies': open_anomalies,
+                'summary_text': message,
+                'generated_at': timezone.now().isoformat()
+            },
+            'period': 'daily'
+        }
+    )
+
+    # Deliver via WhatsApp/SMS to store managers if configured
+    try:
+        biz_settings = BusinessSettings.get_settings()
+        if biz_settings.enable_whatsapp and biz_settings.phone:
+            from apps.notifications.services.whatsapp import send_whatsapp_message
+            send_whatsapp_message(biz_settings.phone, message)
+    except Exception as e:
+        logger.warning(f"Could not deliver daily executive summary via WhatsApp: {e}")
+
+    return f"Daily executive summary processed for {today}: ₹{total_rev:,.2f}"
+
+
+@shared_task
+def scan_and_alert_anomalies_task():
+    """
+    Scheduled task (every 4 hours) to scan for sales spikes, drops, abnormal discounts, and stock discrepancies.
+    """
+    from apps.analytics.services.anomaly_detector import AnomalyDetector
+    detector = AnomalyDetector()
+    anomalies = detector.scan_all_anomalies(lookback_days=90)
+    critical_count = sum(1 for a in anomalies if a.severity in ['critical', 'high'])
+
+    if critical_count > 0:
+        logger.warning(f"ANOMALY RADAR: {critical_count} critical/high anomalies detected during scan.")
+
+    return f"Anomaly scan complete: {len(anomalies)} anomalies logged, {critical_count} critical/high."
+
+
+@shared_task
+def run_reorder_and_stockout_check_task():
+    """
+    Daily 06:00 task to refresh inventory velocity and reorder recommendations.
+    """
+    from apps.analytics.services.reorder_engine import SmartReorderEngine
+    engine = SmartReorderEngine()
+    recs = engine.generate_recommendations(lookback_days=90)
+    critical_count = sum(1 for r in recs if r.urgency == 'critical')
+    return f"Smart reorder check complete: {len(recs)} products flagged ({critical_count} critical)."
+
+
+@shared_task
+def refresh_abc_classification_task():
+    """
+    Weekly task to refresh Pareto ABC inventory classification across all timepieces.
+    """
+    from apps.analytics.services.abc_classification import ABCClassificationEngine
+    engine = ABCClassificationEngine()
+    result = engine.calculate_classification(persist=True)
+    return f"ABC classification refreshed: {result['class_counts']}"

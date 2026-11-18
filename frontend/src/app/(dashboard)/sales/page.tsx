@@ -34,6 +34,18 @@ export default function POSPage() {
   const [customer, setCustomer] = useState<Customer | null>(null)
   const [customerSearch, setCustomerSearch] = useState('')
   const [customerResults, setCustomerResults] = useState<Customer[]>([])
+  const [pointsToRedeem, setPointsToRedeem] = useState(0)
+  const [isRegisteringCustomer, setIsRegisteringCustomer] = useState(false)
+  const [newCustomerName, setNewCustomerName] = useState('')
+  const [newCustomerPhone, setNewCustomerPhone] = useState('')
+  const [newCustomerEmail, setNewCustomerEmail] = useState('')
+  const [isCreatingCustomer, setIsCreatingCustomer] = useState(false)
+  const [storeInfo, setStoreInfo] = useState({
+    name: 'Meghani Watch Co.',
+    address: 'Cactus Park, 23, New Sama Rd, Near Abhilasha Char Rasta, Vadodara, Gujarat - 390008',
+    phone: '+91 91066 80191',
+    gst: '24AAAAA0000A1Z5'
+  })
   const [discount, setDiscount] = useState(0)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [paymentMode, setPaymentMode] = useState<'cash' | 'upi' | 'card' | 'mixed'>('cash')
@@ -51,10 +63,29 @@ export default function POSPage() {
   const [loadingProducts, setLoadingProducts] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  // Fetch initial catalog on mount
+  // Fetch initial catalog and authoritative store settings on mount
   useEffect(() => {
     fetchInitialCatalog()
+    fetchStoreSettings()
   }, [])
+
+  const fetchStoreSettings = async () => {
+    try {
+      const res = await api.get('/settings/public/')
+      if (res.data) {
+        const d = res.data
+        const addrParts = [d.address_line1, d.address_line2, d.city ? `${d.city} - ${d.pincode}` : ''].filter(Boolean)
+        setStoreInfo({
+          name: d.business_name || 'Meghani Watch Co.',
+          address: addrParts.join(', ') || 'Cactus Park, 23, New Sama Rd, Near Abhilasha Char Rasta, Vadodara, Gujarat - 390008',
+          phone: d.phone || '+91 91066 80191',
+          gst: d.gst_number || '24AAAAA0000A1Z5'
+        })
+      }
+    } catch {
+      // Default to canonical Vadodara address
+    }
+  }
 
   const fetchInitialCatalog = async () => {
     setLoadingProducts(true)
@@ -223,9 +254,36 @@ export default function POSPage() {
   }
 
   const subtotal = cart.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0)
-  const total = Math.max(0, subtotal - discount)
+  const loyaltyDiscount = Math.min(pointsToRedeem * 0.5, Math.max(0, subtotal - discount))
+  const total = Math.max(0, subtotal - discount - loyaltyDiscount)
   const splitTotal = Math.round(((Number(splitPayments.cash) || 0) + (Number(splitPayments.upi) || 0) + (Number(splitPayments.card) || 0)) * 100) / 100
   const remainingToPay = Math.round((total - splitTotal) * 100) / 100
+
+  const handleCreateCustomer = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newCustomerName.trim() || !newCustomerPhone.trim()) {
+      toast.error('Client name and mobile number are required')
+      return
+    }
+    setIsCreatingCustomer(true)
+    try {
+      const res = await api.post('/customers/', {
+        name: newCustomerName.trim(),
+        phone: newCustomerPhone.trim(),
+        email: newCustomerEmail.trim() || undefined,
+      })
+      selectCustomer(res.data)
+      setIsRegisteringCustomer(false)
+      setNewCustomerName('')
+      setNewCustomerPhone('')
+      setNewCustomerEmail('')
+      toast.success(`Client ${res.data.name} registered and attached`)
+    } catch (err: any) {
+      toast.error(err.response?.data?.phone?.[0] || err.response?.data?.name?.[0] || 'Failed to create client')
+    } finally {
+      setIsCreatingCustomer(false)
+    }
+  }
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-IN', {
@@ -264,6 +322,11 @@ export default function POSPage() {
         })),
         discount,
         payment_mode: paymentMode,
+        idempotency_key: `pos-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      }
+
+      if (pointsToRedeem > 0) {
+        payload.points_to_redeem = pointsToRedeem
       }
 
       if (paymentMode === 'mixed') {
@@ -289,7 +352,7 @@ export default function POSPage() {
           subtotal: item.quantity * item.unit_price,
         })),
         subtotal: subtotal,
-        discount: discount,
+        discount: discount + loyaltyDiscount,
         tax: 0,
         total: total,
         payment_mode: paymentMode,
@@ -303,6 +366,7 @@ export default function POSPage() {
       setCart([])
       setCustomer(null)
       setDiscount(0)
+      setPointsToRedeem(0)
       setSplitPayments({ cash: 0, upi: 0, card: 0 })
       setShowPaymentModal(false)
       setShowMobileCart(false)
@@ -408,24 +472,67 @@ export default function POSPage() {
         {/* Customer Attachment Card */}
         <div className="bg-[#171613] border border-[#2A261F] rounded-2xl p-3 sm:p-3.5 shadow-xl">
           {customer ? (
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#2A261F] to-[#171613] border border-[#C9A45C]/50 flex items-center justify-center font-bold text-sm text-[#C9A45C] flex-shrink-0">
-                  {customer.name.charAt(0).toUpperCase()}
+            <div className="space-y-2.5">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#2A261F] to-[#171613] border border-[#C9A45C]/50 flex items-center justify-center font-bold text-sm text-[#C9A45C] flex-shrink-0">
+                    {customer.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold text-sm text-[#F3EFE6] truncate">{customer.name}</p>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-950/70 border border-amber-800/50 text-amber-300 font-medium flex items-center gap-1">
+                        <Star className="w-2.5 h-2.5 text-amber-400" /> {customer.loyalty_points} VIP pts
+                      </span>
+                    </div>
+                    <p className="text-xs text-[#8D8980] font-mono">{customer.phone}</p>
+                  </div>
                 </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="font-semibold text-sm text-[#F3EFE6] truncate">{customer.name}</p>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-950/70 border border-amber-800/50 text-amber-300 font-medium flex items-center gap-1">
-                      <Star className="w-2.5 h-2.5 text-amber-400" /> {customer.loyalty_points} VIP pts
+                <Button variant="ghost" size="sm" onClick={() => { setCustomer(null); setPointsToRedeem(0); }} className="flex-shrink-0">
+                  <X className="w-4 h-4 mr-1" /> Detach
+                </Button>
+              </div>
+
+              {/* Loyalty Points Redemption Box */}
+              {customer.loyalty_points > 0 && cart.length > 0 && (
+                <div className="pt-2 border-t border-[#2A261F] flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5 text-[#C9A45C]" />
+                    <span className="text-xs text-[#F3EFE6]">
+                      Redeem Points ({customer.loyalty_points} pts = ₹{(customer.loyalty_points * 0.5).toFixed(0)})
                     </span>
                   </div>
-                  <p className="text-xs text-[#8D8980] font-mono">{customer.phone}</p>
+                  {pointsToRedeem > 0 ? (
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono font-bold text-emerald-400">
+                        -{formatCurrency(loyaltyDiscount)} ({pointsToRedeem} pts)
+                      </span>
+                      <button
+                        onClick={() => setPointsToRedeem(0)}
+                        className="text-[10px] px-2 py-0.5 rounded bg-[#1F1E1A] hover:bg-[#2A261F] text-[#8D8980] hover:text-[#F3EFE6] border border-[#2A261F]"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => {
+                        const maxPointsNeeded = Math.floor(Math.max(0, subtotal - discount) / 0.5);
+                        const redeemable = Math.min(customer.loyalty_points, maxPointsNeeded);
+                        if (redeemable <= 0) {
+                          toast.error('Cart balance is already covered');
+                          return;
+                        }
+                        setPointsToRedeem(redeemable);
+                        toast.success(`Applied ${redeemable} VIP pts (-₹${(redeemable * 0.5).toFixed(0)})`);
+                      }}
+                      className="text-xs px-2.5 py-1 rounded-lg bg-[#C9A45C] hover:bg-[#E8D5A7] text-[#0B0B0A] font-semibold transition-colors"
+                    >
+                      Redeem Points
+                    </button>
+                  )}
                 </div>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => setCustomer(null)} className="flex-shrink-0">
-                <X className="w-4 h-4 mr-1" /> Detach
-              </Button>
+              )}
             </div>
           ) : (
             <button
@@ -634,6 +741,14 @@ export default function POSPage() {
                 />
               </div>
             </div>
+            {loyaltyDiscount > 0 && (
+              <div className="flex justify-between text-emerald-400 font-medium">
+                <span className="flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-[#C9A45C]" /> VIP Loyalty Redemption ({pointsToRedeem} pts)
+                </span>
+                <span className="font-mono font-semibold">-{formatCurrency(loyaltyDiscount)}</span>
+              </div>
+            )}
             <div className="flex justify-between items-baseline pt-2.5 border-t border-[#2A261F]">
               <span className="font-serif text-sm font-semibold text-[#F3EFE6]">Total Payable</span>
               <span className="font-serif text-2xl font-bold text-[#C9A45C] tracking-tight">
@@ -765,51 +880,158 @@ export default function POSPage() {
       {/* Customer Lookup Modal */}
       <Modal
         isOpen={showCustomerSearch}
-        onClose={() => setShowCustomerSearch(false)}
-        title="Lookup Boutique Client"
-        description="Search client by full name or phone number"
+        onClose={() => {
+          setShowCustomerSearch(false)
+          setIsRegisteringCustomer(false)
+        }}
+        title={isRegisteringCustomer ? "Register New Boutique Client" : "Lookup Boutique Client"}
+        description={isRegisteringCustomer ? "Enter client contact details to create and attach instantly" : "Search client by full name or phone number"}
       >
         <div className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#C9A45C]" />
-            <input
-              type="text"
-              placeholder="Search by client name or mobile..."
-              value={customerSearch}
-              onChange={(e) => setCustomerSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl text-sm text-[#F3EFE6] placeholder-[#8D8980] focus:border-[#C9A45C] outline-none"
-              autoFocus
-            />
+          <div className="flex items-center gap-2 border-b border-[#2A261F] pb-2">
+            <button
+              type="button"
+              onClick={() => setIsRegisteringCustomer(false)}
+              className={clsx(
+                "px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors",
+                !isRegisteringCustomer ? "bg-[#C9A45C] text-[#0B0B0A]" : "text-[#8D8980] hover:text-[#F3EFE6]"
+              )}
+            >
+              Lookup Client
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsRegisteringCustomer(true)
+                if (customerSearch) {
+                  if (/^\+?[0-9\s]+$/.test(customerSearch)) {
+                    setNewCustomerPhone(customerSearch.trim())
+                  } else {
+                    setNewCustomerName(customerSearch.trim())
+                  }
+                }
+              }}
+              className={clsx(
+                "px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1",
+                isRegisteringCustomer ? "bg-[#C9A45C] text-[#0B0B0A]" : "text-[#8D8980] hover:text-[#F3EFE6]"
+              )}
+            >
+              <Plus className="w-3.5 h-3.5" /> Quick Register
+            </button>
           </div>
 
-          <div className="max-h-64 overflow-y-auto space-y-2">
-            {customerResults.map((c) => (
-              <button
-                key={c.id}
-                onClick={() => selectCustomer(c)}
-                className="w-full flex items-center justify-between p-3 rounded-xl bg-[#12110F] hover:bg-[#1F1E1A] border border-[#2A261F] hover:border-[#C9A45C]/40 transition-colors text-left"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#1F1E1A] border border-[#C9A45C]/30 flex items-center justify-center font-bold text-xs text-[#C9A45C]">
-                    {c.name.charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm text-[#F3EFE6]">{c.name}</p>
-                    <p className="text-xs font-mono text-[#8D8980]">{c.phone}</p>
-                  </div>
-                </div>
-                <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-amber-950/60 border border-amber-800/40 text-amber-300">
-                  {c.loyalty_points} pts
-                </span>
-              </button>
-            ))}
-            {customerSearch.length >= 2 && customerResults.length === 0 && (
-              <div className="text-center py-8 text-[#8D8980]">
-                <User className="w-8 h-8 mx-auto text-[#2A261F] mb-2" />
-                <p className="text-sm">No client found matching &ldquo;{customerSearch}&rdquo;</p>
+          {!isRegisteringCustomer ? (
+            <>
+              <div className="relative">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#C9A45C]" />
+                <input
+                  type="text"
+                  placeholder="Search by client name or mobile..."
+                  value={customerSearch}
+                  onChange={(e) => setCustomerSearch(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl text-sm text-[#F3EFE6] placeholder-[#8D8980] focus:border-[#C9A45C] outline-none"
+                  autoFocus
+                />
               </div>
-            )}
-          </div>
+
+              <div className="max-h-64 overflow-y-auto space-y-2">
+                {customerResults.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => selectCustomer(c)}
+                    className="w-full flex items-center justify-between p-3 rounded-xl bg-[#12110F] hover:bg-[#1F1E1A] border border-[#2A261F] hover:border-[#C9A45C]/40 transition-colors text-left"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-lg bg-[#1F1E1A] border border-[#C9A45C]/30 flex items-center justify-center font-bold text-xs text-[#C9A45C]">
+                        {c.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-sm text-[#F3EFE6]">{c.name}</p>
+                        <p className="text-xs font-mono text-[#8D8980]">{c.phone}</p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-amber-950/60 border border-amber-800/40 text-amber-300">
+                      {c.loyalty_points} pts
+                    </span>
+                  </button>
+                ))}
+                {customerSearch.length >= 2 && customerResults.length === 0 && (
+                  <div className="text-center py-6 text-[#8D8980] space-y-3">
+                    <User className="w-8 h-8 mx-auto text-[#2A261F]" />
+                    <p className="text-sm">No client found matching &ldquo;{customerSearch}&rdquo;</p>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsRegisteringCustomer(true)
+                        if (/^\+?[0-9\s]+$/.test(customerSearch)) {
+                          setNewCustomerPhone(customerSearch.trim())
+                        } else {
+                          setNewCustomerName(customerSearch.trim())
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-[#C9A45C] text-[#0B0B0A] text-xs font-bold rounded-lg hover:bg-[#E8D5A7] transition-colors"
+                    >
+                      + Quick Register as New Client
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <form onSubmit={handleCreateCustomer} className="space-y-3">
+              <div>
+                <label className="text-xs font-semibold text-[#8D8980] block mb-1">Full Name *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Rajesh Mehta"
+                  value={newCustomerName}
+                  onChange={(e) => setNewCustomerName(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#12110F] border border-[#2A261F] rounded-xl text-sm text-[#F3EFE6] placeholder-[#8D8980] focus:border-[#C9A45C] outline-none"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-[#8D8980] block mb-1">Mobile Number *</label>
+                <input
+                  type="tel"
+                  required
+                  placeholder="e.g. +91 98765 43210"
+                  value={newCustomerPhone}
+                  onChange={(e) => setNewCustomerPhone(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#12110F] border border-[#2A261F] rounded-xl text-sm text-[#F3EFE6] placeholder-[#8D8980] focus:border-[#C9A45C] outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-semibold text-[#8D8980] block mb-1">Email (Optional)</label>
+                <input
+                  type="email"
+                  placeholder="e.g. client@example.com"
+                  value={newCustomerEmail}
+                  onChange={(e) => setNewCustomerEmail(e.target.value)}
+                  className="w-full px-3 py-2 bg-[#12110F] border border-[#2A261F] rounded-xl text-sm text-[#F3EFE6] placeholder-[#8D8980] focus:border-[#C9A45C] outline-none"
+                />
+              </div>
+              <div className="pt-2 flex justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsRegisteringCustomer(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  disabled={isCreatingCustomer}
+                >
+                  {isCreatingCustomer ? 'Registering...' : 'Register & Select Client'}
+                </Button>
+              </div>
+            </form>
+          )}
         </div>
       </Modal>
 
@@ -998,6 +1220,14 @@ export default function POSPage() {
                 <span className="font-mono">-{formatCurrency(discount)}</span>
               </div>
             )}
+            {loyaltyDiscount > 0 && (
+              <div className="flex justify-between text-emerald-400 font-medium">
+                <span className="flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-[#C9A45C]" /> VIP Loyalty Points ({pointsToRedeem} pts)
+                </span>
+                <span className="font-mono font-semibold">-{formatCurrency(loyaltyDiscount)}</span>
+              </div>
+            )}
             {customer && (
               <div className="flex justify-between text-[#8D8980]">
                 <span>Boutique Client</span>
@@ -1048,6 +1278,10 @@ export default function POSPage() {
         <Invoice
           data={invoiceData}
           onClose={() => setShowInvoice(false)}
+          businessName={storeInfo.name}
+          businessAddress={storeInfo.address}
+          businessPhone={storeInfo.phone}
+          businessGST={storeInfo.gst}
         />
       )}
     </div>

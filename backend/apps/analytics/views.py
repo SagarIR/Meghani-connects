@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.http import HttpResponse
 from django.conf import settings
 from datetime import timedelta
+from decimal import Decimal
 from apps.sales.models import Sale, SaleItem, Warranty
 from apps.repairs.models import Repair
 from apps.products.models import Product
@@ -220,6 +221,20 @@ class SalesReportView(APIView):
             total=Sum('total_amount'),
             count=Count('id')
         )
+
+        # Tender breakdown resolving mixed tenders
+        tender_breakdown = {'cash': Decimal('0.00'), 'upi': Decimal('0.00'), 'card': Decimal('0.00')}
+        for sale in sales.only('payment_mode', 'total_amount', 'payment_details'):
+            if sale.payment_mode in tender_breakdown:
+                tender_breakdown[sale.payment_mode] += Decimal(str(sale.total_amount))
+            elif sale.payment_mode == 'mixed' and isinstance(sale.payment_details, dict):
+                for method, amt in sale.payment_details.items():
+                    m = method.lower()
+                    if m in tender_breakdown:
+                        try:
+                            tender_breakdown[m] += Decimal(str(amt or 0))
+                        except Exception:
+                            pass
         
         # Daily breakdown
         daily = sales.annotate(
@@ -240,6 +255,7 @@ class SalesReportView(APIView):
                 'average_sale': (summary['total_sales'] or 0) / max(summary['count'] or 1, 1),
             },
             'by_payment_mode': list(by_payment),
+            'tender_breakdown': {k: float(v) for k, v in tender_breakdown.items()},
             'daily_data': list(daily),
         })
 
@@ -535,3 +551,336 @@ class AIInsightsView(APIView):
                 'insights': insights_service.get_all_insights(limit),
                 'quick_stats': insights_service.get_quick_stats()
             })
+
+
+
+# --- ADVANCED INTELLIGENCE & AI VIEWS (MASTER ORDER 6) ---
+
+from apps.users.permissions import IsManagerOrAbove, IsStaffOrAbove
+from apps.analytics.models import ReorderRecommendation, ABCProductClassification, BusinessAnomaly
+from apps.core.models import AuditLog
+from apps.analytics.services.reorder_engine import SmartReorderEngine
+from apps.analytics.services.abc_classification import ABCClassificationEngine
+from apps.analytics.services.anomaly_detector import AnomalyDetector
+from apps.analytics.services.ai_assistant import ControlledAIAssistant
+from apps.crm.services.crm_analytics import CRMAnalyticsService
+
+
+class AdvancedSalesForecastView(APIView):
+    """
+    Enterprise Sales Forecasting Engine.
+    Provides 30, 60, and 90-day predictive horizons with Prophet/statistical fallback,
+    holdout evaluation (MAE, RMSE, WAPE), seasonal patterns, and uncertainty intervals.
+    """
+    permission_classes = [CanViewReports]
+
+    def get(self, request):
+        horizon = request.query_params.get('horizon', 30)
+        product_id = request.query_params.get('product_id')
+        lookback = int(request.query_params.get('lookback_days', 365))
+
+        engine = SalesForecast()
+        result = engine.generate_forecast(
+            horizon=horizon,
+            product_id=product_id,
+            lookback_days=lookback
+        )
+        return Response(result)
+
+
+class SmartReorderView(APIView):
+    """
+    Smart Inventory Reorder Engine.
+    Exposes ROP, safety stock, daily demand velocity, and manager approval lifecycle.
+    """
+    permission_classes = [CanViewReports]
+
+    def get(self, request):
+        status_filter = request.query_params.get('status', 'pending')
+        urgency_filter = request.query_params.get('urgency')
+
+        # Auto-generate if table empty
+        if not ReorderRecommendation.objects.exists():
+            engine = SmartReorderEngine()
+            engine.generate_recommendations()
+
+        qs = ReorderRecommendation.objects.select_related('product', 'approved_by')
+        if status_filter != 'all':
+            qs = qs.filter(status=status_filter)
+        if urgency_filter:
+            qs = qs.filter(urgency=urgency_filter)
+
+        results = []
+        for r in qs[:50]:
+            results.append({
+                'id': r.id,
+                'product_id': r.product.id,
+                'product_name': r.product.name,
+                'brand': getattr(r.product, 'brand', ''),
+                'category': r.product.category,
+                'current_stock': r.current_stock,
+                'daily_velocity': float(r.daily_velocity),
+                'lead_time_days': r.lead_time_days,
+                'safety_stock': r.safety_stock,
+                'reorder_point': r.reorder_point,
+                'suggested_quantity': r.suggested_quantity,
+                'days_of_stock': float(r.days_of_stock),
+                'estimated_stockout_date': r.estimated_stockout_date.strftime('%Y-%m-%d') if r.estimated_stockout_date else None,
+                'urgency': r.urgency,
+                'estimated_cost': float(r.estimated_cost),
+                'reason': r.reason,
+                'status': r.status,
+                'approved_by': r.approved_by.username if r.approved_by else None,
+                'approved_at': r.approved_at.strftime('%Y-%m-%d %H:%M') if r.approved_at else None,
+                'action_notes': r.action_notes,
+                'created_at': r.created_at.strftime('%Y-%m-%d %H:%M')
+            })
+
+        return Response({
+            'total_count': qs.count(),
+            'recommendations': results,
+            'summary': {
+                'critical': ReorderRecommendation.objects.filter(urgency='critical', status='pending').count(),
+                'high': ReorderRecommendation.objects.filter(urgency='high', status='pending').count(),
+                'medium': ReorderRecommendation.objects.filter(urgency='medium', status='pending').count(),
+                'approved': ReorderRecommendation.objects.filter(status='approved').count(),
+            }
+        })
+
+    def post(self, request):
+        """Manager actions: approve, reject, snooze"""
+        if not IsManagerOrAbove().has_permission(request, self):
+            return Response({'error': 'Manager authorization required for reorder approvals.'}, status=403)
+
+        rec_id = request.data.get('recommendation_id')
+        action = request.data.get('action')
+        notes = request.data.get('notes', '')
+        snooze_days = int(request.data.get('days', 7))
+
+        if not rec_id or not action:
+            return Response({'error': 'recommendation_id and action are required.'}, status=400)
+
+        engine = SmartReorderEngine()
+        try:
+            if action == 'approve':
+                rec = engine.approve_recommendation(rec_id, request.user, notes=notes)
+            elif action == 'reject':
+                rec = engine.reject_recommendation(rec_id, request.user, reason=notes)
+            elif action == 'snooze':
+                rec = engine.snooze_recommendation(rec_id, request.user, days=snooze_days)
+            else:
+                return Response({'error': f"Invalid action '{action}'. Must be approve, reject, or snooze."}, status=400)
+
+            return Response({
+                'success': True,
+                'message': f"Recommendation #{rec.id} marked as {rec.status}.",
+                'recommendation_id': rec.id,
+                'status': rec.status
+            })
+        except ReorderRecommendation.DoesNotExist:
+            return Response({'error': 'Recommendation not found.'}, status=404)
+
+
+class ABCClassificationView(APIView):
+    """
+    Automated ABC Inventory Classification based on cumulative Pareto contribution.
+    """
+    permission_classes = [CanViewReports]
+
+    def get(self, request):
+        lookback = request.query_params.get('lookback_days')
+        engine = ABCClassificationEngine()
+        result = engine.calculate_classification(
+            lookback_days=int(lookback) if lookback else None,
+            persist=False
+        )
+        return Response(result)
+
+    def post(self, request):
+        """Recalculate and persist ABC snapshot"""
+        if not IsManagerOrAbove().has_permission(request, self):
+            return Response({'error': 'Manager authorization required to recalculate ABC inventory classification.'}, status=403)
+
+        a_cut = float(request.data.get('class_a_threshold', 80.0))
+        b_cut = float(request.data.get('class_b_threshold', 95.0))
+        lookback = request.data.get('lookback_days')
+
+        engine = ABCClassificationEngine(a_threshold=a_cut, b_threshold=b_cut)
+        result = engine.calculate_classification(
+            lookback_days=int(lookback) if lookback else None,
+            persist=True
+        )
+        return Response({
+            'success': True,
+            'message': 'ABC classification refreshed and persisted.',
+            'data': result
+        })
+
+
+class AnomalyRadarView(APIView):
+    """
+    Statistical Business Anomaly Detection.
+    Provides signals on sales spikes, drops, abnormal discounts, and inventory drops.
+    """
+    permission_classes = [CanViewReports]
+
+    def get(self, request):
+        cat_filter = request.query_params.get('category')
+        sev_filter = request.query_params.get('severity')
+        stat_filter = request.query_params.get('status', 'open')
+
+        # Auto-scan if table empty
+        if not BusinessAnomaly.objects.exists():
+            detector = AnomalyDetector()
+            detector.scan_all_anomalies(lookback_days=365)
+
+        qs = BusinessAnomaly.objects.select_related('product', 'sale', 'audit_log', 'resolved_by')
+        if stat_filter != 'all':
+            qs = qs.filter(status=stat_filter)
+        if cat_filter:
+            qs = qs.filter(category=cat_filter)
+        if sev_filter:
+            qs = qs.filter(severity=sev_filter)
+
+        results = []
+        for a in qs[:50]:
+            results.append({
+                'id': a.id,
+                'category': a.category,
+                'category_display': a.get_category_display(),
+                'severity': a.severity,
+                'status': a.status,
+                'product_name': a.product.name if a.product else None,
+                'invoice_number': a.sale.invoice_number if a.sale else None,
+                'observed_value': float(a.observed_value),
+                'expected_baseline': float(a.expected_baseline),
+                'deviation_score': float(a.deviation_score),
+                'explanation': a.explanation,
+                'recommended_action': a.recommended_action,
+                'detected_at': a.detected_at.strftime('%Y-%m-%d %H:%M'),
+                'resolved_by': a.resolved_by.username if a.resolved_by else None,
+                'resolved_at': a.resolved_at.strftime('%Y-%m-%d %H:%M') if a.resolved_at else None,
+                'resolution_notes': a.resolution_notes
+            })
+
+        return Response({
+            'total_count': qs.count(),
+            'anomalies': results,
+            'counts_by_severity': {
+                'critical': BusinessAnomaly.objects.filter(severity='critical', status='open').count(),
+                'high': BusinessAnomaly.objects.filter(severity='high', status='open').count(),
+                'medium': BusinessAnomaly.objects.filter(severity='medium', status='open').count(),
+                'low': BusinessAnomaly.objects.filter(severity='low', status='open').count(),
+            }
+        })
+
+    def post(self, request):
+        """Manager action: resolve or dismiss anomaly"""
+        if not IsManagerOrAbove().has_permission(request, self):
+            return Response({'error': 'Manager authorization required to manage anomalies.'}, status=403)
+
+        anom_id = request.data.get('anomaly_id')
+        action = request.data.get('action')
+        notes = request.data.get('notes', '')
+
+        if not anom_id or not action:
+            return Response({'error': 'anomaly_id and action are required.'}, status=400)
+
+        detector = AnomalyDetector()
+        try:
+            if action == 'resolve':
+                anom = detector.resolve_anomaly(anom_id, request.user, notes=notes)
+            elif action == 'dismiss':
+                anom = detector.dismiss_anomaly(anom_id, request.user, notes=notes)
+            else:
+                return Response({'error': f"Invalid action '{action}'. Must be resolve or dismiss."}, status=400)
+
+            return Response({
+                'success': True,
+                'message': f"Anomaly #{anom.id} marked as {anom.status}.",
+                'anomaly_id': anom.id,
+                'status': anom.status
+            })
+        except BusinessAnomaly.DoesNotExist:
+            return Response({'error': 'Anomaly record not found.'}, status=404)
+
+
+class AIAssistantView(APIView):
+    """
+    Secure, Permission-Enforced AI Business Assistant.
+    Evaluates questions via controlled intents with strict RBAC financial masking.
+    Available to authenticated staff and management.
+    """
+    permission_classes = [IsStaffOrAbove]
+
+    def post(self, request):
+        query = request.data.get('query', '')
+        if not query or not query.strip():
+            return Response({'error': 'Query text is required.'}, status=400)
+
+        assistant = ControlledAIAssistant(request.user)
+        response_payload = assistant.process_query(query)
+        return Response(response_payload)
+
+
+class CRMIntelligenceView(APIView):
+    """
+    Advanced CRM Customer Intelligence.
+    Customer segmentation (VIP, Frequent, New, Inactive), CLV, AOV, brand preferences.
+    """
+    permission_classes = [CanViewReports]
+
+    def get(self, request):
+        customer_id = request.query_params.get('customer_id')
+        service = CRMAnalyticsService()
+
+        if customer_id:
+            dossier = service.get_customer_dossier(customer_id)
+            if not dossier:
+                return Response({'error': 'Customer not found.'}, status=404)
+            return Response(dossier)
+
+        overview = service.get_crm_overview()
+        return Response(overview)
+
+
+class OperationalAuditTimelineView(APIView):
+    """
+    Operational Audit Log Timeline with Anomaly Linkage.
+    """
+    permission_classes = [IsManagerOrAbove]
+
+    def get(self, request):
+        action_filter = request.query_params.get('action')
+        severity_filter = request.query_params.get('severity')
+        limit = min(int(request.query_params.get('limit', 50)), 100)
+
+        qs = AuditLog.objects.select_related('user').all()
+        if action_filter:
+            qs = qs.filter(action=action_filter)
+        if severity_filter:
+            qs = qs.filter(severity=severity_filter)
+
+        results = []
+        for log in qs[:limit]:
+            # Check for linked anomaly
+            anom = log.anomalies.first() if hasattr(log, 'anomalies') else None
+            results.append({
+                'id': log.id,
+                'user': getattr(log.user, 'name', '') or getattr(log.user, 'username', 'System') if log.user else 'System',
+                'action': log.action,
+                'action_display': log.get_action_display(),
+                'severity': log.severity,
+                'model_name': log.model_name,
+                'object_id': log.object_id,
+                'message': log.message,
+                'changes': log.changes,
+                'ip_address': log.ip_address,
+                'timestamp': log.timestamp.strftime('%Y-%m-%d %H:%M:%S'),
+                'linked_anomaly_id': anom.id if anom else None
+            })
+
+        return Response({
+            'total_count': qs.count(),
+            'timeline': results
+        })

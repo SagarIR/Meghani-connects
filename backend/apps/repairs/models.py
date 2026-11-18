@@ -66,8 +66,9 @@ class Repair(models.Model):
 
     @property
     def balance_due(self):
-        if self.repair_charge:
-            return self.repair_charge - self.advance_paid
+        charge = self.repair_charge if self.repair_charge is not None else self.estimated_cost
+        if charge is not None:
+            return charge - self.advance_paid
         return 0
 
     @property

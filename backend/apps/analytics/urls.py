@@ -6,7 +6,10 @@ from .views import (
     CustomerLoyaltyView, InventoryReportView, ReportExportView,
     # AI Views
     SalesForecastView, StockPredictionView, StockoutPredictionView,
-    SmartAlertsView, ProfitPredictionView, AIInsightsView
+    SmartAlertsView, ProfitPredictionView, AIInsightsView,
+    # Advanced Intelligence Views (Order 6)
+    AdvancedSalesForecastView, SmartReorderView, ABCClassificationView,
+    AnomalyRadarView, AIAssistantView, CRMIntelligenceView, OperationalAuditTimelineView
 )
 
 urlpatterns = [
@@ -29,11 +32,23 @@ urlpatterns = [
     # Export
     path('reports/<str:report_type>/export/<str:format_type>/', ReportExportView.as_view(), name='report-export'),
     
-    # AI / ML Endpoints
-    path('ai/forecast/', SalesForecastView.as_view(), name='sales-forecast'),
+    # Standard AI / ML Endpoints
+    path('ai/forecast/', AdvancedSalesForecastView.as_view(), name='sales-forecast'),
+    path('ai/forecast/advanced/', AdvancedSalesForecastView.as_view(), name='advanced-sales-forecast'),
     path('ai/stock-prediction/', StockPredictionView.as_view(), name='stock-prediction'),
     path('ai/stock-prediction/<int:product_id>/', StockoutPredictionView.as_view(), name='stockout-prediction'),
     path('ai/alerts/', SmartAlertsView.as_view(), name='smart-alerts'),
     path('ai/profit/', ProfitPredictionView.as_view(), name='profit-prediction'),
     path('ai/insights/', AIInsightsView.as_view(), name='ai-insights'),
+
+    # Advanced Intelligence Suite (Master Order 6)
+    path('ai/reorder/', SmartReorderView.as_view(), name='smart-reorder'),
+    path('ai/reorder/action/', SmartReorderView.as_view(), name='smart-reorder-action'),
+    path('ai/abc-classification/', ABCClassificationView.as_view(), name='abc-classification'),
+    path('ai/abc-classification/refresh/', ABCClassificationView.as_view(), name='abc-classification-refresh'),
+    path('ai/anomalies/', AnomalyRadarView.as_view(), name='anomaly-radar'),
+    path('ai/anomalies/action/', AnomalyRadarView.as_view(), name='anomaly-radar-action'),
+    path('ai/assistant/', AIAssistantView.as_view(), name='ai-assistant'),
+    path('ai/crm-intelligence/', CRMIntelligenceView.as_view(), name='crm-intelligence'),
+    path('audit-timeline/', OperationalAuditTimelineView.as_view(), name='audit-timeline'),
 ]

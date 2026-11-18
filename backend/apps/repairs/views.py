@@ -26,6 +26,13 @@ class RepairViewSet(viewsets.ModelViewSet):
             return RepairCreateSerializer
         return RepairSerializer
 
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(RepairSerializer(serializer.instance, context={'request': request}).data, status=status.HTTP_201_CREATED, headers=headers)
+
     def get_queryset(self):
         queryset = super().get_queryset()
         
@@ -46,9 +53,13 @@ class RepairViewSet(viewsets.ModelViewSet):
         
         return queryset
 
+    def perform_create(self, serializer):
+        repair = serializer.save()
+        self._dispatch_repair_notification(repair, 'received')
+
     @action(detail=True, methods=['patch'])
     def update_status(self, request, pk=None):
-        """Update repair status"""
+        """Update repair status across the 5-stage repair lifecycle"""
         repair = self.get_object()
         serializer = RepairStatusSerializer(data=request.data)
         
@@ -72,22 +83,28 @@ class RepairViewSet(viewsets.ModelViewSet):
             
             repair.save()
             
-            # Send notification if status changed to ready
-            if old_status != 'ready' and new_status == 'ready':
-                self._send_ready_notification(repair)
+            # Dispatch asynchronous status update notification if status changed
+            if old_status != new_status:
+                self._dispatch_repair_notification(repair, new_status)
             
             return Response(RepairSerializer(repair).data)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def _send_ready_notification(self, repair):
-        """Send notification when repair is ready"""
+    def _dispatch_repair_notification(self, repair, status_event):
+        """
+        Safely dispatches repair notifications via Celery background task with SMS fallback.
+        Ensures repair operations are never blocked if the message provider or broker fails.
+        """
         try:
-            from apps.notifications.services.whatsapp import send_whatsapp_message
-            message = f"Your {repair.item_type} is ready for pickup. Ticket: {repair.ticket_number}. Please collect from Meghani Watch Co."
-            send_whatsapp_message(repair.customer.phone, message)
+            from apps.notifications.tasks import send_repair_notification_task
+            try:
+                send_repair_notification_task.delay(repair.id, status_event)
+            except Exception:
+                # If Celery worker/broker is unreachable, invoke task logic safely
+                send_repair_notification_task(repair.id, status_event)
         except Exception:
-            pass  # Don't fail if notification fails
+            pass  # Never block repair lifecycle on notification failure
 
     @action(detail=False, methods=['get'])
     def summary(self, request):

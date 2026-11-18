@@ -38,3 +38,31 @@ class EnquirySerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
 
+    def validate_name(self, value):
+        val = (value or '').strip()
+        if len(val) < 2:
+            raise serializers.ValidationError("Name must be at least 2 characters.")
+        return val
+
+    def validate_phone(self, value):
+        import re
+        cleaned = re.sub(r'[\s\-\(\)]', '', (value or '').strip())
+        if not re.match(r'^\+?[0-9]{8,15}$', cleaned):
+            raise serializers.ValidationError("Please provide a valid contact number (8 to 15 digits).")
+        return cleaned
+
+    def create(self, validated_data):
+        from django.utils import timezone
+        from datetime import timedelta
+        phone = validated_data.get('phone', '')
+        enquiry_type = validated_data.get('enquiry_type', 'viewing')
+        recent_threshold = timezone.now() - timedelta(seconds=60)
+        existing = Enquiry.objects.filter(
+            phone=phone,
+            enquiry_type=enquiry_type,
+            created_at__gte=recent_threshold
+        ).first()
+        if existing:
+            return existing
+        return super().create(validated_data)
+

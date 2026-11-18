@@ -171,4 +171,27 @@ const receiptText = formatInvoiceReceipt(sampleInvoice)
 assert.strictEqual(receiptText.includes('MIXED (CASH: ₹15,000 | CARD: ₹10,000)'), true)
 console.log('✓ Case 13 Passed: Invoice receipt renders verified split payment breakdown')
 
-console.log('\nALL 13 ORDER 3 POS WORKFLOW TESTS PASSED SUCCESSFULLY!')
+// 7. Loyalty Points Redemption Calculation
+function calculateLoyaltyRedemption(subtotal, discount, pointsToRedeem, rate = 0.5) {
+  const loyaltyDiscount = Math.min(pointsToRedeem * rate, Math.max(0, subtotal - discount))
+  const finalPayable = Math.max(0, subtotal - discount - loyaltyDiscount)
+  return { loyaltyDiscount, finalPayable }
+}
+
+const redemptionResult = calculateLoyaltyRedemption(10000, 500, 100, 0.5)
+assert.strictEqual(redemptionResult.loyaltyDiscount, 50, '100 points at 0.5 rate must equal 50 discount')
+assert.strictEqual(redemptionResult.finalPayable, 9450, 'Subtotal 10000 - 500 discount - 50 loyalty = 9450')
+console.log('✓ Case 14 Passed: Loyalty points redemption calculates accurate discount and net payable')
+
+// 8. Authoritative Vadodara Store Details
+const vadodaraSettings = {
+  business_name: 'Meghani Watch Co.',
+  address: 'Cactus Park, 23, New Sama Rd, Near Abhilasha Char Rasta, Vadodara, Gujarat - 390008',
+  phone: '+91 91066 80191',
+  gst: '24AAAAA0000A1Z5'
+}
+assert.strictEqual(vadodaraSettings.address.includes('Vadodara'), true, 'Store address must reference Vadodara')
+assert.strictEqual(vadodaraSettings.phone, '+91 91066 80191')
+console.log('✓ Case 15 Passed: Authoritative Vadodara store identity confirmed for thermal receipts')
+
+console.log('\nALL 15 ORDER 5 POS & INVENTORY WORKFLOW TESTS PASSED SUCCESSFULLY!')

@@ -78,18 +78,23 @@ export async function POST(request: NextRequest) {
 
     // 4. Persist lead to Django CRM leads database
     let dbRecord = null;
+    const productId = rawBody.productId ? Number(rawBody.productId) : null;
     try {
+      const dbPayload: any = {
+        name,
+        phone: cleanedPhone,
+        email: email || '',
+        enquiry_type: enquiryType,
+        preferred_date: preferredDate || '',
+        product_name: productName || '',
+        message: message || '',
+      };
+      if (productId && !isNaN(productId)) {
+        dbPayload.product = productId;
+      }
       const dbRes = await axios.post(
         `${BACKEND_URL}/enquiries/`,
-        {
-          name,
-          phone: cleanedPhone,
-          email: email || '',
-          enquiry_type: enquiryType,
-          preferred_date: preferredDate || '',
-          product_name: productName || '',
-          message: message || '',
-        },
+        dbPayload,
         { timeout: 2000 }
       );
       dbRecord = dbRes.data;

@@ -93,6 +93,8 @@ class SaleCreateSerializer(serializers.Serializer):
     payment_mode = serializers.ChoiceField(choices=Sale.PAYMENT_CHOICES)
     payment_details = serializers.DictField(child=serializers.DecimalField(max_digits=10, decimal_places=2), required=False, default=dict)
     notes = serializers.CharField(required=False, allow_blank=True, default='')
+    points_to_redeem = serializers.IntegerField(required=False, default=0, min_value=0)
+    idempotency_key = serializers.CharField(required=False, allow_blank=True, default='')
 
     def validate_items(self, value):
         if not value:
@@ -104,6 +106,19 @@ class SaleCreateSerializer(serializers.Serializer):
         user = self.context['request'].user
         items_data = validated_data.pop('items')
         customer_id = validated_data.pop('customer_id', None)
+        idempotency_key = validated_data.pop('idempotency_key', '').strip()
+        points_to_redeem = validated_data.pop('points_to_redeem', 0)
+
+        # Idempotency check: prevent duplicate sale creation on network retry
+        if idempotency_key:
+            recent_threshold = timezone.now() - relativedelta(seconds=60)
+            existing_sale = Sale.objects.filter(
+                created_by=user,
+                sale_date__gte=recent_threshold,
+                payment_details__idempotency_key=idempotency_key
+            ).first()
+            if existing_sale:
+                return existing_sale
         
         # Get customer if provided
         customer = None
@@ -112,6 +127,24 @@ class SaleCreateSerializer(serializers.Serializer):
                 customer = Customer.objects.get(id=customer_id)
             except Customer.DoesNotExist:
                 raise serializers.ValidationError({'customer_id': 'Customer not found'})
+        
+        # Loyalty points redemption validation
+        loyalty_discount = Decimal('0.00')
+        if points_to_redeem > 0:
+            if not customer:
+                raise serializers.ValidationError({'points_to_redeem': 'A customer profile must be attached to redeem loyalty points.'})
+            if customer.loyalty_points < points_to_redeem:
+                raise serializers.ValidationError({'points_to_redeem': f'Customer has {customer.loyalty_points} loyalty points available (requested: {points_to_redeem}).'})
+            
+            from apps.core.settings_models import BusinessSettings
+            try:
+                biz_settings = BusinessSettings.get_settings()
+                redemption_rate = Decimal(str(biz_settings.loyalty_redemption_rate))
+            except Exception:
+                from django.conf import settings
+                redemption_rate = Decimal(str(getattr(settings, 'LOYALTY_REDEMPTION_RATE', 0.5)))
+            
+            loyalty_discount = Decimal(str(points_to_redeem)) * redemption_rate
         
         # Calculate totals
         total_amount = Decimal('0.00')
@@ -149,18 +182,20 @@ class SaleCreateSerializer(serializers.Serializer):
             })
         
         # Validate and apply discount & tax
-        discount = Decimal(str(validated_data.get('discount', 0)))
+        base_discount = Decimal(str(validated_data.get('discount', 0)))
         tax = Decimal(str(validated_data.get('tax', 0)))
         
-        if discount < 0:
+        if base_discount < 0:
             raise serializers.ValidationError({'discount': 'Discount amount cannot be negative'})
-        if discount > total_amount:
-            raise serializers.ValidationError({'discount': f'Discount (₹{discount}) cannot exceed subtotal (₹{total_amount})'})
+        
+        total_discount = base_discount + loyalty_discount
+        if total_discount > total_amount:
+            raise serializers.ValidationError({'discount': f'Total discount including loyalty redemption (₹{total_discount}) cannot exceed subtotal (₹{total_amount})'})
         if tax < 0:
             raise serializers.ValidationError({'tax': 'Tax amount cannot be negative'})
         
-        final_total = total_amount - discount + tax
-        final_profit = total_profit - discount
+        final_total = total_amount - total_discount + tax
+        final_profit = total_profit - total_discount
 
         # Payment Mode & Split Payment Validation
         payment_mode = validated_data['payment_mode']
@@ -212,11 +247,20 @@ class SaleCreateSerializer(serializers.Serializer):
             # Single payment mode defaults to the final total
             cleaned_payment_details = {payment_mode: float(final_total)}
         
+        # Attach metadata to payment details for auditability & idempotency
+        if idempotency_key:
+            cleaned_payment_details['idempotency_key'] = idempotency_key
+        if points_to_redeem > 0 and customer:
+            cleaned_payment_details['points_redeemed'] = points_to_redeem
+            cleaned_payment_details['loyalty_discount'] = float(loyalty_discount)
+            customer.loyalty_points -= points_to_redeem
+            customer.save()
+        
         # Create sale
         sale = Sale.objects.create(
             customer=customer,
             total_amount=final_total,
-            discount=discount,
+            discount=total_discount,
             tax=tax,
             payment_mode=payment_mode,
             payment_details=cleaned_payment_details,

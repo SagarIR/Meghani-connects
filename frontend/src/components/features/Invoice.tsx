@@ -40,9 +40,9 @@ export default function Invoice({
   data,
   onClose,
   businessName = 'Meghani Watch Co.',
-  businessAddress = '123 Main Street, Mumbai, Maharashtra 400001',
-  businessPhone = '+91 98765 43210',
-  businessGST = 'GSTIN: 27AABCU9603R1ZM',
+  businessAddress = 'Cactus Park, 23, New Sama Rd, Near Abhilasha Char Rasta, Vadodara, Gujarat - 390008',
+  businessPhone = '+91 91066 80191',
+  businessGST = 'GSTIN: 24AAAAA0000A1Z5',
 }: InvoiceProps) {
   const printRef = useRef<HTMLDivElement>(null)
 

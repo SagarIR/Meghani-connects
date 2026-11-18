@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 from datetime import timedelta
 
@@ -154,6 +155,9 @@ CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = TIME_ZONE
+if 'test' in sys.argv or os.getenv('CELERY_ALWAYS_EAGER') == 'True':
+    CELERY_TASK_ALWAYS_EAGER = True
+    CELERY_TASK_EAGER_PROPAGATES = True
 
 # AWS S3 Configuration (optional)
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')

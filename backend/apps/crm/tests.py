@@ -52,6 +52,36 @@ class EnquiryApiTests(TestCase):
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0]['name'], 'Anita Patel')
 
+    def test_enquiry_validation_rejects_invalid_input(self):
+        """Backend serializer strictly rejects invalid names and malformed phones"""
+        # Invalid short name
+        res1 = self.client.post('/api/enquiries/', {'name': 'A', 'phone': '9876543210'})
+        self.assertEqual(res1.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('name', res1.data)
+
+        # Invalid malformed phone
+        res2 = self.client.post('/api/enquiries/', {'name': 'Valid Name', 'phone': 'not-a-number'})
+        self.assertEqual(res2.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('phone', res2.data)
+
+    def test_enquiry_duplicate_suppression(self):
+        """Duplicate enquiries from the same phone within 60s do not create duplicate rows"""
+        payload = {
+            'name': 'Duplicate Tester',
+            'phone': '9876543299',
+            'enquiry_type': 'viewing',
+            'message': 'Testing duplicate suppression'
+        }
+        res1 = self.client.post('/api/enquiries/', payload)
+        self.assertEqual(res1.status_code, status.HTTP_201_CREATED)
+        first_id = res1.data['id']
+
+        # Immediate re-submission
+        res2 = self.client.post('/api/enquiries/', payload)
+        self.assertIn(res2.status_code, [status.HTTP_200_OK, status.HTTP_201_CREATED])
+        self.assertEqual(res2.data['id'], first_id)
+        self.assertEqual(Enquiry.objects.filter(phone='9876543299').count(), 1)
+
 
 class CustomerBulkImportTests(TestCase):
     def setUp(self):

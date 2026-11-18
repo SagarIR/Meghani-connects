@@ -77,6 +77,20 @@ class SalesReport(ReportGenerator):
             total=Sum('total_amount'),
             count=Count('id')
         )
+
+        # Authoritative tender reconciliation resolving mixed split tenders
+        tender_breakdown = {'cash': Decimal('0.00'), 'upi': Decimal('0.00'), 'card': Decimal('0.00')}
+        for sale in sales.only('payment_mode', 'total_amount', 'payment_details'):
+            if sale.payment_mode in tender_breakdown:
+                tender_breakdown[sale.payment_mode] += Decimal(str(sale.total_amount))
+            elif sale.payment_mode == 'mixed' and isinstance(sale.payment_details, dict):
+                for method, amt in sale.payment_details.items():
+                    m = method.lower()
+                    if m in tender_breakdown:
+                        try:
+                            tender_breakdown[m] += Decimal(str(amt or 0))
+                        except Exception:
+                            pass
         
         return {
             'period': {'start': str(start), 'end': str(end)},
@@ -88,7 +102,8 @@ class SalesReport(ReportGenerator):
                 'average_sale': round(summary['avg_sale'] or 0, 2)
             },
             'daily_data': list(daily),
-            'by_payment_mode': {item['payment_mode']: item['total'] for item in by_payment}
+            'by_payment_mode': {item['payment_mode']: item['total'] for item in by_payment},
+            'tender_breakdown': {k: float(v) for k, v in tender_breakdown.items()}
         }
 
 
@@ -372,12 +387,20 @@ def export_to_pdf(title, data, headers):
     doc = SimpleDocTemplate(buffer, pagesize=landscape(A4), rightMargin=15*mm, leftMargin=15*mm, topMargin=15*mm, bottomMargin=15*mm)
     
     styles = getSampleStyleSheet()
-    styles.add(ParagraphStyle(name='ReportTitle', parent=styles['Heading1'], fontSize=18, alignment=TA_CENTER, spaceAfter=20))
+    styles.add(ParagraphStyle(name='ReportTitle', parent=styles['Heading1'], fontSize=18, alignment=TA_CENTER, spaceAfter=10))
+    styles.add(ParagraphStyle(name='ReportSubtitle', parent=styles['Normal'], fontSize=12, alignment=TA_CENTER, spaceAfter=15, textColor=colors.HexColor('#6b7280')))
     
+    try:
+        from apps.core.settings_models import BusinessSettings
+        biz_name = BusinessSettings.get_settings().business_name or "Meghani Watch Co."
+    except Exception:
+        biz_name = "Meghani Watch Co."
+
     elements = []
-    elements.append(Paragraph(title, styles['ReportTitle']))
+    elements.append(Paragraph(f"<b>{biz_name.upper()}</b>", styles['ReportTitle']))
+    elements.append(Paragraph(title, styles['ReportSubtitle']))
     elements.append(Paragraph(f"Generated on: {timezone.now().strftime('%d-%m-%Y %H:%M')}", styles['Normal']))
-    elements.append(Spacer(1, 10*mm))
+    elements.append(Spacer(1, 8*mm))
     
     table_data = [headers] + list(data)
     
