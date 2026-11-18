@@ -1,11 +1,15 @@
 import { MetadataRoute } from 'next';
-import { SEED_PUBLIC_PRODUCTS } from '@/services/publicCatalogue';
+import {
+  PUBLIC_BRANDS,
+  PUBLIC_CATEGORIES,
+  SEED_PUBLIC_PRODUCTS
+} from '@/services/publicCatalogue';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const baseUrl = 'https://meghaniwatch.com';
   const now = new Date();
 
-  // Static indexable public routes
+  // 1. Static indexable public routes
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
@@ -69,7 +73,23 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  // Dynamic Product routes - 100% canonical product URLs
+  // 2. Individual Brand Showcase routes (Titan, Casio, Citizen, etc.)
+  const brandRoutes: MetadataRoute.Sitemap = PUBLIC_BRANDS.map((brand) => ({
+    url: `${baseUrl}/brands/${brand.slug}`,
+    lastModified: now,
+    changeFrequency: 'weekly',
+    priority: 0.8,
+  }));
+
+  // 3. Individual Category routes (Analog, Digital, Smart, Wall Clocks, etc.)
+  const categoryRoutes: MetadataRoute.Sitemap = PUBLIC_CATEGORIES.map((cat) => ({
+    url: `${baseUrl}/categories/${cat.slug}`,
+    lastModified: now,
+    changeFrequency: 'weekly',
+    priority: 0.8,
+  }));
+
+  // 4. Dynamic Product routes - 100% canonical product URLs
   const productRoutes: MetadataRoute.Sitemap = SEED_PUBLIC_PRODUCTS.map((product) => ({
     url: `${baseUrl}/shop/${product.id}`,
     lastModified: product.created_at ? new Date(product.created_at) : now,
@@ -77,5 +97,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.8,
   }));
 
-  return [...staticRoutes, ...productRoutes];
+  return [...staticRoutes, ...brandRoutes, ...categoryRoutes, ...productRoutes];
 }

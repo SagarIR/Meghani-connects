@@ -32,7 +32,7 @@ export default async function CategoriesPage() {
     'Explore watch categories including analog watches, digital watches, smartwatches, and wall clocks in Vadodara.',
     categoriesList.map((category, idx) => ({
       name: category.name,
-      url: `/shop?category=${encodeURIComponent(category.id)}`,
+      url: `/categories/${category.slug}`,
       image: category.imageUrl,
       position: idx + 1,
     }))
@@ -118,7 +118,7 @@ export default async function CategoriesPage() {
 
               <div className="pt-4">
                 <Link
-                  href={`/shop?category=${category.id}`}
+                  href={`/categories/${category.slug}`}
                   className="px-6 py-3 rounded-xl bg-[#C9A45C] hover:bg-[#E8D5A7] text-[#0B0B0A] font-bold text-xs uppercase tracking-[0.18em] transition-colors inline-flex items-center gap-2"
                 >
                   <span>Explore {category.name}</span>

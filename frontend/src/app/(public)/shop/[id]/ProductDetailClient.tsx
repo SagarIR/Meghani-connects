@@ -263,7 +263,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
           <div>
             <div className="flex items-center justify-between gap-4 mb-2">
               <Link
-                href={`/shop?brand=${product.brand}`}
+                href={`/brands/${product.brand.toLowerCase()}`}
                 className="px-3 py-1 rounded-md text-xs font-semibold uppercase tracking-[0.15em] bg-[#171613] text-[#C9A45C] border border-[#C9A45C]/30 hover:bg-[#C9A45C] hover:text-[#0B0B0A] transition-colors"
               >
                 {product.brand}

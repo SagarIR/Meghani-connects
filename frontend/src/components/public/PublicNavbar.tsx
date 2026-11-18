@@ -277,7 +277,7 @@ export default function PublicNavbar({
                             {brands.slice(0, 6).map((brand) => (
                               <Link
                                 key={brand.slug}
-                                href={`/shop?brand=${brand.slug}`}
+                                href={`/brands/${brand.slug}`}
                                 className="p-2.5 rounded-xl bg-[#171613] hover:bg-[#1E1C17] border border-[#2A261F] hover:border-[#C9A45C]/40 transition-all group"
                               >
                                 <div className="flex items-center justify-between">
@@ -401,7 +401,7 @@ export default function PublicNavbar({
                             {categories.map((cat) => (
                               <Link
                                 key={cat.id}
-                                href={`/shop?category=${cat.id}`}
+                                href={`/categories/${cat.slug}`}
                                 className="p-2.5 rounded-xl bg-[#171613] hover:bg-[#1E1C17] border border-[#2A261F] hover:border-[#C9A45C]/40 transition-all group"
                               >
                                 <div className="flex items-center justify-between">

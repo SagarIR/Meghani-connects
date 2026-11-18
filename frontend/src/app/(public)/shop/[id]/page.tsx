@@ -177,7 +177,7 @@ export default async function ProductDetailPage({
         <Breadcrumbs
           items={[
             { label: 'Shop Watches', href: '/shop' },
-            { label: product.brand, href: `/shop?brand=${encodeURIComponent(product.brand)}` },
+            { label: product.brand, href: `/brands/${encodeURIComponent(product.brand.toLowerCase())}` },
             { label: product.name },
           ]}
         />

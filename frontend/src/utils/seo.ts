@@ -266,3 +266,39 @@ export function getItemListSchema(
     })),
   };
 }
+
+/**
+ * Structured Data (JSON-LD) for a Brand Page
+ */
+export function getBrandSchema(brand: BrandItem) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Brand',
+    '@id': `${SITE_URL}/brands/${brand.slug}#brand`,
+    name: brand.name,
+    description: brand.description,
+    image: brand.heroImage,
+    url: `${SITE_URL}/brands/${brand.slug}`,
+    ...(brand.tagline ? { slogan: brand.tagline } : {}),
+  };
+}
+
+/**
+ * Structured Data (JSON-LD) for a Category Page
+ */
+export function getCategorySchema(category: CategoryItem) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': `${SITE_URL}/categories/${category.slug}#collection`,
+    name: `${category.name} Watches`,
+    description: category.description,
+    url: `${SITE_URL}/categories/${category.slug}`,
+    image: category.imageUrl,
+    about: {
+      '@type': 'Thing',
+      name: category.name,
+      description: category.tagline,
+    },
+  };
+}

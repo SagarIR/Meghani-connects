@@ -666,7 +666,7 @@ export async function getPublicProducts(
 
     // Try fetching from Django public endpoint with 2.5s timeout
     const res = await axios.get(`${API_BASE}/products/public/?${query.toString()}`, {
-      timeout: 5000,
+      timeout: 1500,
     });
 
     if (res.data && (res.data.results || Array.isArray(res.data))) {
@@ -778,7 +778,7 @@ export async function getPublicProductById(
 
   try {
     const res = await axios.get(`${API_BASE}/products/public/${numericId}/`, {
-      timeout: 5000,
+      timeout: 1500,
     });
     if (res.data) {
       const item = res.data;
@@ -852,7 +852,7 @@ export function buildWhatsAppEnquiryUrl(
  */
 export async function getStoreInfo(): Promise<BusinessStoreInfo> {
   try {
-    const res = await axios.get(`${API_BASE}/settings/public/`, { timeout: 5000 });
+    const res = await axios.get(`${API_BASE}/settings/public/`, { timeout: 1500 });
     if (res.data && res.data.business_name) {
       const d = res.data;
       return {
@@ -894,7 +894,7 @@ export async function getStoreInfo(): Promise<BusinessStoreInfo> {
  */
 export async function getPublicBrands(): Promise<BrandItem[]> {
   try {
-    const res = await axios.get(`${API_BASE}/brands/`, { timeout: 5000 });
+    const res = await axios.get(`${API_BASE}/brands/`, { timeout: 1500 });
     const rawList = Array.isArray(res.data) ? res.data : (res.data?.results || []);
     if (rawList.length > 0) {
       return rawList.map((b: any) => ({
@@ -920,7 +920,7 @@ export async function getPublicBrands(): Promise<BrandItem[]> {
  */
 export async function getPublicCategories(): Promise<CategoryItem[]> {
   try {
-    const res = await axios.get(`${API_BASE}/categories/`, { timeout: 5000 });
+    const res = await axios.get(`${API_BASE}/categories/`, { timeout: 1500 });
     const rawList = Array.isArray(res.data) ? res.data : (res.data?.results || []);
     if (rawList.length > 0) {
       return rawList.map((c: any) => ({
@@ -941,11 +941,59 @@ export async function getPublicCategories(): Promise<CategoryItem[]> {
 }
 
 /**
+ * Fetch a specific brand by its slug, or return from PUBLIC_BRANDS fallback.
+ */
+export async function getPublicBrandBySlug(slug: string): Promise<BrandItem | null> {
+  const normalizedSlug = slug.toLowerCase();
+  try {
+    const brands = await getPublicBrands();
+    const found = brands.find(
+      (b) => b.slug.toLowerCase() === normalizedSlug || b.name.toLowerCase() === normalizedSlug
+    );
+    if (found) return found;
+  } catch (err) {
+    // fallback
+  }
+  return (
+    PUBLIC_BRANDS.find(
+      (b) => b.slug.toLowerCase() === normalizedSlug || b.name.toLowerCase() === normalizedSlug
+    ) || null
+  );
+}
+
+/**
+ * Fetch a specific category by its slug or ID, or return from PUBLIC_CATEGORIES fallback.
+ */
+export async function getPublicCategoryBySlug(slug: string): Promise<CategoryItem | null> {
+  const normalizedSlug = slug.toLowerCase();
+  try {
+    const categories = await getPublicCategories();
+    const found = categories.find(
+      (c) =>
+        c.slug.toLowerCase() === normalizedSlug ||
+        c.id.toLowerCase() === normalizedSlug ||
+        c.name.toLowerCase() === normalizedSlug
+    );
+    if (found) return found;
+  } catch (err) {
+    // fallback
+  }
+  return (
+    PUBLIC_CATEGORIES.find(
+      (c) =>
+        c.slug.toLowerCase() === normalizedSlug ||
+        c.id.toLowerCase() === normalizedSlug ||
+        c.name.toLowerCase() === normalizedSlug
+    ) || null
+  );
+}
+
+/**
  * Fetch active boutique offers and privileges dynamically from backend.
  */
 export async function getPublicOffers(): Promise<OfferItem[]> {
   try {
-    const res = await axios.get(`${API_BASE}/offers/`, { timeout: 5000 });
+    const res = await axios.get(`${API_BASE}/offers/`, { timeout: 1500 });
     const rawList = Array.isArray(res.data) ? res.data : (res.data?.results || []);
     if (rawList.length > 0) {
       return rawList.map((o: any) => ({
@@ -972,7 +1020,7 @@ export async function getPublicOffers(): Promise<OfferItem[]> {
  */
 export async function getPublicGallery(): Promise<GalleryItem[]> {
   try {
-    const res = await axios.get(`${API_BASE}/gallery/`, { timeout: 5000 });
+    const res = await axios.get(`${API_BASE}/gallery/`, { timeout: 1500 });
     const rawList = Array.isArray(res.data) ? res.data : (res.data?.results || []);
     if (rawList.length > 0) {
       return rawList.map((g: any) => ({
@@ -995,7 +1043,7 @@ export async function getPublicGallery(): Promise<GalleryItem[]> {
  */
 export async function getPublicMilestones(): Promise<MilestoneItem[]> {
   try {
-    const res = await axios.get(`${API_BASE}/milestones/`, { timeout: 5000 });
+    const res = await axios.get(`${API_BASE}/milestones/`, { timeout: 1500 });
     const rawList = Array.isArray(res.data) ? res.data : (res.data?.results || []);
     if (rawList.length > 0) {
       return rawList.map((m: any) => ({

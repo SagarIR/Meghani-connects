@@ -32,7 +32,7 @@ export default async function BrandsPage() {
     'Official watch brands available with manufacturer warranty at Meghani Watch Co. in Vadodara.',
     brandsList.map((brand, idx) => ({
       name: brand.name,
-      url: `/shop?brand=${encodeURIComponent(brand.name)}`,
+      url: `/brands/${brand.slug}`,
       image: brand.heroImage,
       position: idx + 1,
     }))
@@ -117,7 +117,7 @@ export default async function BrandsPage() {
 
               <div className="pt-2 flex flex-wrap items-center gap-4">
                 <Link
-                  href={`/shop?brand=${encodeURIComponent(brand.name)}`}
+                  href={`/brands/${brand.slug}`}
                   className="px-6 py-3 rounded-xl bg-[#C9A45C] hover:bg-[#E8D5A7] text-[#0B0B0A] font-bold text-xs uppercase tracking-[0.18em] transition-colors inline-flex items-center gap-2"
                 >
                   <span>Explore {brand.name} Watches</span>

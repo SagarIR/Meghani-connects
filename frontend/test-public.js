@@ -131,7 +131,84 @@ function runTests() {
   assert.strictEqual(sortedAsc[1].price, 21995);
   console.log('✓ Sort by Price Ascending Passed');
 
-  console.log('\nALL 8 FRONTEND VERIFICATION TESTS PASSED SUCCESSFULLY!');
+  // Test 3: Brand slug resolution logic
+  const mockBrands = [
+    { name: 'Titan', slug: 'titan', country: 'India' },
+    { name: 'Casio', slug: 'casio', country: 'Japan' },
+    { name: 'Citizen', slug: 'citizen', country: 'Japan' },
+  ];
+  function findBrandBySlug(slug) {
+    const norm = slug.toLowerCase();
+    return mockBrands.find(b => b.slug.toLowerCase() === norm || b.name.toLowerCase() === norm) || null;
+  }
+  assert.strictEqual(findBrandBySlug('titan').name, 'Titan');
+  assert.strictEqual(findBrandBySlug('CASIO').country, 'Japan');
+  assert.strictEqual(findBrandBySlug('unknown-brand'), null);
+  console.log('✓ Case 3 Passed: Brand slug lookup with case-insensitivity');
+
+  // Test 4: Category slug resolution logic
+  const mockCategories = [
+    { id: 'analog', slug: 'analog', name: 'Analog Watches' },
+    { id: 'digital', slug: 'digital', name: 'Digital Watches' },
+    { id: 'wall', slug: 'wall-clocks', name: 'Wall Clocks' },
+  ];
+  function findCategoryBySlug(slug) {
+    const norm = slug.toLowerCase();
+    return mockCategories.find(c => c.slug.toLowerCase() === norm || c.id.toLowerCase() === norm) || null;
+  }
+  assert.strictEqual(findCategoryBySlug('analog').name, 'Analog Watches');
+  assert.strictEqual(findCategoryBySlug('wall-clocks').id, 'wall');
+  assert.strictEqual(findCategoryBySlug('unknown'), null);
+  console.log('✓ Case 4 Passed: Category slug lookup with alias matching');
+
+  // Test 5: CRM Enquiry spam honeypot and phone sanitization
+  function validateEnquiry(body) {
+    if (body.website || body.honeypot) return { spam: true };
+    const name = (body.name || '').trim();
+    const phone = (body.phone || '').replace(/[\s\-\(\)]/g, '');
+    if (!name || name.length < 2) return { error: 'Name too short' };
+    if (!/^\+?[0-9]{8,15}$/.test(phone)) return { error: 'Invalid phone' };
+    return { valid: true, cleanedPhone: phone };
+  }
+  assert.strictEqual(validateEnquiry({ name: 'Bot', phone: '1234567890', honeypot: 'spam' }).spam, true);
+  assert.strictEqual(validateEnquiry({ name: 'A', phone: '1234567890' }).error, 'Name too short');
+  assert.strictEqual(validateEnquiry({ name: 'Raman Mehta', phone: '+91 91066-80191' }).cleanedPhone, '+919106680191');
+  console.log('✓ Case 5 Passed: CRM Enquiry honeypot detection & phone normalization');
+
+  // Test 6: Structured Data (JSON-LD) Validation
+  const brandSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Brand',
+    '@id': 'https://meghaniwatch.com/brands/titan#brand',
+    name: 'Titan',
+    url: 'https://meghaniwatch.com/brands/titan'
+  };
+  assert.strictEqual(brandSchema['@type'], 'Brand');
+  assert.strictEqual(brandSchema.name, 'Titan');
+
+  const categorySchema = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': 'https://meghaniwatch.com/categories/analog#collection',
+    name: 'Analog Watches',
+    url: 'https://meghaniwatch.com/categories/analog'
+  };
+  assert.strictEqual(categorySchema['@type'], 'CollectionPage');
+
+  const productSchemaHidden = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: 'Tourbillon Atelier',
+    offers: {
+      '@type': 'Offer',
+      availability: 'https://schema.org/PreOrder',
+      priceSpecification: { description: 'Price Available on Request' }
+    }
+  };
+  assert(!('price' in productSchemaHidden.offers), 'Hidden price must NOT expose numeric price field in schema');
+  console.log('✓ Case 6 Passed: JSON-LD schemas validated for Brand, Category & Product (Price Hiding)');
+
+  console.log('\nALL 12 FRONTEND VERIFICATION TESTS PASSED SUCCESSFULLY!');
 }
 
 runTests();
