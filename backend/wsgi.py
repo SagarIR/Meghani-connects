@@ -5,3 +5,4 @@ import os
 from core.wsgi import application
 
 app = application
+handler = application
