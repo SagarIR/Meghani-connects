@@ -7,7 +7,10 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from apps.users.permissions import IsManagerOrAbove
 from rest_framework.generics import ListAPIView
 from rest_framework import filters
-from django_filters.rest_framework import DjangoFilterBackend
+try:
+    from django_filters.rest_framework import DjangoFilterBackend
+except ImportError:
+    DjangoFilterBackend = filters.BaseFilterBackend
 from django.db import connection
 from django.utils import timezone
 from django.core.cache import cache
