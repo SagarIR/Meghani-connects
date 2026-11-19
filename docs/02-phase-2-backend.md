@@ -1,9 +1,9 @@
 # Phase 2 – Backend Folder Structure
 
 > **Current Status:** PARTIALLY COMPLETED  
-> **Progress:** 4 / 6 verified tasks  
-> **Last Updated:** 2026-11-17  
-> **Next Action:** Enforce Role-Based Access Control by attaching `CanManageUsers` to `UserViewSet` and permissions to other ViewSets.  
+> **Progress:** 3 / 6 verified tasks complete (50.0%), 2 partial (33.3%), 1 pending (16.7%)  
+> **Last Updated:** 2026-11-19  
+> **Next Action:** Add WhiteNoise to `requirements.txt` and `settings.py` (`BUG-02`), and safely retire orphaned `backend/common/` directory.  
 > **Master Tracker Reference:** [PROJECT_EXECUTION_TRACKER.md](./PROJECT_EXECUTION_TRACKER.md)
 
 ---
@@ -13,25 +13,26 @@
 | Task | Status | Evidence | Remaining Work |
 |:---|:---:|:---|:---|
 | Modular 9-App Django Structure | **COMPLETED** | Apps `users`, `products`, `sales`, `repairs`, `crm`, `expenses`, `analytics`, `notifications`, `core` active in `backend/apps/`. | None. |
-| URL Configuration & Routing Engine | **COMPLETED** | `backend/core/urls.py` delegates cleanly to each app's router. | None. |
-| Python Dependencies Management | **COMPLETED** | `backend/requirements.txt` specifies Django, DRF, SimpleJWT, Celery, Redis, Prophet, ReportLab. | None. |
-| Django Core Settings Configuration | **COMPLETED** | `backend/core/settings.py` configured with `AUTH_USER_MODEL = 'users.User'`, REST_FRAMEWORK defaults, media and static settings. | None. |
-| Shared Utilities (`backend/common/`) | **PARTIALLY COMPLETED** | `backend/common/` exists but has 0 imports across codebase; system migrated to `apps.core`. | Formalize deprecation or safely remove orphaned module. |
-| Role-Based Access Control (RBAC) Enforcement | **PARTIALLY COMPLETED (SECURITY GAP)** | Custom permission classes exist in `apps/users/permissions.py`, but were never attached to ViewSets. `User.ROLE_CHOICES` has 2 roles vs 4 in permissions. | Synchronize `ROLE_CHOICES` and attach permissions to ViewSets in `views.py`. |
+| URL Configuration & Routing Engine | **COMPLETED** | `backend/core/urls.py` delegates cleanly to each app's router under `/api/`. | None. |
+| Python Dependencies Management | **PARTIALLY COMPLETED** | `backend/requirements.txt` specifies Django 4.2 LTS, DRF, SimpleJWT, Celery, Redis, Prophet, ReportLab. | Lacks `whitenoise>=6.5.0` (`BUG-02`); includes unimplemented `razorpay`. |
+| Django Core Settings Configuration | **PARTIALLY COMPLETED** | `backend/core/settings.py` configured with `AUTH_USER_MODEL = 'users.User'`, REST_FRAMEWORK defaults, media and static settings. | Missing `WhiteNoiseMiddleware` in `MIDDLEWARE` for production static asset serving (`BUG-02`). |
+| Shared Utilities (`backend/common/`) | **PENDING (DEAD CODE)** | `backend/common/` exists but has 0 imports across codebase; system migrated utilities to `apps.core`. | Formalize deprecation and safely retire orphaned module (`DEBT-01`). |
+| Role-Based Access Control (RBAC) Enforcement | **COMPLETED** | Custom permission classes (`CanManageUsers`, `CanManageProducts`, `CanManageSales`, `CanManageRepairs`, `IsManagerOrAbove`, `CanViewReports`) actively attached to ViewSets. `User.ROLE_CHOICES` includes all 4 roles (`admin`, `manager`, `staff`, `viewer`). | None. |
 
 ---
 
 ## Completed Tasks
 - [x] Implemented modular 9-domain app architecture under `backend/apps/`.
-- [x] Configured master REST URL routing with DRF `DefaultRouter` in all apps.
-- [x] Established strict dependency specification in `backend/requirements.txt`.
-- [x] Configured Django core settings including custom User model authentication, SimpleJWT, CORS, WhiteNoise, and Celery broker.
+- [x] Configured master REST URL routing with DRF `DefaultRouter` across all domain apps.
+- [x] Enforced Role-Based Access Control (RBAC) with granular permissions attached across ViewSets and 4 distinct roles in `User.ROLE_CHOICES`.
+
+## Incomplete / Partially Completed Tasks
+- [ ] Add `whitenoise>=6.5.0` to `backend/requirements.txt` (`BUG-02`).
+- [ ] Register `whitenoise.middleware.WhiteNoiseMiddleware` in `backend/core/settings.py` (`BUG-02`).
+- [ ] Remove unused `razorpay>=1.4` from `backend/requirements.txt` or implement digital checkout in Order 7.
 
 ## Pending Tasks
-- [ ] Enforce `CanManageUsers` on `UserViewSet` in `backend/apps/users/views.py`.
-- [ ] Enforce `CanManageProducts` on `ProductViewSet` and `CanManageSales` on `SaleViewSet`.
-- [ ] Synchronize `ROLE_CHOICES` in `apps/users/models.py` (`admin`, `manager`, `staff`, `viewer`).
-- [ ] Clean up or deprecate orphaned `backend/common/` folder.
+- [ ] Safely remove or deprecate orphaned `backend/common/` folder (`DEBT-01`).
 
 ## Blocked Tasks
 *None.*
@@ -39,10 +40,11 @@
 ## Completion Criteria
 1. All 9 domain apps register cleanly without circular import errors. *(PASSED)*
 2. System check identifies 0 issues (`python manage.py check`). *(PASSED)*
-3. ViewSets reject unprivileged staff attempts to create administrator accounts or delete sales records. *(PENDING RBAC ENFORCEMENT)*
+3. ViewSets reject unprivileged staff attempts to create administrator accounts or delete sales records. *(PASSED)*
+4. Static assets serve correctly in containerized production. *(PENDING BUG-02 FIX)*
 
 ## Next Action
-Attach `permission_classes = [CanManageUsers]` to `UserViewSet` in [backend/apps/users/views.py](../backend/apps/users/views.py).
+Add `whitenoise` to [backend/requirements.txt](../backend/requirements.txt) and [backend/core/settings.py](../backend/core/settings.py).
 
 ---
 
@@ -161,24 +163,11 @@ backend/
 │       │   └── sms.py
 │       └── tests.py
 │
-├── common/                   → Shared utilities
-│   ├── __init__.py
-│   ├── permissions.py        → Custom permissions
-│   ├── pagination.py         → Custom pagination
-│   ├── utils.py              → Helper functions
-│   └── exceptions.py         → Custom exceptions
+├── common/                   → Shared utilities (Deprecated; migrated to apps.core)
 │
 ├── static/                   → Static assets
-│   ├── logos/
-│   └── templates/
-│
 ├── media/                    → User uploads
-│   ├── receipts/
-│   └── images/
-│
-└── scripts/                  → Automation scripts
-    ├── backup_db.py
-    └── sync_cloud.py
+└── backups/                  → Automated Gzip JSON database snapshots
 ```
 
 ---
@@ -187,14 +176,15 @@ backend/
 
 | App | Responsibility |
 |-----|----------------|
-| `users` | User registration, login, JWT auth, role management |
-| `products` | Product CRUD, stock management, barcode handling |
-| `sales` | POS transactions, invoice generation, profit calculation |
-| `repairs` | Repair job CRUD, status tracking, delivery reminders |
-| `crm` | Customer profiles, loyalty points, birthday tracking |
-| `expenses` | Expense categories, logging, profit integration |
-| `analytics` | AI forecasting, reports generation, metrics caching |
-| `notifications` | WhatsApp/SMS templates, sending, status tracking |
+| `users` | User registration, login, JWT auth, role management (`admin`, `manager`, `staff`, `viewer`) |
+| `products` | Product catalog, inventory stock tracking, barcode lookup |
+| `sales` | POS transactions, split payments, invoice generation, profit calculation |
+| `repairs` | Repair job state machine, technician tracking, pickup notifications |
+| `crm` | Customer directory, loyalty points ledger, customer consultation enquiries, bulk import |
+| `expenses` | Expense logging across 8 categories, receipt uploads, Net Profit deduction |
+| `analytics` | AI sales forecasting, Smart ROP, ABC Pareto classification, Anomaly radar, AI assistant, PDF reports |
+| `notifications` | WhatsApp & SMS automated alerts, Twilio integration, delivery logs |
+| `core` | Website CMS management, database backup/restore engine, system health diagnostics, Cloudinary CDN |
 
 ---
 
@@ -214,78 +204,12 @@ prophet>=1.1
 openpyxl>=3.1
 reportlab>=4.0
 twilio>=8.0
-razorpay>=1.4
 celery>=5.3
 redis>=5.0
 django-celery-beat>=2.5
 boto3>=1.28
 gunicorn>=21.0
-```
-
----
-
-### settings.py Configuration
-
-```python
-import os
-from pathlib import Path
-from dotenv import load_dotenv
-
-load_dotenv()
-
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-SECRET_KEY = os.getenv('SECRET_KEY')
-DEBUG = os.getenv('DEBUG', 'False') == 'True'
-
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
-
-INSTALLED_APPS = [
-    'django.contrib.admin',
-    'django.contrib.auth',
-    'django.contrib.contenttypes',
-    'django.contrib.sessions',
-    'django.contrib.messages',
-    'django.contrib.staticfiles',
-    
-    # Third party
-    'rest_framework',
-    'rest_framework_simplejwt',
-    'corsheaders',
-    
-    # Local apps
-    'apps.users',
-    'apps.products',
-    'apps.sales',
-    'apps.repairs',
-    'apps.crm',
-    'apps.expenses',
-    'apps.analytics',
-    'apps.notifications',
-    'apps.core',
-]
-
-AUTH_USER_MODEL = 'users.User'
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('DATABASE_NAME'),
-        'USER': os.getenv('DATABASE_USER'),
-        'PASSWORD': os.getenv('DATABASE_PASSWORD'),
-        'HOST': os.getenv('DATABASE_HOST', 'localhost'),
-        'PORT': os.getenv('DATABASE_PORT', '5432'),
-    }
-}
-
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework_simplejwt.authentication.JWTAuthentication',
-    ],
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
-    ],
-}
+whitenoise>=6.5.0
 ```
 
 ---

@@ -1,8 +1,41 @@
 # Meghani Connect 360 - Deployment Guide
 
 > **Document Location:** `docs/deployment/DEPLOY.md`  
-> **Master Tracker:** [PROJECT_EXECUTION_TRACKER.md](../PROJECT_EXECUTION_TRACKER.md)  
-> **Detailed Phase Specification:** [Phase 8 – Deployment & Hosting](../08-phase-8-deployment.md)
+> **Master Tracker Reference:** [PROJECT_EXECUTION_TRACKER.md](../PROJECT_EXECUTION_TRACKER.md)  
+> **Detailed Phase Specification:** [Phase 8 – Deployment & Hosting](../08-phase-8-deployment.md)  
+> **Last Updated:** 2026-11-19
+
+---
+
+## Pre-Deployment Configuration Checklist (Crucial)
+
+Before building Docker images or initiating cloud deployments, verify that the following prerequisites are applied:
+
+1. **Frontend Standalone Build (`BUG-01`):**
+   In `frontend/next.config.js`, ensure `output: 'standalone'` is active:
+   ```javascript
+   const nextConfig = {
+     output: 'standalone',
+     // ...
+   };
+   module.exports = nextConfig;
+   ```
+   *Required for the multi-stage Next.js `Dockerfile` to successfully bundle the production runner layer.*
+
+2. **Backend Static Files Serving (`BUG-02`):**
+   In `backend/requirements.txt`, ensure `whitenoise>=6.5.0` is present:
+   ```txt
+   whitenoise>=6.5.0
+   ```
+   And register `WhiteNoiseMiddleware` immediately following `SecurityMiddleware` in `backend/core/settings.py`:
+   ```python
+   MIDDLEWARE = [
+       'django.middleware.security.SecurityMiddleware',
+       'whitenoise.middleware.WhiteNoiseMiddleware',
+       # ...
+   ]
+   STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+   ```
 
 ---
 
@@ -15,19 +48,20 @@ cd Meghani-Connects
 # Copy environment file
 cp backend/.env.example backend/.env
 cp frontend/.env.example frontend/.env.local
-# Edit .env with your credentials
+# Edit .env files with your operational credentials
 
-# Start all services
+# Start all services (Database, Redis, Backend, Frontend, Celery Worker, Celery Beat)
 docker-compose up -d
 
 # Run migrations
 docker-compose exec backend python manage.py migrate
 
-# Create superuser
+# Create initial administrator
 docker-compose exec backend python manage.py createsuperuser
 
-# Access the app
-# Frontend Boutique / Dashboard: http://localhost:3000
+# Access the applications:
+# Public Boutique: http://localhost:3000
+# Staff Operations Portal: http://localhost:3000/dashboard
 # Backend API: http://localhost:8000/api
 # Django Admin: http://localhost:8000/admin
 ```
@@ -55,14 +89,14 @@ docker-compose exec backend python manage.py createsuperuser
    - Copy connection string to backend env: `DATABASE_URL`
 
 4. **Deploy Frontend:**
-   - Use Vercel (below) or Render Static Site
-   - Set `NEXT_PUBLIC_API_URL` to your Render backend URL
+   - Use Vercel (below) or Render Web Service
+   - Set `NEXT_PUBLIC_API_URL` to your Render backend API URL (e.g., `https://api.meghaniwatch.com/api`)
 
 ---
 
-### Option 2: Vercel + Render
+### Option 2: Vercel (Frontend) + Render (Backend)
 
-**Cost:** ~$7/month (Vercel free + Render backend)
+**Cost:** ~$7/month (Vercel free hobby tier + Render backend starter)
 
 1. **Frontend on Vercel:**
    ```bash
@@ -71,9 +105,9 @@ docker-compose exec backend python manage.py createsuperuser
    vercel login
    vercel --prod
    ```
-   - Set env: `NEXT_PUBLIC_API_URL=https://your-backend.onrender.com/api`
+   - Set environment variable: `NEXT_PUBLIC_API_URL=https://api.meghaniwatch.com/api`
 
-2. **Backend on Render:** (same as above)
+2. **Backend on Render:** (same as Option 1)
 
 ---
 
@@ -86,7 +120,7 @@ docker-compose exec backend python manage.py createsuperuser
 | Backend | EC2 t3.small |
 | Database | RDS PostgreSQL 15 |
 | Redis | ElastiCache |
-| Storage | S3 |
+| Storage | S3 / Cloudinary |
 | CDN | CloudFront |
 
 **Setup:**
@@ -101,7 +135,11 @@ python3.11 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
 
-# Configure nginx, gunicorn, systemd
+# Run migrations and collect static
+python manage.py migrate
+python manage.py collectstatic --noinput
+
+# Configure nginx, gunicorn, and systemd services
 # See docs/08-phase-8-deployment.md for full configs
 ```
 
@@ -115,57 +153,65 @@ pip install -r requirements.txt
 DEBUG=False
 SECRET_KEY=your-secure-secret-key
 DATABASE_URL=postgres://user:pass@host:5432/dbname
-ALLOWED_HOSTS=api.yourdomain.com
-CORS_ALLOWED_ORIGINS=https://yourdomain.com
+ALLOWED_HOSTS=api.meghaniwatch.com
+CORS_ALLOWED_ORIGINS=https://meghaniwatch.com
 
-# Optional
+# Optional / Feature-Specific
 REDIS_URL=redis://host:6379/0
 TWILIO_ACCOUNT_SID=xxx
 TWILIO_AUTH_TOKEN=xxx
 TWILIO_WHATSAPP_NUMBER=whatsapp:+14155238886
 TWILIO_SMS_NUMBER=+14155238886
-AWS_ACCESS_KEY_ID=xxx
-AWS_SECRET_ACCESS_KEY=xxx
+CLOUDINARY_CLOUD_NAME=xxx
+CLOUDINARY_API_KEY=xxx
+CLOUDINARY_API_SECRET=xxx
 SENTRY_DSN=xxx
 ```
 
 ### Frontend (`frontend/.env.production`)
 ```env
-NEXT_PUBLIC_API_URL=https://api.yourdomain.com/api
+NEXT_PUBLIC_API_URL=https://api.meghaniwatch.com/api
 NEXT_PUBLIC_APP_NAME=Meghani Connect 360
 ```
 
 ---
 
-## Health Checks
+## Health Checks & Diagnostics
 
-| Endpoint | Description |
-|----------|-------------|
-| `/api/health/` | Full system health status |
-| `/api/ready/` | Kubernetes / Container readiness probe |
-| `/api/live/` | Liveness probe |
+| Endpoint | Description | Permission |
+|----------|-------------|:---:|
+| `/api/core/health/` (and `/api/health/`) | Full system health status (DB, Redis, Celery, uptime) | `AllowAny` |
+| `/api/core/ready/` (and `/api/ready/`) | Container / Kubernetes readiness probe | `AllowAny` |
+| `/api/core/live/` (and `/api/live/`) | Container liveness probe | `AllowAny` |
 
 ---
 
 ## SSL / Domain Setup (Cloudflare)
 
-1. Add domain to Cloudflare
-2. Configure DNS:
-   - A record: `@` → Vercel IP
-   - CNAME: `api` → Render/EC2 domain
-3. Enable SSL: Full (strict)
-4. Enable: Always Use HTTPS
+1. Add domain `meghaniwatch.com` to Cloudflare.
+2. Configure DNS records:
+   - A record: `@` → Vercel IP (`76.76.21.21`), Proxied
+   - CNAME: `www` → `meghaniwatch.com`, Proxied
+   - CNAME: `api` → Render/EC2 endpoint, Proxied
+3. Enable SSL: **Full (strict)**.
+4. Enable: **Always Use HTTPS** and **Brotli Compression**.
 
 ---
 
 ## Backup Strategy
 
-```bash
-# Manual backup
-docker-compose exec db pg_dump -U meghani_admin meghani_connect > backup.sql
+### Manual Gzip Archiving via API:
+- `POST /api/core/backup/create/` (generates `.json.gz` snapshot in `backend/backups/`)
+- `GET /api/core/backup/list/` (lists existing snapshots with timestamps and byte sizes)
+- `POST /api/core/backup/restore/` (restores snapshot)
 
-# Restore
-docker-compose exec -T db psql -U meghani_admin meghani_connect < backup.sql
+### CLI Database Dump (Docker):
+```bash
+# Manual PostgreSQL dump
+docker-compose exec db pg_dump -U meghani_admin meghani_connect_360 > backup.sql
+
+# Restore dump
+docker-compose exec -T db psql -U meghani_admin meghani_connect_360 < backup.sql
 ```
 
 ---
@@ -173,10 +219,10 @@ docker-compose exec -T db psql -U meghani_admin meghani_connect < backup.sql
 ## Celery Workers (Background Tasks)
 
 ```bash
-# Start worker
+# Start Celery worker
 celery -A core worker -l info
 
-# Start scheduler
+# Start Celery Beat scheduler
 celery -A core beat -l info
 
 # Docker (already included in docker-compose.yml)
@@ -185,25 +231,16 @@ docker-compose up -d celery celery-beat
 
 ---
 
-## Monitoring
+## Launch Checklist
 
-1. **Sentry** - Error tracking
-   - Add `SENTRY_DSN` to env
-
-2. **Uptime Monitoring**
-   - Monitor: `https://api.yourdomain.com/api/health/`
-
----
-
-## Checklist Before Launch
-
-- [ ] DEBUG=False in production
-- [ ] Unique SECRET_KEY
-- [ ] SSL certificate active
-- [ ] Database backup configured
-- [ ] Celery workers running
-- [ ] Health checks passing
-- [ ] Test login flow
-- [ ] Test sales creation
-- [ ] Test repair creation
-- [ ] Test notifications (if Twilio configured)
+- [ ] `output: 'standalone'` uncommented in `frontend/next.config.js` (`BUG-01`)
+- [ ] `whitenoise>=6.5.0` added to `backend/requirements.txt` and `MIDDLEWARE` (`BUG-02`)
+- [ ] `DEBUG=False` in production `.env`
+- [ ] Unique, cryptographically strong `SECRET_KEY` generated
+- [ ] SSL certificate active via Cloudflare Full (Strict)
+- [ ] Database backup creation endpoint verified
+- [ ] Celery worker and Celery Beat daemon active
+- [ ] Health check (`/api/core/health/`) returns HTTP 200 `healthy`
+- [ ] Test authentication and JWT auto-refresh
+- [ ] Test POS barcode lookup, split payments, and thermal receipt print
+- [ ] Test watch repair ticket lifecycle (`received` $\rightarrow$ `ready`)

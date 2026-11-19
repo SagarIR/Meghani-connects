@@ -1,9 +1,9 @@
 # Phase 7 – AI Automation Features
 
 > **Current Status:** PARTIALLY COMPLETED  
-> **Progress:** 4 / 8 verified tasks  
-> **Last Updated:** 2026-11-17  
-> **Next Action:** Fix Celery Beat cron keyword arguments in `apps/analytics/tasks.py` and add `TWILIO_SMS_NUMBER` to `backend/core/settings.py`.  
+> **Progress:** 6 / 8 verified tasks (75.0%)  
+> **Last Updated:** 2026-11-19  
+> **Next Action:** Determine Razorpay checkout necessity and evaluate whether transactional email dispatch is required.  
 > **Master Tracker Reference:** [PROJECT_EXECUTION_TRACKER.md](./PROJECT_EXECUTION_TRACKER.md)
 
 ---
@@ -12,38 +12,40 @@
 
 | Task | Status | Evidence | Remaining Work |
 |:---|:---:|:---|:---|
-| Facebook Prophet 30-Day Sales Forecasting | **COMPLETED** | `apps/analytics/services/forecasting.py` (`SalesForecast`). Implements Prophet with weekly/yearly seasonality and rolling fallback. | None. |
-| Inventory Stockout Date Predictor & Sales Velocity Math | **COMPLETED** | `StockoutPredictionView` calculates sales velocity per product and estimates days until stockout. | None. |
-| Celery & Redis Background Worker Infrastructure | **COMPLETED** | `backend/core/celery.py`, Redis broker configuration in `settings.py`, Celery Beat schedule configured. | None. |
-| Celery Beat Automated Cron Schedules | **PARTIALLY COMPLETED (RUNTIME CRASH)** | Scheduled cron jobs in `apps/analytics/tasks.py` instantiate `Notification` with invalid kwargs (`notification_type`, `template_name`). | Update kwargs to `type='whatsapp'` and remove `template_name`. |
-| Outbound WhatsApp Concierge Alerts (Twilio) | **COMPLETED (CODE WIRED)** | `apps/notifications/services/whatsapp.py` verified. Hooked to repair status changes. | Requires live Twilio credentials for end-to-end device delivery. |
-| Outbound SMS Customer Alerts (Twilio) | **BLOCKED** | `apps/notifications/services/sms.py` attempts to read `settings.TWILIO_SMS_NUMBER`, which is missing from `backend/core/settings.py`. | Add `TWILIO_SMS_NUMBER = os.getenv('TWILIO_SMS_NUMBER')` in `settings.py`. |
-| Transactional Email Dispatch Service | **PARTIALLY COMPLETED** | `apps/notifications/services/email_service.py` exists but is orphaned with 0 callers and an unhandled attribute error. | Wire email service or document as optional. |
-| Razorpay Online Payment Gateway Integration | **PENDING / NOT STARTED** | Listed in `requirements.txt` and `settings.py`. Zero endpoint, view, or frontend payment integration exists. | Author order creation endpoint if online payments are required. |
+| Facebook Prophet Sales Forecasting (30/60/90 Days) | **COMPLETED** | `apps/analytics/services/forecasting.py` (`SalesForecast`). Implements Prophet 1.3 with weekly/yearly seasonality and statistical seasonal moving average fallback. | None. (Windows hosts fallback to seasonal MA due to cmdstan DLL relocation). |
+| Smart Inventory Reorder Engine & Dynamic ROP | **COMPLETED** | `apps/analytics/services/reorder_engine.py` (`SmartReorderEngine`). Mathematical formulas for ADD, Safety Stock ($SS$), and Reorder Point ($ROP$). | None. |
+| Automated ABC Inventory Classification | **COMPLETED** | `apps/analytics/services/abc_classification.py`. Pareto cumulative revenue analysis segmenting stock into Class A, B, C, and Unclassified. | None. |
+| Statistical Business Anomaly Radar | **COMPLETED** | `apps/analytics/services/anomaly_detector.py`. Rolling Z-score anomaly detection ($Z \ge 2.5$) for sales spikes, drops, and abnormal discounts >20%. | None. |
+| Controlled AI Business Assistant | **COMPLETED** | `apps/analytics/services/ai_assistant.py`. Deterministic intent routing, prompt injection defense, and RBAC wholesale margin masking for staff. | None. |
+| Celery & Redis Background Worker Infrastructure | **COMPLETED** | `backend/core/celery.py`, Redis broker, Celery Beat with 7 scheduled daily/weekly tasks. | None. |
+| Outbound WhatsApp & SMS Alerts (Twilio) | **COMPLETED** | `apps/notifications/services/whatsapp.py`, `sms.py`, and `tasks.py`. Hooked to repair status changes with automatic SMS fallback. | Requires production Twilio credentials for end-to-end device delivery. |
+| Transactional Email & Razorpay Gateways | **PENDING / NOT STARTED** | Razorpay declared in settings but 0 code exists. `email_service.py` is absent from filesystem. | Author order creation endpoint if online payments required; wire email if needed. |
 
 ---
 
 ## Completed Tasks
-- [x] Machine learning sales forecasting engine utilizing Facebook Prophet with dynamic training on historical daily transaction data.
-- [x] Predictive inventory reorder logic computing product sales velocity, days until stockout, and reorder urgency.
-- [x] Celery worker and Redis broker infrastructure with daily scheduled Celery Beat tasks.
-- [x] Twilio WhatsApp messaging client formatted for automated repair collection alerts and boutique notifications.
+- [x] Machine learning sales forecasting engine utilizing Facebook Prophet with multi-horizon projections (30, 60, 90 days) and robust seasonal statistical fallback.
+- [x] Predictive inventory reorder engine computing product sales velocity, dynamic safety stock, ROP, and manager review lifecycle.
+- [x] Automated ABC inventory classification following Pareto distribution.
+- [x] Statistical anomaly radar detecting abnormal sales volumes, discounts, and inventory drops.
+- [x] Controlled AI store assistant with prompt injection protection and RBAC margin shielding.
+- [x] Celery worker and Redis broker infrastructure with 7 scheduled Celery Beat crons.
+- [x] Twilio WhatsApp messaging client with automatic SMS fallback for repair pickup alerts.
 
 ## Pending Tasks
-- [ ] Fix runtime crash in `backend/apps/analytics/tasks.py` by aligning `Notification.objects.create` keyword arguments with the model (`type='whatsapp'`).
-- [ ] Resolve SMS blocker by declaring `TWILIO_SMS_NUMBER = os.getenv('TWILIO_SMS_NUMBER')` in `backend/core/settings.py`.
-- [ ] Implement Razorpay order creation endpoint and frontend checkout if online advance payments are required.
+- [ ] Determine whether Razorpay is required for online deposit booking; author order creation endpoint if needed.
+- [ ] Implement transactional email service if customer email notifications are desired.
 
 ## Blocked Tasks
-- **Twilio SMS Notifications:** Blocked until `TWILIO_SMS_NUMBER` is declared in `backend/core/settings.py`.
+*None. Zero active blockers in AI/analytics code.*
 
 ## Completion Criteria
-1. Prophet forecasting model generates 30-day projection without memory exhaustion. *(PASSED)*
-2. Celery Beat executes scheduled morning tasks without raising `TypeError`. *(PENDING KWARG FIX)*
-3. Twilio SMS client loads configured sender number from Django settings. *(PENDING SETTINGS ENTRY)*
+1. Prophet forecasting model generates 30/60/90-day projections with fallback resilience. *(PASSED)*
+2. Celery Beat executes scheduled morning and evening tasks without raising exceptions. *(PASSED)*
+3. Twilio SMS client loads configured sender number from Django settings. *(PASSED)*
 
 ## Next Action
-Fix task keyword arguments in [backend/apps/analytics/tasks.py](../backend/apps/analytics/tasks.py) and add `TWILIO_SMS_NUMBER` to `backend/core/settings.py`.
+Evaluate whether online customer deposit checkout (Razorpay) or email notifications are required prior to production deployment.
 
 ---
 

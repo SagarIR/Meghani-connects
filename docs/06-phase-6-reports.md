@@ -78,7 +78,7 @@ Define report types, data structures, and export formats for business analytics.
 **API Endpoint**:
 
 ```
-GET /api/reports/sales-summary/
+GET /api/analytics/reports/sales/
 ?start_date=2026-01-01&end_date=2026-01-31&payment_mode=all
 ```
 
@@ -127,7 +127,7 @@ GET /api/reports/sales-summary/
 **API Endpoint**:
 
 ```
-GET /api/reports/product-performance/
+GET /api/analytics/reports/products/
 ?start_date=2026-01-01&end_date=2026-01-31&category=analog
 ```
 
@@ -172,7 +172,7 @@ GET /api/reports/product-performance/
 **API Endpoint**:
 
 ```
-GET /api/reports/repair-income/
+GET /api/analytics/reports/repairs/
 ?start_date=2026-01-01&end_date=2026-01-31
 ```
 
@@ -198,7 +198,7 @@ GET /api/reports/repair-income/
 **API Endpoint**:
 
 ```
-GET /api/reports/expenses/
+GET /api/analytics/reports/expenses/
 ?start_date=2026-01-01&end_date=2026-01-31
 ```
 
@@ -242,7 +242,7 @@ GET /api/reports/expenses/
 **API Endpoint**:
 
 ```
-GET /api/reports/customer-loyalty/
+GET /api/analytics/reports/customers/
 ?start_date=2026-01-01&end_date=2026-01-31
 ```
 
@@ -266,7 +266,7 @@ GET /api/reports/customer-loyalty/
 **API Endpoint**:
 
 ```
-GET /api/reports/inventory/
+GET /api/analytics/reports/inventory/
 ```
 
 ---

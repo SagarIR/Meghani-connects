@@ -13,19 +13,19 @@ The repository hosts three interconnected applications in a unified monorepo:
 
 1. **Meghani Watch Co. — Public Luxury Boutique (`frontend/src/app/(public)`)**
    - High-performance, customer-facing luxury e-commerce experience.
-   - Built with Next.js 14 App Router, Tailwind CSS, Framer Motion, and GSAP.
-   - Features 32 bespoke micro-interactions, smooth cursor choreographies, brand storytelling, catalogue browsing, and luxury aesthetic standards.
-   - Fully optimized for SEO with JSON-LD structured schema markup (Store, Product, BreadcrumbList, WebSite).
+   - Built with Next.js 14 App Router, Tailwind CSS, and Framer Motion.
+   - Features bespoke luxury micro-interactions, responsive navigation, brand storytelling, catalogue browsing, and luxury aesthetic standards.
+   - Fully optimized for SEO with JSON-LD structured schema markup (JewelryStore, Product, BreadcrumbList, WebSite).
 
 2. **Saff Staff Portal — Internal Operations & POS (`frontend/src/app/(dashboard)`)**
    - High-throughput web interface for showroom staff, billing cashiers, inventory managers, and repair technicians.
-   - Features barcode thermal receipt printing, quick POS cart management, multi-mode payments (Cash, Card, UPI, Razorpay), repair job ticketing, customer loyalty tracking, and live GST invoices.
+   - Features barcode thermal receipt printing, quick POS cart management, multi-mode split payments (Cash, Card, UPI, Mixed), repair job ticketing, customer loyalty tracking, and live GST invoices.
 
 3. **Meghani Connect 360 — Backend Core (`backend/`)**
-   - Enterprise REST API built on **Django 5.x** and **Django REST Framework (DRF)**.
-   - Powered by PostgreSQL 15 relational storage with Redis for caching and Celery asynchronous background tasks.
-   - Comprehensive modules for `products`, `sales`, `crm`, `repairs`, `analytics`, `users`, and `core`.
-   - Features automated WhatsApp/SMS notifications, Prophet-powered sales forecasting, inventory reorder prediction, and GST report generation.
+   - Enterprise REST API built on **Django 4.2 LTS** and **Django REST Framework (DRF)**.
+   - Powered by PostgreSQL 15 relational storage (SQLite in development) with Redis for caching and Celery asynchronous background tasks.
+   - Comprehensive modules for `products`, `sales`, `crm`, `repairs`, `analytics`, `users`, `notifications`, and `core`.
+   - Features automated WhatsApp/SMS notifications, Prophet-powered sales forecasting with seasonal fallback, inventory reorder prediction, and GST report generation.
 
 ---
 
@@ -34,20 +34,20 @@ The repository hosts three interconnected applications in a unified monorepo:
 All documentation is maintained under the [`docs/`](./docs/00-overview.md) directory.
 
 ### Core Tracking & Architecture
-- **[PROJECT_EXECUTION_TRACKER.md](./docs/PROJECT_EXECUTION_TRACKER.md)** — **The authoritative single source of truth** for all 8 development phases, 60 mapped tasks, progress metrics (78.33% verified complete), blocker tracking, and upcoming milestones.
+- **[PROJECT_EXECUTION_TRACKER.md](./docs/PROJECT_EXECUTION_TRACKER.md)** — **The authoritative single source of truth** for all 8 development phases, 60 mapped tasks, progress metrics (81.67% verified complete: 49/60 tasks), blocker tracking, and upcoming milestones.
 - **[ARCHITECTURE_REPORT.md](./docs/architecture/ARCHITECTURE_REPORT.md)** — Comprehensive architectural breakdown of the Public Boutique, Saff Staff Portal, and Django ERP engine.
 - **[DEPLOY.md](./docs/deployment/DEPLOY.md)** — Step-by-step production deployment manual, environment configuration, systemd services, and offline-first synchronization setup.
 - **[00-overview.md](./docs/00-overview.md)** — High-level project index, core features, and module matrix.
 
 ### Phase Specifications (Phases 1 to 8)
-- **[Phase 1: Setup & Environment Architecture](./docs/01-phase-1-setup.md)** — Environment bootstrap, monorepo layout, Docker Compose, Next.js / Django initialisation. *(Status: COMPLETED 100%)*
-- **[Phase 2: Backend Core Architecture](./docs/02-phase-2-backend.md)** — Django REST Framework, JWT authentication, custom user models, core middleware. *(Status: PARTIAL 87.5%)*
-- **[Phase 3: Frontend Architecture](./docs/03-phase-3-frontend.md)** — Next.js 14 App Router layout, dual public/staff routes, UI component library, animations. *(Status: COMPLETED 100%)*
-- **[Phase 4: Database Schema & Relational Models](./docs/04-phase-4-database.md)** — PostgreSQL schemas, migrations, composite indices, foreign keys, constraints. *(Status: COMPLETED 100%)*
-- **[Phase 5: Module Development & Business Logic](./docs/05-phase-5-modules.md)** — POS & Billing, Inventory & Serials, CRM & Loyalty, Repair Job Ticketing, RBAC. *(Status: PARTIAL 80.0%)*
-- **[Phase 6: Reports, Financials & Analytics](./docs/06-phase-6-reports.md)** — GST GSTR-1 ledgers, Profit & Loss reporting, Excel/PDF export engines, Chart dashboards. *(Status: PARTIAL 83.3%)*
-- **[Phase 7: AI Automation & Notifications](./docs/07-phase-7-ai.md)** — WhatsApp/SMS gateways, Celery Beat tasks, Scikit-learn & Prophet predictive analytics. *(Status: PARTIAL 50.0%)*
-- **[Phase 8: Deployment & Production Ops](./docs/08-phase-8-deployment.md)** — Docker Compose production configuration, Nginx reverse proxy, SSL certbot, automated daily backups. *(Status: PARTIAL 16.7%)*
+- **[Phase 1: Setup & Environment Architecture](./docs/01-phase-1-setup.md)** — Environment bootstrap, monorepo layout, Docker Compose, Next.js / Django initialisation. *(Status: PARTIALLY COMPLETED 85.7% - 6/7 tasks)*
+- **[Phase 2: Backend Core Architecture](./docs/02-phase-2-backend.md)** — Django REST Framework, JWT authentication, custom user models, core middleware. *(Status: PARTIALLY COMPLETED 50.0% - 3/6 tasks)*
+- **[Phase 3: Frontend Architecture](./docs/03-phase-3-frontend.md)** — Next.js 14 App Router layout, dual public/staff routes, UI component library, animations. *(Status: PARTIALLY COMPLETED 71.4% - 5/7 tasks)*
+- **[Phase 4: Database Schema & Relational Models](./docs/04-phase-4-database.md)** — PostgreSQL schemas, migrations, composite indices, foreign keys, constraints. *(Status: COMPLETED 100% - 9/9 tasks)*
+- **[Phase 5: Module Development & Business Logic](./docs/05-phase-5-modules.md)** — POS & Billing, Inventory & Serials, CRM & Loyalty, Repair Job Ticketing, RBAC. *(Status: COMPLETED 100% - 11/11 tasks)*
+- **[Phase 6: Reports, Financials & Analytics](./docs/06-phase-6-reports.md)** — GST ledgers, Profit & Loss reporting, Excel/PDF export engines, Chart dashboards. *(Status: COMPLETED 100% - 6/6 tasks)*
+- **[Phase 7: AI Automation & Notifications](./docs/07-phase-7-ai.md)** — WhatsApp/SMS gateways, Celery Beat tasks, Prophet predictive analytics, Smart ROP. *(Status: PARTIALLY COMPLETED 75.0% - 6/8 tasks)*
+- **[Phase 8: Deployment & Production Ops](./docs/08-phase-8-deployment.md)** — Docker Compose configuration, Cloudinary CDN, automated daily backups. *(Status: PARTIALLY COMPLETED 50.0% - 3/6 tasks)*
 
 ---
 
@@ -85,7 +85,7 @@ Meghani-Connects/
 │   │   ├── repairs/                # Repair job tickets, service status, warranty
 │   │   ├── sales/                  # Orders, invoices, payments, POS transactions
 │   │   └── users/                  # Custom User model, staff profiles, RBAC
-│   ├── meghani_core/               # Django root project configuration & settings
+│   ├── core/                       # Django root project configuration & settings
 │   ├── manage.py
 │   └── requirements.txt
 ├── frontend/                       # Next.js 14 Universal Frontend Application
@@ -108,7 +108,7 @@ Meghani-Connects/
 ### 1. Prerequisites
 - **Python 3.11+**
 - **Node.js 18+ & npm**
-- **PostgreSQL 15+**
+- **PostgreSQL 15+** (SQLite 3 fallback for development)
 - **Redis 7+**
 
 ### 2. Backend Setup
@@ -138,7 +138,7 @@ python manage.py seed_data
 # Start local API server
 python manage.py runserver 8000
 ```
-Backend API will be accessible at `http://localhost:8000/api/v1/`.
+Backend API will be accessible at `http://localhost:8000/api/`.
 
 ### 3. Frontend Setup
 ```bash
@@ -155,15 +155,16 @@ npm run dev
 - **Saff Staff Portal:** `http://localhost:3000/login`
 
 ### 4. Running Automated Test Suites
-Both suites must pass cleanly prior to code submission:
+Both suites pass cleanly:
 
 ```bash
-# Backend test suite (41 passing tests)
-backend/venv/Scripts/python.exe backend/manage.py test apps.products apps.core apps.crm apps.users apps.sales apps.analytics
+# Backend test suite (73 passing tests)
+.\backend\venv\Scripts\python.exe backend/manage.py test apps
 
-# Frontend test suites (7 public storefront tests + 13 POS workflow tests)
-node frontend/test-public.js
-node frontend/test-pos-workflow.js
+# Frontend test suites (33 passing automated test cases)
+node frontend/test-pos-workflow.js          # 15 POS & Inventory engine tests
+node frontend/test-public.js                # 12 Storefront & CRM enquiry tests
+node frontend/test-advanced-analytics.js    # 6 AI Forecasting & Anomaly tests
 ```
 
 ---
@@ -172,17 +173,23 @@ node frontend/test-pos-workflow.js
 
 ```
 Overall Verified Completion: 81.67% (49 of 60 Tasks Verified Complete)
+├── Completed:          49 Tasks (81.67%)
+├── Partially Complete:  8 Tasks (13.33%)
+└── Pending:             3 Tasks ( 5.00%)
 ```
 
-| Phase | Description | Total Tasks | Done | Partial | Pending | Blocked | Verification | Status |
-|:-----:|:------------|:-----------:|:----:|:-------:|:-------:|:-------:|:------------:|:------:|
-| **1** | [Setup & Environment Architecture](./docs/01-phase-1-setup.md) | 6 | 6 | 0 | 0 | 0 | 0 | **COMPLETED** |
-| **2** | [Backend Core Architecture](./docs/02-phase-2-backend.md) | 8 | 7 | 1 | 0 | 0 | 0 | **PARTIAL** |
-| **3** | [Frontend Architecture](./docs/03-phase-3-frontend.md) | 8 | 8 | 0 | 0 | 0 | 0 | **COMPLETED** |
-| **4** | [Database Schema & Models](./docs/04-phase-4-database.md) | 8 | 8 | 0 | 0 | 0 | 0 | **COMPLETED** |
-| **5** | [Module Development & POS](./docs/05-phase-5-modules.md) | 10 | 9 | 1 | 0 | 0 | 0 | **PARTIAL** |
-| **6** | [Reports & Analytics](./docs/06-phase-6-reports.md) | 6 | 6 | 0 | 0 | 0 | 0 | **COMPLETED** |
-| **7** | [AI Automation & Notifications](./docs/07-phase-7-ai.md) | 8 | 4 | 3 | 0 | 0 | 1 | **PARTIAL** |
-| **8** | [Deployment & Operations](./docs/08-phase-8-deployment.md) | 6 | 1 | 2 | 2 | 1 | 0 | **PARTIAL** |
+| Phase | Description | Total Tasks | Done | Partial | Pending | Blocked | Status |
+|:-----:|:------------|:-----------:|:----:|:-------:|:-------:|:-------:|:------:|
+| **1** | [Setup & Environment Architecture](./docs/01-phase-1-setup.md) | 7 | 6 | 1 | 0 | 0 | **PARTIALLY COMPLETED** (85.7%) |
+| **2** | [Backend Core Architecture](./docs/02-phase-2-backend.md) | 6 | 3 | 2 | 1 | 0 | **PARTIALLY COMPLETED** (50.0%) |
+| **3** | [Frontend Architecture](./docs/03-phase-3-frontend.md) | 7 | 5 | 2 | 0 | 0 | **PARTIALLY COMPLETED** (71.4%) |
+| **4** | [Database Schema & Models](./docs/04-phase-4-database.md) | 9 | 9 | 0 | 0 | 0 | **COMPLETED** (100.0%) |
+| **5** | [Module Development & POS](./docs/05-phase-5-modules.md) | 11 | 11 | 0 | 0 | 0 | **COMPLETED** (100.0%) |
+| **6** | [Reports & Analytics](./docs/06-phase-6-reports.md) | 6 | 6 | 0 | 0 | 0 | **COMPLETED** (100.0%) |
+| **7** | [AI Automation & Notifications](./docs/07-phase-7-ai.md) | 8 | 6 | 1 | 1 | 0 | **PARTIALLY COMPLETED** (75.0%) |
+| **8** | [Deployment & Operations](./docs/08-phase-8-deployment.md) | 6 | 3 | 2 | 1 | 0 | **PARTIALLY COMPLETED** (50.0%) |
+| **TOTAL** | **8 Technical Phases** | **60** | **49** | **8** | **3** | **0** | **81.67% VERIFIED** |
+
+For the complete task-by-task breakdown, evidence paths, and next implementation priorities, refer to [`docs/PROJECT_EXECUTION_TRACKER.md`](./docs/PROJECT_EXECUTION_TRACKER.md).
 
 For the complete task-by-task breakdown, evidence paths, and next implementation priorities, refer to [`docs/PROJECT_EXECUTION_TRACKER.md`](./docs/PROJECT_EXECUTION_TRACKER.md).

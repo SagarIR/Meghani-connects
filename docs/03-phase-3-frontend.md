@@ -13,26 +13,27 @@
 | Task | Status | Evidence | Remaining Work |
 |:---|:---:|:---|:---|
 | App Router Route Hierarchy | **COMPLETED** | `(auth)` group, `(dashboard)` group, and `(public)` luxury storefront implemented. | None. |
-| In-Store ERP / POS Dashboard Pages | **COMPLETED** | Pages `/dashboard`, `/products`, `/sales`, `/repairs`, `/customers`, `/expenses`, `/reports`, `/settings`, `/website-cms`. | None. |
-| Reusable UI Component Library | **COMPLETED** | `Button.tsx`, `Modal.tsx`, `Badge.tsx`, `Input.tsx`, `SortableHeader.tsx`, `Pagination.tsx`. | None. |
+| In-Store ERP / POS Dashboard Pages | **COMPLETED** | Pages `/dashboard`, `/products`, `/sales`, `/sales/history`, `/repairs`, `/customers`, `/expenses`, `/reports`, `/analytics`, `/notifications`, `/settings`, `/website-cms`. | None. |
+| Reusable UI Component Library | **COMPLETED** | `Button.tsx`, `Modal.tsx`, `Badge.tsx`, `Input.tsx`, `SortableHeader.tsx`, `Pagination.tsx`, `ExportButton.tsx`. | None. |
 | Axios Client & JWT Interceptor | **COMPLETED** | `frontend/src/services/api.ts` handles Bearer token injection and automatic 401 refresh rotation. | None. |
-| Global Search & Keyboard Shortcuts | **COMPLETED** | `GlobalSearch.tsx` (hotkey `/`) and `KeyboardShortcutsModal.tsx` (hotkey `?`) active. | Connect backend search filter to `SaleViewSet`. |
+| Global Search & Keyboard Shortcuts | **PARTIALLY COMPLETED** | `GlobalSearch.tsx` (hotkey `/`) and `KeyboardShortcutsModal.tsx` (hotkey `?`) active. | Connect backend `filters.SearchFilter` to `SaleViewSet` in `apps/sales/views.py`. |
 | Public Digital Boutique Route Cluster | **COMPLETED** | 11 public luxury pages (`/`, `/shop`, `/brands`, `/categories`, `/offers`, `/gallery`, `/about`, `/contact`, `/privacy-policy`, `/terms`). | None. |
-| Component Hygiene & Dead Code Cleanup | **PARTIALLY COMPLETED** | 6 orphaned components remain (`Header.tsx`, `InvoiceTemplate.tsx`, `BulkActionsBar.tsx`, `useBulkSelection.ts`, `FormField.tsx`, `LoadingSpinner.tsx`). | Delete or archive unreferenced components. |
+| Component Hygiene & Dead Code Cleanup | **PARTIALLY COMPLETED** | `Header.tsx` integrated into layout. 5 orphaned components remain (`InvoiceTemplate.tsx`, `BulkActionsBar.tsx`, `useBulkSelection.ts`, `FormField.tsx`, `LoadingSpinner.tsx`) and 6 empty route folders (`products/new`, `products/[id]`, etc.). | Delete or archive unreferenced components and empty stubs. |
 
 ---
 
 ## Completed Tasks
 - [x] Established Next.js 14 App Router layout hierarchy with client-side authentication guards.
-- [x] Implemented all operational in-store staff modules across sales/POS, watch repairs, products, CRM, and analytics.
+- [x] Implemented all operational in-store staff modules across sales/POS, watch repairs, products, CRM, analytics, notifications, and CMS.
 - [x] Built reusable design system components in `src/components/ui/` with Tailwind CSS styling.
 - [x] Built Axios HTTP client with automatic SimpleJWT token refresh rotation.
-- [x] Integrated power-user keyboard navigation and instant global search.
+- [x] Integrated power-user keyboard navigation and instant global search UI.
 - [x] Developed luxury public customer storefront showcasing Meghani Watch Co. catalog with price shielding.
+- [x] Redesigned and integrated universal `Header.tsx` into `DashboardLayout` with mobile drawer and shortcuts.
 
 ## Pending Tasks
-- [ ] Remove orphaned dead code components (`Header.tsx`, `InvoiceTemplate.tsx`, `BulkActionsBar.tsx`, `useBulkSelection.ts`, `FormField.tsx`, `LoadingSpinner.tsx`).
-- [ ] Add `filters.SearchFilter` to backend `SaleViewSet` so `GlobalSearch.tsx` invoice search filters accurately.
+- [ ] Remove 5 orphaned dead code components (`InvoiceTemplate.tsx`, `BulkActionsBar.tsx`, `useBulkSelection.ts`, `FormField.tsx`, `LoadingSpinner.tsx`) and 6 empty route folders.
+- [ ] Add `filters.SearchFilter` to backend `SaleViewSet` in `backend/apps/sales/views.py` so `GlobalSearch.tsx` invoice search filters accurately.
 
 ## Blocked Tasks
 *None.*

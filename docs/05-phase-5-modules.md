@@ -1,9 +1,9 @@
 # Phase 5 – Module Breakdown
 
-> **Current Status:** PARTIALLY COMPLETED  
-> **Progress:** 9 / 11 verified tasks  
-> **Last Updated:** 2026-11-17  
-> **Next Action:** Resolve password change 404 URL mismatch in `apps/users/views.py`.  
+> **Current Status:** COMPLETED  
+> **Progress:** 11 / 11 verified tasks (100%)  
+> **Last Updated:** 2026-11-19  
+> **Next Action:** All core functional modules verified complete. Proceed to Order 7 (Deployment & Defect Fixes).  
 > **Master Tracker Reference:** [PROJECT_EXECUTION_TRACKER.md](./PROJECT_EXECUTION_TRACKER.md)
 
 ---
@@ -18,11 +18,11 @@
 | Product & Inventory Management with Bulk Import | **COMPLETED** | `products/page.tsx`, `ProductViewSet`, tabbed product modal, `BulkImport.tsx` with line-by-line validation. | None. |
 | Watch Repair Workshop & 5-Stage State Machine | **COMPLETED** | `repairs/page.tsx`, `RepairViewSet`, full lifecycle (`received` to `delivered`), automated WhatsApp hook on `ready`. | None. |
 | CRM Customer Directory & Loyalty Points Engine | **COMPLETED** | `customers/page.tsx`, `CustomerViewSet`, phone lookup, tier badges, points accrual and checkout redemption. | None. |
-| Customer Bulk Import Endpoint | **PENDING / NOT STARTED** | `BulkImport.tsx` includes Customer Import UI dispatching to `/customers/import/`, but endpoint is missing in `apps/crm/urls.py`. | Implement `CustomerImportView` or remove tab from UI. |
+| Customer Bulk Import Endpoint | **COMPLETED** | `CustomerImportView`, `CustomerExportTemplateView`, and `CustomerImportService` active in `apps/crm/views.py` and `apps/crm/urls.py`. | None. |
 | Operating Expense Tracker with Bill Upload | **COMPLETED** | `expenses/page.tsx`, `ExpenseViewSet`, category filtering, receipt image uploads, Net Profit impact. | None. |
 | Website CMS Administration Dashboard | **COMPLETED** | `website-cms/page.tsx`, `apps/core/views.py`, CRUD for banners, brand partners, milestones, gallery, lead enquiry inbox. | None. |
-| Business Settings & Gzip Database Backup Engine | **COMPLETED** | `settings/page.tsx`, `apps/core/backup_service.py`, Gzip JSON dump creation, listing, restore, and delete endpoints. | None. |
-| User Password Change Endpoint | **PARTIALLY COMPLETED (BUG)** | Frontend calls `POST /api/users/change-password/`. DRF router registers `change_password/` (underscored), resulting in 404. | Add `url_path='change-password'` to `@action` decorator in `UserViewSet`. |
+| Business Settings & Gzip Database Backup Engine | **COMPLETED** | `settings/page.tsx`, `apps/core/backup_service.py`, Gzip JSON dump creation, listing, restore, download, and delete endpoints. | None. |
+| User Password Change Endpoint | **COMPLETED** | `@action(detail=False, methods=['post'], url_path='change-password')` in `apps/users/views.py` correctly maps to frontend callers. | None. |
 
 ---
 
@@ -33,13 +33,14 @@
 - [x] Full catalog management with tabbed detail modals and working Excel/CSV bulk import.
 - [x] Comprehensive watch repair workshop module with sequential tickets (`REP-YYYYMMDD-XXXX`), status workflow, and automated WhatsApp alert triggers.
 - [x] CRM customer database with automated loyalty points accrual ($1\text{ pt} / \text{₹}100$) and POS checkout discount redemption.
+- [x] Customer bulk import endpoint and template download service (`/api/crm/import/` and `/api/crm/import/template/`).
 - [x] Operating expense tracking categorized across 8 business accounts with bill image uploads.
 - [x] Integrated Website CMS allowing store managers to update public storefront content, banners, milestones, and review customer consultation enquiries.
 - [x] Database backup manager generating gzip-compressed JSON archives with one-click restore and download.
+- [x] User password change endpoint mapped to `/api/users/change-password/`.
 
 ## Pending Tasks
-- [ ] Add `url_path='change-password'` to `@action` decorator in `backend/apps/users/views.py`.
-- [ ] Implement `CustomerImportView` in `backend/apps/crm/views.py` or remove the customer option from `BulkImport.tsx`.
+*None. All 11 Core Module Tasks are fully implemented and verified.*
 
 ## Blocked Tasks
 *None.*
@@ -47,10 +48,11 @@
 ## Completion Criteria
 1. Barcode scan instantly finds product and adds to cart with accurate price and stock validation. *(PASSED)*
 2. Advancing repair ticket to `ready` triggers automated customer notification. *(PASSED)*
-3. Password change request from user settings succeeds without HTTP 404 errors. *(PENDING FIX)*
+3. Password change request from user settings succeeds without HTTP 404 errors. *(PASSED)*
+4. Customer Excel/CSV file imports cleanly into the CRM database. *(PASSED)*
 
 ## Next Action
-Fix the password change URL pattern in [backend/apps/users/views.py](../backend/apps/users/views.py).
+Proceed to Order 7 (Deployment & Defect Fixes) in [PROJECT_EXECUTION_TRACKER.md](./PROJECT_EXECUTION_TRACKER.md).
 
 ---
 
@@ -78,29 +80,10 @@ Define detailed specifications for each application module.
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/dashboard/stats/` | Get overview statistics |
-| GET | `/api/dashboard/sales-chart/` | Get sales chart data |
-| GET | `/api/dashboard/top-products/` | Get top selling products |
-| GET | `/api/dashboard/recent-activity/` | Get recent transactions |
-
-#### Data Structure
-
-```json
-{
-  "stats": {
-    "today_sales": 15000,
-    "today_profit": 3500,
-    "pending_repairs": 8,
-    "low_stock_items": 5
-  },
-  "sales_chart": [
-    { "date": "2026-01-10", "sales": 12000, "profit": 2800 }
-  ],
-  "top_products": [
-    { "id": 1, "name": "Titan Analog", "sold": 25, "revenue": 75000 }
-  ]
-}
-```
+| GET | `/api/analytics/dashboard/stats/` | Get overview statistics |
+| GET | `/api/analytics/dashboard/sales-chart/` | Get sales chart data |
+| GET | `/api/analytics/dashboard/top-products/` | Get top selling products |
+| GET | `/api/analytics/dashboard/recent-activity/` | Get recent transactions |
 
 ---
 
@@ -110,12 +93,12 @@ Define detailed specifications for each application module.
 
 | Feature | Description |
 |---------|-------------|
-| Barcode Scanner | Scan to add product to cart |
+| Barcode Scanner | Scan to add product to cart (camera + hardware scanner) |
 | Product Search | Search by name/brand/barcode |
 | Cart Management | Add, remove, update quantity |
-| Discount | Apply percentage or fixed discount |
-| Payment | Cash, UPI, Card, or Mixed |
-| Invoice | Print thermal receipt + PDF |
+| Discount & Points | Apply percentage/fixed discount or redeem loyalty points |
+| Split Payment | Cash, UPI, Card, or Mixed / Split tender |
+| Invoice | Print thermal receipt modal + PDF download |
 | Customer Linking | Assign sale to customer |
 
 #### API Endpoints
@@ -124,40 +107,10 @@ Define detailed specifications for each application module.
 |--------|----------|-------------|
 | GET | `/api/products/search/` | Search products |
 | GET | `/api/products/barcode/{code}/` | Get product by barcode |
-| POST | `/api/sales/` | Create new sale |
+| POST | `/api/sales/` | Create new sale (atomic) |
 | GET | `/api/sales/` | List all sales |
 | GET | `/api/sales/{id}/` | Get sale details |
 | GET | `/api/sales/{id}/invoice/` | Download invoice PDF |
-
-#### Sale Creation Payload
-
-```json
-{
-  "customer_id": 5,
-  "items": [
-    { "product_id": 12, "quantity": 2, "unit_price": 3500 },
-    { "product_id": 8, "quantity": 1, "unit_price": 2200 }
-  ],
-  "discount": 500,
-  "payment_mode": "upi",
-  "notes": "Gift wrapping requested"
-}
-```
-
-#### Business Logic
-
-```python
-def create_sale(data):
-    # 1. Validate stock availability
-    # 2. Calculate subtotals
-    # 3. Apply discount
-    # 4. Calculate profit (sum of selling_price - cost_price per item)
-    # 5. Generate invoice number (INV-YYYYMMDD-XXXX)
-    # 6. Deduct stock from products
-    # 7. Add loyalty points to customer
-    # 8. Create warranty entries if applicable
-    # 9. Return sale with invoice number
-```
 
 ---
 
@@ -167,10 +120,10 @@ def create_sale(data):
 
 | Feature | Description |
 |---------|-------------|
-| Create Repair | Log new repair job with customer |
+| Create Repair | Log new repair job with customer & watch brand |
 | Status Tracking | Received → In Repair → Ready → Delivered |
 | Notifications | Auto WhatsApp when ready for pickup |
-| Repair Invoice | Generate repair receipt |
+| Repair Invoice | Generate repair receipt PDF |
 | History | View customer's past repairs |
 
 #### API Endpoints
@@ -180,7 +133,7 @@ def create_sale(data):
 | POST | `/api/repairs/` | Create repair job |
 | GET | `/api/repairs/` | List repairs (filter by status) |
 | GET | `/api/repairs/{id}/` | Get repair details |
-| PATCH | `/api/repairs/{id}/status/` | Update status |
+| PATCH | `/api/repairs/{id}/status/` | Update status (triggers notification) |
 | GET | `/api/repairs/{id}/invoice/` | Download repair invoice |
 
 #### Status Workflow
@@ -188,15 +141,6 @@ def create_sale(data):
 ```
 received → in_repair → ready → delivered
                     ↘ cancelled
-```
-
-#### Auto Notifications
-
-```python
-# When status changes to 'ready'
-def on_repair_ready(repair):
-    message = f"Your {repair.item_type} is ready for pickup. Ticket: {repair.ticket_number}"
-    send_whatsapp(repair.customer.phone, message)
 ```
 
 ---
@@ -207,42 +151,23 @@ def on_repair_ready(repair):
 
 | Feature | Description |
 |---------|-------------|
-| Customer List | Searchable customer database |
+| Customer List | Searchable customer database with tier badges |
 | Customer Profile | Purchase history, repairs, loyalty points |
-| Loyalty System | Points per purchase, redeem for discounts |
-| Birthday Offers | Auto-notify customers on birthday |
-| Language Preference | Store preferred communication language |
+| Loyalty System | Points per purchase ($1\text{ pt} / \text{₹}100$), redeem for discounts |
+| Bulk Import | Import customers from Excel (.xlsx/.xls) or CSV |
+| Consultation Inquiries | Store and manage leads from public boutique |
 
 #### API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| POST | `/api/customers/` | Create customer |
-| GET | `/api/customers/` | List customers |
-| GET | `/api/customers/{id}/` | Get customer with history |
-| PATCH | `/api/customers/{id}/` | Update customer |
-| GET | `/api/customers/{id}/purchases/` | Get purchase history |
-| GET | `/api/customers/{id}/repairs/` | Get repair history |
-
-#### Loyalty Points System
-
-```python
-POINTS_PER_100_RUPEES = 1
-POINTS_REDEMPTION_RATE = 0.5  # 1 point = Rs 0.50
-
-def add_loyalty_points(customer, sale_amount):
-    points = int(sale_amount / 100) * POINTS_PER_100_RUPEES
-    customer.loyalty_points += points
-    customer.save()
-
-def redeem_points(customer, points_to_redeem):
-    if customer.loyalty_points >= points_to_redeem:
-        discount = points_to_redeem * POINTS_REDEMPTION_RATE
-        customer.loyalty_points -= points_to_redeem
-        customer.save()
-        return discount
-    return 0
-```
+| POST | `/api/crm/customers/` | Create customer |
+| GET | `/api/crm/customers/` | List customers |
+| GET | `/api/crm/customers/{id}/` | Get customer with history |
+| PATCH | `/api/crm/customers/{id}/` | Update customer |
+| POST | `/api/crm/import/` | Bulk import customers from Excel/CSV |
+| GET | `/api/crm/import/template/` | Download sample Excel import template |
+| GET | `/api/crm/enquiries/` | List consultation leads from public site |
 
 ---
 
@@ -253,11 +178,11 @@ def redeem_points(customer, points_to_redeem):
 | Feature | Description |
 |---------|-------------|
 | Product CRUD | Add, edit, delete products |
-| Stock Management | Track inventory levels |
-| Low Stock Alerts | Notify when stock < threshold |
+| Stock Management | Track inventory levels and stock adjustments |
+| Low Stock Alerts | Notify when stock $\le$ threshold |
 | Barcode Generation | Generate barcode for new products |
-| Categories | Analog, Digital, Smart, Wall, Accessory |
-| Bulk Import | Import products from Excel |
+| Categories | Analog, Digital, Smart, Wall, Luxury, Vintage |
+| Bulk Import | Import products from Excel/CSV with row validation |
 
 #### API Endpoints
 
@@ -268,19 +193,8 @@ def redeem_points(customer, points_to_redeem):
 | GET | `/api/products/{id}/` | Get product details |
 | PATCH | `/api/products/{id}/` | Update product |
 | DELETE | `/api/products/{id}/` | Soft delete product |
-| POST | `/api/products/bulk-import/` | Import from Excel |
+| POST | `/api/products/bulk-import/` | Import from Excel/CSV |
 | GET | `/api/products/low-stock/` | Get low stock items |
-
-#### Stock Threshold Alert
-
-```python
-LOW_STOCK_THRESHOLD = 5
-
-def check_low_stock():
-    low_stock = Product.objects.filter(stock__lte=LOW_STOCK_THRESHOLD, is_active=True)
-    for product in low_stock:
-        create_alert(f"Low stock: {product.name} ({product.stock} left)")
-```
 
 ---
 
@@ -290,11 +204,11 @@ def check_low_stock():
 
 | Feature | Description |
 |---------|-------------|
-| Log Expenses | Record business expenses |
-| Categories | Rent, Salary, Utilities, Maintenance, Purchase |
+| Log Expenses | Record business expenses across 8 accounts |
+| Categories | Rent, Salary, Utilities, Maintenance, Inventory, Marketing, Packaging, Other |
 | Receipt Upload | Attach receipt image |
 | Monthly Summary | View expenses by month |
-| Profit Integration | Factor expenses into profit calculations |
+| Profit Integration | Factor expenses into Net Profit calculations |
 
 #### API Endpoints
 
@@ -314,28 +228,16 @@ def check_low_stock():
 | Feature | Description |
 |---------|-------------|
 | WhatsApp Integration | Send via Twilio WhatsApp API |
-| SMS Fallback | Send SMS if WhatsApp fails |
+| SMS Fallback | Send SMS if WhatsApp delivery fails |
 | Templates | Predefined message templates |
-| Bulk Send | Send offers to multiple customers |
-| Status Tracking | Track sent/pending/failed |
+| Status Tracking | Track sent/delivered/failed states |
 
 #### API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | POST | `/api/notifications/send/` | Send notification |
-| POST | `/api/notifications/bulk/` | Send bulk notifications |
 | GET | `/api/notifications/` | List notifications |
-| GET | `/api/notifications/templates/` | Get message templates |
-
-#### Message Templates
-
-| Template | Message |
-|----------|---------|
-| sale_receipt | "Thank you for your purchase at Meghani Watch Co. Invoice: {invoice_number}" |
-| repair_ready | "Your {item_type} is ready for pickup. Ticket: {ticket_number}" |
-| birthday | "Happy Birthday {name}! Visit us for a special 10% discount today." |
-| warranty_expiry | "Your warranty for {product_name} expires on {date}. Renew now!" |
 
 ---
 
@@ -345,21 +247,21 @@ def check_low_stock():
 
 | Feature | Description |
 |---------|-------------|
-| User Preferences | Theme, language, notification settings |
-| Business Settings | Store name, address, GST, logo |
-| Backup | Manual database backup |
-| Cloud Sync | Sync data to cloud |
-| Data Export | Export all data as Excel/CSV |
+| Business Settings | Store name, address, GST, phone numbers, invoice notes |
+| Gzip Database Backup | One-click JSON gzip backup creation, listing, restore, download |
+| Website CMS | Manage homepage hero banners, brand partners, milestones, gallery |
 
 #### API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `/api/settings/` | Get all settings |
-| PATCH | `/api/settings/` | Update settings |
-| POST | `/api/backup/create/` | Create backup |
-| GET | `/api/backup/list/` | List backups |
-| POST | `/api/backup/restore/` | Restore from backup |
+| GET | `/api/core/settings/` | Get business settings |
+| PATCH | `/api/core/settings/` | Update business settings |
+| POST | `/api/core/backup/create/` | Create gzip database backup |
+| GET | `/api/core/backup/list/` | List backups |
+| POST | `/api/core/backup/restore/` | Restore from backup |
+| GET | `/api/core/backup/download/{filename}/` | Download backup file |
+| DELETE | `/api/core/backup/delete/{filename}/` | Delete backup file |
 
 ---
 

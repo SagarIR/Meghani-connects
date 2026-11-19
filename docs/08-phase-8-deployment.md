@@ -1,9 +1,9 @@
 # Phase 8 – Deployment & Hosting
 
-> **Current Status:** NEEDS VERIFICATION  
-> **Progress:** 5 / 6 verified tasks  
-> **Last Updated:** 2026-11-17  
-> **Next Action:** Provision live production infrastructure (Render/AWS), configure DNS records, and verify live SSL certificates.  
+> **Current Status:** PARTIALLY COMPLETED  
+> **Progress:** 3 / 6 verified tasks complete (50.0%), 2 partial (33.3%), 1 pending (16.7%)  
+> **Last Updated:** 2026-11-19  
+> **Next Action:** Resolve pre-deployment container prerequisites (`next.config.js` standalone mode, WhiteNoise middleware), then provision live production infrastructure.  
 > **Master Tracker Reference:** [PROJECT_EXECUTION_TRACKER.md](./PROJECT_EXECUTION_TRACKER.md)
 
 ---
@@ -12,36 +12,38 @@
 
 | Task | Status | Evidence | Remaining Work |
 |:---|:---:|:---|:---|
-| Docker Containerization & Multi-Container Compose | **COMPLETED** | `docker-compose.yml`, `docker-compose.dev.yml`, `backend/Dockerfile`, `frontend/Dockerfile`. | None. |
+| Docker Containerization & Multi-Container Compose | **PARTIALLY COMPLETED (BUG-01)** | `docker-compose.yml`, `docker-compose.dev.yml`, `backend/Dockerfile`, `frontend/Dockerfile` present. | `frontend/next.config.js` lacks `output: 'standalone'`, causing frontend Docker image build failure (`BUG-01`). |
 | Production Environment Variable Specification | **COMPLETED** | `backend/.env.example` and `frontend/.env.example` catalog all required keys. | None. |
-| Static Asset & Cloudinary CDN Media Storage | **COMPLETED** | WhiteNoise configured for Django staticfiles; `apps/core/cloudinary_service.py` handles image uploads with local media fallback. | None. |
+| Static Asset & Cloudinary CDN Media Storage | **PARTIALLY COMPLETED (BUG-02)** | Cloudinary signed CDN delivery active via `apps/core/cloudinary_service.py` with local fallback. | WhiteNoise package missing in `backend/requirements.txt` and absent from `MIDDLEWARE` in `settings.py` (`BUG-02`). |
 | SEO Microdata, Dynamic Sitemap & Robots Directives | **COMPLETED** | Verified JSON-LD schemas (`JewelryStore`, `Product`, `BreadcrumbList`), dynamic `sitemap.ts`, and `robots.ts`. | None. |
 | Automated Database Backup Archiving & Vault | **COMPLETED** | `apps/core/backup_service.py` creates gzip-compressed JSON snapshots with one-click restore and deletion. | None. |
-| Production Cloud Hosting & Reverse Proxy | **NEEDS VERIFICATION** | Render, Vercel, and AWS EC2 deployment topologies documented in `DEPLOY.md`. Actual live hosting requires live cloud infrastructure provisioning. | Provision live server, execute Docker Compose, configure domain DNS and SSL. |
+| Production Cloud Hosting & Reverse Proxy | **PENDING** | Render, Vercel, and AWS EC2 deployment runbooks documented in `DEPLOY.md`. Live cloud hosting unprovisioned. | Provision live server, execute Docker Compose, configure domain DNS records and Cloudflare SSL. |
 
 ---
 
 ## Completed Tasks
-- [x] Multi-container Docker configuration supporting frontend, backend, PostgreSQL, Redis, and Celery workers.
-- [x] Comprehensive `.env.example` templates specifying all operational and third-party credential keys.
-- [x] Hybrid media storage pipeline supporting Cloudinary signed CDN delivery with graceful local filesystem fallbacks.
-- [x] Search engine discovery suite with canonical sitemap generators, robots exclusion policies for ERP routes, and luxury structured data.
-- [x] Automated database backup manager generating compressed gzip snapshots with one-click restore and download.
+- [x] Comprehensive `.env.example` templates specifying all operational, database, and third-party credential keys.
+- [x] Search engine discovery suite with canonical sitemap generator, robots exclusion policies for ERP routes, and luxury JSON-LD structured data.
+- [x] Automated database backup manager generating compressed gzip snapshots with one-click restore, listing, and download endpoints.
+
+## Incomplete / Partially Completed Tasks
+- [ ] **BUG-01:** Uncomment `output: 'standalone'` in `frontend/next.config.js` to enable multi-stage Docker builds.
+- [ ] **BUG-02:** Add `whitenoise>=6.5.0` to `backend/requirements.txt` and insert `whitenoise.middleware.WhiteNoiseMiddleware` into `backend/core/settings.py`.
 
 ## Pending Tasks
 - [ ] Deploy containerized application to live cloud hosting platform (Render, AWS EC2, or Vercel).
-- [ ] Configure custom domain DNS records (`meghaniwatch.com` and `api.meghaniwatch.com`) with Cloudflare Full SSL.
+- [ ] Configure custom domain DNS records (`meghaniwatch.com` and `api.meghaniwatch.com`) with Cloudflare Full (Strict) SSL.
 
 ## Blocked Tasks
 *None. Awaiting client provisioning of production cloud credentials.*
 
 ## Completion Criteria
-1. Backend and frontend containers boot and communicate seamlessly via internal Docker network. *(PASSED)*
+1. Backend and frontend containers boot and communicate seamlessly via internal Docker network. *(PENDING BUG-01 FIX)*
 2. Production domain responds with valid SSL certificate and 200 OK on health endpoints. *(NEEDS LIVE CLOUD)*
 3. Scheduled database backups archive safely to off-site cloud storage. *(PASSED LOCALLY)*
 
 ## Next Action
-Provision staging or production cloud instance using Docker Compose runbook in [DEPLOY.md](./deployment/DEPLOY.md).
+Apply pre-deployment fixes (`BUG-01` and `BUG-02`), then proceed with production cloud instance deployment using the runbook in [DEPLOY.md](./deployment/DEPLOY.md).
 
 ---
 
@@ -63,7 +65,7 @@ Deploy the application to production with proper configuration, security, and ba
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
 │                    CLOUDFLARE (CDN + SSL)                   │
-│                    meghani-connect.com                      │
+│                    meghaniwatch.com                         │
 └─────────────────────────────────────────────────────────────┘
                     │                       │
                     ▼                       ▼
@@ -71,21 +73,53 @@ Deploy the application to production with proper configuration, security, and ba
 │     VERCEL / NETLIFY     │   │    RENDER / AWS EC2      │
 │     (Frontend - Next.js) │   │    (Backend - Django)    │
 │                          │   │                          │
-│  meghani-connect.com     │   │  api.meghani-connect.com │
+│  meghaniwatch.com        │   │  api.meghaniwatch.com    │
 └──────────────────────────┘   └──────────────────────────┘
                                            │
               ┌────────────────────────────┼────────────────────────────┐
               │                            │                            │
               ▼                            ▼                            ▼
 ┌──────────────────────┐   ┌──────────────────────┐   ┌──────────────────────┐
-│    AWS RDS           │   │       REDIS          │   │       AWS S3         │
+│    AWS RDS           │   │       REDIS          │   │    CLOUDINARY / S3   │
 │    (PostgreSQL)      │   │    (Celery Broker)   │   │    (Media + Backup)  │
 └──────────────────────┘   └──────────────────────┘   └──────────────────────┘
 ```
 
 ---
 
-### 1. Backend Deployment (Django on Render)
+### 1. Pre-Deployment Configuration Checklist (Crucial Fixes)
+
+Before building Docker images or deploying to production, ensure these prerequisite configurations are in place:
+
+1. **Frontend Standalone Build (`BUG-01`):**
+   In `frontend/next.config.js`, uncomment or set:
+   ```javascript
+   const nextConfig = {
+     output: 'standalone',
+     // ...
+   };
+   module.exports = nextConfig;
+   ```
+   *Why:* `frontend/Dockerfile` relies on `COPY --from=builder /app/.next/standalone ./` and `COPY --from=builder /app/.next/static ./.next/static`. Without this setting, the Docker build fails.
+
+2. **Backend Static Files Serving (`BUG-02`):**
+   In `backend/requirements.txt`, append:
+   ```txt
+   whitenoise>=6.5.0
+   ```
+   In `backend/core/settings.py`, register the middleware directly after `SecurityMiddleware`:
+   ```python
+   MIDDLEWARE = [
+       'django.middleware.security.SecurityMiddleware',
+       'whitenoise.middleware.WhiteNoiseMiddleware',
+       # ...
+   ]
+   STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+   ```
+
+---
+
+### 2. Backend Deployment (Django on Render / AWS EC2)
 
 #### Option A: Render (Recommended for simplicity)
 
@@ -98,7 +132,7 @@ services:
     env: python
     region: singapore  # Closest to India
     plan: starter
-    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
     startCommand: gunicorn core.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
       - key: DEBUG
@@ -110,9 +144,9 @@ services:
           name: meghani-db
           property: connectionString
       - key: ALLOWED_HOSTS
-        value: api.meghani-connect.com
+        value: api.meghaniwatch.com
       - key: CORS_ALLOWED_ORIGINS
-        value: https://meghani-connect.com
+        value: https://meghaniwatch.com
 
 databases:
   - name: meghani-db
@@ -133,7 +167,7 @@ sudo apt install python3.11 python3.11-venv python3-pip nginx postgresql-client 
 
 # Clone repository
 git clone https://github.com/your-repo/meghani-connect-api.git
-cd meghani-connect-api
+cd meghani-connect-api/backend
 
 # Create virtual environment
 python3.11 -m venv venv
@@ -144,7 +178,7 @@ pip install -r requirements.txt
 cp .env.example .env
 nano .env  # Add production values
 
-# Run migrations
+# Run migrations and collect static
 python manage.py migrate
 python manage.py collectstatic --noinput
 
@@ -164,10 +198,10 @@ After=network.target
 [Service]
 User=ubuntu
 Group=www-data
-WorkingDirectory=/home/ubuntu/meghani-connect-api
-Environment="PATH=/home/ubuntu/meghani-connect-api/venv/bin"
-EnvironmentFile=/home/ubuntu/meghani-connect-api/.env
-ExecStart=/home/ubuntu/meghani-connect-api/venv/bin/gunicorn \
+WorkingDirectory=/home/ubuntu/meghani-connect-api/backend
+Environment="PATH=/home/ubuntu/meghani-connect-api/backend/venv/bin"
+EnvironmentFile=/home/ubuntu/meghani-connect-api/backend/.env
+ExecStart=/home/ubuntu/meghani-connect-api/backend/venv/bin/gunicorn \
     --workers 3 \
     --bind unix:/run/gunicorn.sock \
     core.wsgi:application
@@ -183,16 +217,16 @@ WantedBy=multi-user.target
 
 server {
     listen 80;
-    server_name api.meghani-connect.com;
+    server_name api.meghaniwatch.com;
 
     location = /favicon.ico { access_log off; log_not_found off; }
     
     location /static/ {
-        alias /home/ubuntu/meghani-connect-api/staticfiles/;
+        alias /home/ubuntu/meghani-connect-api/backend/staticfiles/;
     }
 
     location /media/ {
-        alias /home/ubuntu/meghani-connect-api/media/;
+        alias /home/ubuntu/meghani-connect-api/backend/media/;
     }
 
     location / {
@@ -204,7 +238,7 @@ server {
 
 ---
 
-### 2. Frontend Deployment (Next.js on Vercel)
+### 3. Frontend Deployment (Next.js on Vercel)
 
 #### vercel.json
 
@@ -215,7 +249,7 @@ server {
   "framework": "nextjs",
   "regions": ["sin1"],
   "env": {
-    "NEXT_PUBLIC_API_URL": "https://api.meghani-connect.com"
+    "NEXT_PUBLIC_API_URL": "https://api.meghaniwatch.com/api"
   }
 }
 ```
@@ -223,17 +257,15 @@ server {
 #### Deploy Commands
 
 ```bash
-# Install Vercel CLI
+cd frontend
 npm i -g vercel
-
-# Login and deploy
 vercel login
 vercel --prod
 ```
 
 ---
 
-### 3. Database (PostgreSQL on AWS RDS)
+### 4. Database (PostgreSQL on AWS RDS / Render)
 
 #### RDS Configuration
 
@@ -243,16 +275,8 @@ vercel --prod
 | Instance | db.t3.micro (free tier) / db.t3.small |
 | Storage | 20 GB (auto-scaling) |
 | Region | ap-south-1 (Mumbai) |
-| Multi-AZ | No (for cost, Yes for production) |
+| Multi-AZ | No (for cost; Yes for high availability) |
 | Backup | 7 days retention |
-
-#### Security Group
-
-```
-Inbound Rules:
-- Type: PostgreSQL (5432)
-- Source: Your EC2 Security Group / Render IPs
-```
 
 #### Connection String
 
@@ -262,196 +286,68 @@ DATABASE_URL=postgres://meghani_admin:password@meghani-db.xxxxxx.ap-south-1.rds.
 
 ---
 
-### 4. Redis (For Celery)
+### 5. Media Storage (Cloudinary & S3 Fallback)
 
-#### Option A: Render Redis
-
-```yaml
-# Add to render.yaml
-services:
-  - type: redis
-    name: meghani-redis
-    plan: starter
-    region: singapore
-```
-
-#### Option B: AWS ElastiCache
-
-| Setting | Value |
-|---------|-------|
-| Engine | Redis 7.x |
-| Node Type | cache.t3.micro |
-| Region | ap-south-1 |
-
----
-
-### 5. Media Storage (AWS S3)
-
-#### S3 Bucket Configuration
-
-```bash
-# Create bucket
-aws s3 mb s3://meghani-connect-media --region ap-south-1
-
-# Bucket policy
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Sid": "PublicReadGetObject",
-            "Effect": "Allow",
-            "Principal": "*",
-            "Action": "s3:GetObject",
-            "Resource": "arn:aws:s3:::meghani-connect-media/*"
-        }
-    ]
-}
-```
-
-#### Django Settings
+Media uploads are handled primarily through Cloudinary CDN via `apps.core.cloudinary_service`:
 
 ```python
 # settings.py
+CLOUDINARY_CLOUD_NAME = os.getenv('CLOUDINARY_CLOUD_NAME')
+CLOUDINARY_API_KEY = os.getenv('CLOUDINARY_API_KEY')
+CLOUDINARY_API_SECRET = os.getenv('CLOUDINARY_API_SECRET')
+```
 
-# S3 Configuration
-AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = 'meghani-connect-media'
-AWS_S3_REGION_NAME = 'ap-south-1'
-AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-AWS_DEFAULT_ACL = 'public-read'
-
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/'
+If Cloudinary credentials are not supplied, media uploads fall back gracefully to local media directory storage:
+```python
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 ```
 
 ---
 
-### 6. Domain & SSL
+### 6. Domain & SSL Setup (Cloudflare)
 
-#### DNS Configuration (Cloudflare)
+#### DNS Configuration
 
-| Type | Name | Content |
-|------|------|---------|
-| A | @ | Vercel IP |
-| CNAME | www | meghani-connect.com |
-| CNAME | api | render/ec2 domain |
+| Type | Name | Content | Proxy Status |
+|------|------|---------|:---:|
+| A | `@` | Vercel IP (76.76.21.21) | Proxied (Orange Cloud) |
+| CNAME | `www` | `meghaniwatch.com` | Proxied |
+| CNAME | `api` | Render/EC2 server address | Proxied |
 
-#### SSL (Cloudflare)
-
-- Enable Full (strict) SSL
-- Enable Always Use HTTPS
-- Enable Auto Minify (JS, CSS, HTML)
+#### SSL Settings
+- Enable **Full (strict)** SSL
+- Enable **Always Use HTTPS**
+- Enable **Auto Minify** (JS, CSS, HTML)
+- Enable **Brotli Compression**
 
 ---
 
 ### 7. Backup Strategy
 
-#### Automated Database Backup
+#### Automated Gzip Database Backup
 
-```python
-# scripts/backup_db.py
+Database backups are generated as gzip-compressed JSON snapshots using `apps.core.backup_service`:
 
-import subprocess
-import boto3
-from datetime import datetime
-import os
+- **Create Backup:** `POST /api/core/backup/create/`
+- **List Backups:** `GET /api/core/backup/list/`
+- **Restore Backup:** `POST /api/core/backup/restore/`
+- **Download Backup:** `GET /api/core/backup/download/{filename}/`
+- **Delete Backup:** `DELETE /api/core/backup/delete/{filename}/`
 
-def backup_database():
-    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-    filename = f'backup_{timestamp}.sql'
-    
-    # Create backup
-    subprocess.run([
-        'pg_dump',
-        '-h', os.getenv('DATABASE_HOST'),
-        '-U', os.getenv('DATABASE_USER'),
-        '-d', os.getenv('DATABASE_NAME'),
-        '-f', filename
-    ])
-    
-    # Compress
-    subprocess.run(['gzip', filename])
-    
-    # Upload to S3
-    s3 = boto3.client('s3')
-    s3.upload_file(
-        f'{filename}.gz',
-        'meghani-connect-backups',
-        f'database/{filename}.gz'
-    )
-    
-    # Cleanup local file
-    os.remove(f'{filename}.gz')
-    
-    print(f'Backup completed: {filename}.gz')
-
-if __name__ == '__main__':
-    backup_database()
-```
-
-#### Cron Job (EC2)
-
-```bash
-# Nightly backup at 2 AM
-0 2 * * * /home/ubuntu/meghani-connect-api/venv/bin/python /home/ubuntu/meghani-connect-api/scripts/backup_db.py >> /var/log/backup.log 2>&1
-```
-
-#### Celery Task (Alternative)
-
-```python
-@shared_task
-def nightly_backup():
-    from scripts.backup_db import backup_database
-    backup_database()
-```
+Snapshots are stored under `backend/backups/` and include checksum validation and automatic directory creation.
 
 ---
 
-### 8. Environment Variables Checklist
+### 8. Monitoring & Health Checks
 
-#### Backend (.env)
+#### Health Check Endpoints
 
-```env
-# Django
-DEBUG=False
-SECRET_KEY=your-production-secret-key
-ALLOWED_HOSTS=api.meghani-connect.com
-
-# Database
-DATABASE_URL=postgres://user:pass@host:5432/dbname
-
-# Redis
-REDIS_URL=redis://hostname:6379/0
-
-# AWS
-AWS_ACCESS_KEY_ID=your-key
-AWS_SECRET_ACCESS_KEY=your-secret
-AWS_STORAGE_BUCKET_NAME=meghani-connect-media
-
-# Twilio
-TWILIO_ACCOUNT_SID=your-sid
-TWILIO_AUTH_TOKEN=your-token
-TWILIO_WHATSAPP_NUMBER=whatsapp:+14155238886
-
-# Razorpay
-RAZORPAY_KEY_ID=your-key
-RAZORPAY_KEY_SECRET=your-secret
-
-# CORS
-CORS_ALLOWED_ORIGINS=https://meghani-connect.com
-```
-
-#### Frontend (.env.production)
-
-```env
-NEXT_PUBLIC_API_URL=https://api.meghani-connect.com
-NEXT_PUBLIC_APP_NAME=Meghani Connect 360
-```
-
----
-
-### 9. Monitoring & Logging
+| Endpoint | Method | Permission | Description |
+|----------|:---:|:---:|-------------|
+| `/api/core/health/` | GET | AllowAny | Overall health, DB connectivity, Redis status, uptime |
+| `/api/core/ready/` | GET | AllowAny | Readiness probe for container orchestrators |
+| `/api/core/live/` | GET | AllowAny | Liveness probe for uptime monitoring |
 
 #### Sentry (Error Tracking)
 
@@ -464,76 +360,30 @@ sentry_sdk.init(
     dsn=os.getenv('SENTRY_DSN'),
     integrations=[DjangoIntegration()],
     traces_sample_rate=0.1,
-    send_default_pii=True
+    send_default_pii=False
 )
 ```
 
-#### Health Check Endpoint
-
-```python
-# apps/core/views.py
-
-class HealthCheckView(APIView):
-    permission_classes = []
-    
-    def get(self, request):
-        return Response({
-            'status': 'healthy',
-            'database': self.check_database(),
-            'redis': self.check_redis(),
-            'timestamp': timezone.now()
-        })
-```
-
 ---
 
-### 10. Deployment Checklist
-
-#### Pre-Deployment
-
-- [ ] All tests passing
-- [ ] Environment variables set
-- [ ] Database migrations tested
-- [ ] Static files collected
-- [ ] SECRET_KEY is unique and secure
-- [ ] DEBUG = False
-- [ ] ALLOWED_HOSTS configured
-
-#### Post-Deployment
-
-- [ ] SSL certificate active
-- [ ] Database connected
-- [ ] Redis connected
-- [ ] Celery workers running
-- [ ] Celery beat running
-- [ ] Media uploads working
-- [ ] Email/WhatsApp notifications working
-- [ ] Backup cron job running
-- [ ] Monitoring active
-- [ ] Test all critical flows
-
----
-
-### Cost Estimate (Monthly)
+### 9. Monthly Cost Estimate
 
 | Service | Provider | Plan | Cost |
 |---------|----------|------|------|
 | Backend | Render | Starter | $7 |
-| Database | Render | Starter | $7 |
-| Redis | Render | Starter | $0 (free) |
-| Frontend | Vercel | Free | $0 |
-| Storage | AWS S3 | Pay as you go | ~$1 |
-| Domain | Cloudflare | Pro | $0 |
-| **Total** | | | **~$15/month** |
+| Database | Render PostgreSQL | Starter | $7 |
+| Redis | Render Redis | Starter | $0 (Free) |
+| Frontend | Vercel | Hobby | $0 (Free) |
+| Media Storage | Cloudinary | Free Tier (25GB) | $0 |
+| Domain & SSL | Cloudflare | Free Tier | $0 |
+| **Total** | | | **~$14/month** |
 
 ---
 
-### Production Upgrade Path
+### 10. Master Verification Status
 
-When traffic grows:
-
-1. **Backend**: Render Starter → Standard ($25/mo)
-2. **Database**: Render Starter → Standard ($15/mo) or AWS RDS
-3. **Add**: Load balancer for multiple backend instances
-4. **Add**: CDN for static assets (CloudFront)
-5. **Add**: Dedicated Redis cluster
+| Item | Classification | Verification Status |
+|:---|:---:|:---|
+| Multi-container Docker | `PARTIALLY COMPLETE` | `BUG-01` (`output: 'standalone'` in `next.config.js`) must be resolved before container builds. |
+| Static file serving | `PARTIALLY COMPLETE` | `BUG-02` (`whitenoise` in `requirements.txt` and `MIDDLEWARE`) must be added for production staticfiles. |
+| Production cloud hosting | `PENDING` | Awaiting live infrastructure provisioning, DNS, and SSL. |

@@ -127,17 +127,24 @@ CREATE TABLE users (
 class User(AbstractBaseUser, PermissionsMixin):
     ROLE_CHOICES = [
         ('admin', 'Admin'),
+        ('manager', 'Manager'),
         ('staff', 'Staff'),
-        ('customer', 'Customer'),
+        ('viewer', 'Viewer'),
+    ]
+    LANGUAGE_CHOICES = [
+        ('en', 'English'),
+        ('hi', 'Hindi'),
+        ('gu', 'Gujarati'),
     ]
     
     name = models.CharField(max_length=100)
     username = models.CharField(max_length=50, unique=True)
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES)
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='staff')
     phone = models.CharField(max_length=15, blank=True)
     email = models.EmailField(blank=True)
-    language = models.CharField(max_length=10, default='en')
+    language = models.CharField(max_length=10, choices=LANGUAGE_CHOICES, default='en')
     is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -224,6 +231,34 @@ class Customer(models.Model):
     date_of_birth = models.DateField(blank=True, null=True)
     language_preference = models.CharField(max_length=10, default='en')
     loyalty_points = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class Enquiry(models.Model):
+    ENQUIRY_TYPE_CHOICES = [
+        ('viewing', 'Private Boutique Viewing'),
+        ('product', 'Product Inquiry'),
+        ('service', 'Watchmaker Service / Repair'),
+        ('general', 'General Inquiry'),
+    ]
+    STATUS_CHOICES = [
+        ('new', 'New'),
+        ('contacted', 'Contacted'),
+        ('converted', 'Converted'),
+        ('closed', 'Closed'),
+    ]
+
+    name = models.CharField(max_length=100)
+    phone = models.CharField(max_length=20)
+    email = models.EmailField(blank=True)
+    enquiry_type = models.CharField(max_length=20, choices=ENQUIRY_TYPE_CHOICES, default='viewing')
+    preferred_date = models.CharField(max_length=100, blank=True)
+    product = models.ForeignKey('products.Product', on_delete=models.SET_NULL, null=True, blank=True, related_name='enquiries')
+    product_name = models.CharField(max_length=200, blank=True)
+    message = models.TextField(blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='new')
+    notes = models.TextField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 ```
