@@ -59,12 +59,12 @@ export default function RepairQueue() {
               <Wrench className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-serif font-bold text-sm sm:text-base text-[#F3EFE6]">Repair Atelier</h3>
-              <p className="text-[11px] font-mono text-[#8D8980]">Active timepiece servicing</p>
+              <h3 className="font-serif font-bold text-sm sm:text-base text-[#F3EFE6]">Watch Repairs</h3>
+              <p className="text-[11px] font-mono text-[#8D8980]">Active watch repairs</p>
             </div>
           </div>
           <Link href="/repairs" className="text-xs font-semibold text-[#C9A45C] hover:text-[#E8D5A7] flex items-center gap-1 transition-colors">
-            <span>View atelier</span>
+            <span>View all repairs</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -86,7 +86,7 @@ export default function RepairQueue() {
           </div>
         ) : repairs.length === 0 ? (
           <div className="p-6 text-center text-[#8D8980]">
-            <p className="text-xs">All repair tickets are current and delivered</p>
+            <p className="text-xs">No pending watch repairs</p>
           </div>
         ) : (
           repairs.slice(0, 5).map((repair, index) => {

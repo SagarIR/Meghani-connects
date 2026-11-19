@@ -84,8 +84,8 @@ export default function KeyboardShortcutsModal() {
                     <Keyboard className="w-4 h-4 sm:w-5 sm:h-5" />
                   </div>
                   <div>
-                    <h2 className="text-lg sm:text-xl font-bold font-serif text-[#F3EFE6] tracking-wide">Keyboard Navigation</h2>
-                    <p className="text-xs sm:text-sm text-[#8D8980] hidden sm:block">Tactile shortcuts for rapid boutique operations</p>
+                    <h2 className="text-lg sm:text-xl font-bold font-serif text-[#F3EFE6] tracking-wide">Keyboard Shortcuts</h2>
+                    <p className="text-xs sm:text-sm text-[#8D8980] hidden sm:block">Quick keyboard shortcuts for daily store operations</p>
                   </div>
                 </div>
                 <button

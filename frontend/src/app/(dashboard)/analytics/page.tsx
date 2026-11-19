@@ -106,7 +106,7 @@ export default function AnalyticsSuitePage() {
         action,
         notes
       })
-      toast.success(`Replenishment recommendation ${action}d`)
+      toast.success(`Restock recommendation ${action}d`)
       fetchReorder()
     } catch (err: any) {
       toast.error(err.response?.data?.error || `Failed to ${action} recommendation`)
@@ -142,11 +142,11 @@ export default function AnalyticsSuitePage() {
   const fetchAnomalies = async () => {
     setLoading(true)
     try {
-      const res = await api.get(`/analytics/ai/anomalies/?status=${anomalyFilter}`)
+      const res = await api.get('/analytics/ai/anomalies/?status=${anomalyFilter}')
       setAnomalyData(res.data)
     } catch (err) {
       console.error(err)
-      toast.error('Failed to load business anomalies')
+      toast.error('Failed to load unusual activity alerts')
     } finally {
       setLoading(false)
     }
@@ -159,10 +159,10 @@ export default function AnalyticsSuitePage() {
         action,
         notes
       })
-      toast.success(`Anomaly signal ${action}d`)
+      toast.success(`Alert marked as ${action}d`)
       fetchAnomalies()
     } catch (err: any) {
-      toast.error(err.response?.data?.error || `Failed to ${action} anomaly`)
+      toast.error(err.response?.data?.error || `Failed to ${action} alert`)
     }
   }
 
@@ -173,7 +173,7 @@ export default function AnalyticsSuitePage() {
       setCrmData(res.data)
     } catch (err) {
       console.error(err)
-      toast.error('Failed to load CRM customer intelligence')
+      toast.error('Failed to load customer insights')
     } finally {
       setLoading(false)
     }
@@ -186,7 +186,7 @@ export default function AnalyticsSuitePage() {
       setAuditData(res.data)
     } catch (err) {
       console.error(err)
-      toast.error('Failed to load operational audit timeline')
+      toast.error('Failed to load activity log')
     } finally {
       setLoading(false)
     }
@@ -226,12 +226,12 @@ export default function AnalyticsSuitePage() {
 
   return (
     <div className="space-y-6 lg:space-y-8 text-[#F3EFE6] pb-12">
-      {/* Executive Command Header */}
+      {/* Header */}
       <div className="bg-[#171613] border border-[#2A261F] rounded-2xl p-6 shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
             <span className="text-[10px] font-mono font-bold tracking-widest text-[#C9A45C] uppercase bg-[#C9A45C]/10 px-2 py-0.5 rounded border border-[#C9A45C]/20">
-              MEGHANI 360 HOROLOGICAL INTELLIGENCE
+              MEGHANI 360 BUSINESS INTELLIGENCE
             </span>
             <span className="text-[#8D8980]">•</span>
             <span className="text-xs font-mono text-emerald-400 flex items-center gap-1">
@@ -239,11 +239,10 @@ export default function AnalyticsSuitePage() {
             </span>
           </div>
           <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#F3EFE6] tracking-wide">
-            Executive AI & Business Intelligence
+            Store Analytics & AI Insights
           </h1>
           <p className="text-xs sm:text-sm text-[#8D8980] mt-1 max-w-2xl font-sans">
-            Explainable forecasting, inventory replenishment optimization, Pareto ABC classification, 
-            statistical anomaly radar, and secure permission-enforced business assistant.
+            Sales forecasts, restock recommendations, ABC inventory classification, unusual activity alerts, and AI store assistant.
           </p>
         </div>
 
@@ -258,12 +257,12 @@ export default function AnalyticsSuitePage() {
               if (activeTab === 'anomalies') fetchAnomalies()
               if (activeTab === 'crm') fetchCrm()
               if (activeTab === 'audit') fetchAudit()
-              toast.success('Intelligence metrics refreshed')
+              toast.success('Analytics refreshed')
             }}
             loading={loading}
             icon={<RefreshCw className={clsx('w-3.5 h-3.5', loading && 'animate-spin')} />}
           >
-            Refresh Desk
+            Refresh Data
           </Button>
         </div>
       </div>
@@ -274,10 +273,10 @@ export default function AnalyticsSuitePage() {
           { id: 'forecasting', label: 'Sales Forecasting', icon: TrendingUp },
           { id: 'reorder', label: 'Smart Reordering', icon: PackageSearch, count: reorderData?.summary?.critical },
           { id: 'abc', label: 'ABC Inventory', icon: PieChartIcon },
-          { id: 'anomalies', label: 'Anomaly Radar', icon: AlertTriangle, count: anomalyData?.counts_by_severity?.critical },
-          { id: 'crm', label: 'Clientele Intelligence', icon: Users },
-          { id: 'assistant', label: 'AI Business Assistant', icon: Sparkles },
-          { id: 'audit', label: 'Operational Audit', icon: ShieldCheck },
+          { id: 'anomalies', label: 'Activity Alerts', icon: AlertTriangle, count: anomalyData?.counts_by_severity?.critical },
+          { id: 'crm', label: 'Customer Insights', icon: Users },
+          { id: 'assistant', label: 'Store AI Assistant', icon: Sparkles },
+          { id: 'audit', label: 'Activity Log', icon: ShieldCheck },
         ].map((tab) => {
           const Icon = tab.icon
           const isActive = activeTab === tab.id
@@ -376,7 +375,7 @@ export default function AnalyticsSuitePage() {
             </div>
 
             <div className="bg-[#171613] border border-[#2A261F] rounded-2xl p-5 shadow-lg">
-              <p className="text-xs font-mono text-[#8D8980] uppercase">Peak Trading Behaviour</p>
+              <p className="text-xs font-mono text-[#8D8980] uppercase">Peak Sales Day</p>
               <h3 className="font-serif text-2xl font-bold text-amber-300 mt-1">
                 {forecastData?.patterns?.peak_day || 'Saturday'}
               </h3>
@@ -433,8 +432,8 @@ export default function AnalyticsSuitePage() {
           {/* Day of Week Distribution Chart */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="bg-[#171613] border border-[#2A261F] rounded-2xl p-6 shadow-xl space-y-4">
-              <h3 className="font-serif text-lg font-bold text-[#F3EFE6]">Day-of-Week Purchasing Affinity</h3>
-              <p className="text-xs font-mono text-[#8D8980]">Historical average daily revenue across horological boutique week</p>
+              <h3 className="font-serif text-lg font-bold text-[#F3EFE6]">Day-of-Week Sales Pattern</h3>
+              <p className="text-xs font-mono text-[#8D8980]">Historical average daily revenue across the week</p>
               
               <div className="h-60 w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -467,7 +466,7 @@ export default function AnalyticsSuitePage() {
                     </div>
                     <div className="text-right">
                       <p className="text-xs font-mono font-bold text-[#C9A45C]">{formatCurrency(w.predicted_revenue)}</p>
-                      <p className="text-[10px] font-mono text-[#8D8980]">{w.predicted_volume} timepieces</p>
+                      <p className="text-[10px] font-mono text-[#8D8980]">{w.predicted_volume} watches</p>
                     </div>
                   </div>
                 ))}
@@ -518,11 +517,11 @@ export default function AnalyticsSuitePage() {
             <div className="flex items-center gap-2">
               <Compass className="w-4 h-4 text-[#C9A45C]" />
               <span>
-                <strong>Deterministic Replenishment Formula:</strong> Reorder Point (ROP) = (Average Daily Demand × Lead Time) + Safety Stock.
+                <strong>Restock Formula:</strong> Reorder Point (ROP) = (Average Daily Sales × Lead Time) + Safety Stock.
               </span>
             </div>
             <span className="text-[11px] font-mono text-[#8D8980] hidden md:inline">
-              Requires explicit manager approval before purchase orders
+              Requires manager approval before creating purchase orders
             </span>
           </div>
 
@@ -532,9 +531,9 @@ export default function AnalyticsSuitePage() {
               <table className="w-full text-left text-xs">
                 <thead className="bg-[#12110F] text-[#8D8980] uppercase font-mono border-b border-[#2A261F]">
                   <tr>
-                    <th className="py-3.5 px-4">Timepiece / Brand</th>
+                    <th className="py-3.5 px-4">Watch / Brand</th>
                     <th className="py-3.5 px-3">Current Stock</th>
-                    <th className="py-3.5 px-3">Daily Velocity</th>
+                    <th className="py-3.5 px-3">Daily Sales</th>
                     <th className="py-3.5 px-3">Reorder Point</th>
                     <th className="py-3.5 px-3">Stockout Date</th>
                     <th className="py-3.5 px-3">Suggested Order</th>
@@ -590,7 +589,7 @@ export default function AnalyticsSuitePage() {
                             <button
                               onClick={() => setSelectedReorderExplanation(r)}
                               className="p-1.5 rounded-lg bg-[#1F1E1A] text-[#8D8980] hover:text-[#C9A45C] hover:bg-[#282620] transition-colors"
-                              title="Inspect Mathematical Explanation"
+                              title="View Calculation Details"
                             >
                               <Info className="w-3.5 h-3.5" />
                             </button>
@@ -788,7 +787,7 @@ export default function AnalyticsSuitePage() {
               <Search className="w-4 h-4 text-[#8D8980] absolute left-3.5 top-1/2 -translate-y-1/2" />
               <input
                 type="text"
-                placeholder="Search timepieces by name or brand..."
+                placeholder="Search watches by name or brand..."
                 value={abcSearch}
                 onChange={(e) => setAbcSearch(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 bg-[#171613] border border-[#2A261F] rounded-xl text-xs text-[#F3EFE6] focus:border-[#C9A45C] focus:outline-none"
@@ -819,12 +818,12 @@ export default function AnalyticsSuitePage() {
                 <thead className="bg-[#12110F] text-[#8D8980] uppercase font-mono border-b border-[#2A261F]">
                   <tr>
                     <th className="py-3 px-4">Class</th>
-                    <th className="py-3 px-4">Timepiece</th>
+                    <th className="py-3 px-4">Watch</th>
                     <th className="py-3 px-3">Revenue Contribution</th>
                     <th className="py-3 px-3">Cumulative %</th>
                     <th className="py-3 px-3">Units Sold</th>
                     <th className="py-3 px-3">Gross Margin</th>
-                    <th className="py-3 px-4 text-right">Inventory Valuation</th>
+                    <th className="py-3 px-4 text-right">Stock Value</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#2A261F]/60">
@@ -931,8 +930,8 @@ export default function AnalyticsSuitePage() {
             {(anomalyData?.anomalies || []).length === 0 ? (
               <div className="p-12 text-center rounded-2xl bg-[#171613] border border-[#2A261F] text-[#8D8980]">
                 <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
-                <p className="font-serif text-sm">Anomaly Radar Clear</p>
-                <p className="text-xs font-mono mt-1">No anomalous transactions or inventory deviations detected.</p>
+                <p className="font-serif text-sm">No Activity Alerts</p>
+                <p className="text-xs font-mono mt-1">No unusual transactions or stock discrepancies detected.</p>
               </div>
             ) : (
               anomalyData.anomalies.map((a: any) => (
@@ -1000,7 +999,7 @@ export default function AnalyticsSuitePage() {
       )}
 
       {/* ========================================================= */}
-      {/* TAB 5: CLIENTELE INTELLIGENCE */}
+      {/* TAB 5: CUSTOMER INSIGHTS */}
       {/* ========================================================= */}
       {activeTab === 'crm' && (
         <div className="space-y-6">
@@ -1017,9 +1016,9 @@ export default function AnalyticsSuitePage() {
             </div>
 
             <div className="bg-[#171613] border border-[#2A261F] rounded-2xl p-5 shadow-lg">
-              <p className="text-xs font-mono text-[#8D8980] uppercase">High-Value VIPs</p>
+              <p className="text-xs font-mono text-[#8D8980] uppercase">High-Value Customers</p>
               <h3 className="font-serif text-2xl font-bold text-[#C9A45C] mt-1">
-                {crmData?.high_value_vip_count || 0} Clients
+                {crmData?.high_value_vip_count || 0} Customers
               </h3>
               <p className="text-[11px] font-mono text-[#8D8980] mt-1">
                 Lifetime spend ≥ ₹50,000 threshold
@@ -1037,9 +1036,9 @@ export default function AnalyticsSuitePage() {
             </div>
 
             <div className="bg-[#171613] border border-[#2A261F] rounded-2xl p-5 shadow-lg">
-              <p className="text-xs font-mono text-[#8D8980] uppercase">Inactive At-Risk Clients</p>
+              <p className="text-xs font-mono text-[#8D8980] uppercase">Inactive Customers</p>
               <h3 className="font-serif text-2xl font-bold text-amber-400 mt-1">
-                {crmData?.inactive_clients_count || 0} Patrons
+                {crmData?.inactive_clients_count || 0} Customers
               </h3>
               <p className="text-[11px] font-mono text-[#8D8980] mt-1">
                 No orders in past 90+ days
@@ -1047,24 +1046,24 @@ export default function AnalyticsSuitePage() {
             </div>
           </div>
 
-          {/* Inactive Client Outreach List */}
+          {/* Inactive Customer Outreach List */}
           <div className="bg-[#171613] border border-[#2A261F] rounded-2xl p-6 shadow-xl space-y-4">
             <div>
-              <h3 className="font-serif text-lg font-bold text-[#F3EFE6]">VIP Re-Engagement & Concierge Outreach</h3>
-              <p className="text-xs font-mono text-[#8D8980]">High-value clientele with no purchases in the last 90+ days</p>
+              <h3 className="font-serif text-lg font-bold text-[#F3EFE6]">Customer Re-Engagement</h3>
+              <p className="text-xs font-mono text-[#8D8980]">Customers with no purchases in the last 90+ days</p>
             </div>
 
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="bg-[#12110F] text-[#8D8980] uppercase font-mono border-b border-[#2A261F]">
                   <tr>
-                    <th className="py-3 px-4">Client Name</th>
+                    <th className="py-3 px-4">Customer Name</th>
                     <th className="py-3 px-3">Phone</th>
-                    <th className="py-3 px-3">Total Historical Spend</th>
+                    <th className="py-3 px-3">Total Spend</th>
                     <th className="py-3 px-3">Loyalty Points</th>
                     <th className="py-3 px-3">Last Order Date</th>
                     <th className="py-3 px-3">Days Inactive</th>
-                    <th className="py-3 px-4 text-right">Concierge Action</th>
+                    <th className="py-3 px-4 text-right">Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#2A261F]/60">
@@ -1079,12 +1078,12 @@ export default function AnalyticsSuitePage() {
                       <td className="py-3 px-4 text-right">
                         <button
                           onClick={() => {
-                            const msg = `Dear ${c.name}, Meghani Watch Co. would love to welcome you back to our Vadodara showroom. We have prepared an exclusive concierge viewing of our newest timepiece collection.`
+                            const msg = `Dear ${c.name}, Meghani Watch Co. (Vadodara) would love to welcome you back. Visit our store to explore our latest watch arrivals!`
                             window.open(`https://wa.me/91${c.phone}?text=${encodeURIComponent(msg)}`, '_blank')
                           }}
                           className="px-2.5 py-1 rounded-lg bg-[#C9A45C]/15 text-[#C9A45C] border border-[#C9A45C]/40 hover:bg-[#C9A45C]/25 text-[11px] font-bold"
                         >
-                          WhatsApp VIP Invite
+                          WhatsApp Message
                         </button>
                       </td>
                     </tr>
@@ -1107,9 +1106,9 @@ export default function AnalyticsSuitePage() {
                 <Sparkles className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="font-serif font-bold text-base text-[#F3EFE6]">Controlled Horological AI Assistant</h3>
+                <h3 className="font-serif font-bold text-base text-[#F3EFE6]">Store AI Assistant</h3>
                 <p className="text-xs font-mono text-[#8D8980]">
-                  Role-enforced analytics queries • Zero arbitrary SQL execution • Financial privacy protected
+                  Ask questions about sales, restock needs, revenue, and store performance
                 </p>
               </div>
             </div>
@@ -1144,9 +1143,9 @@ export default function AnalyticsSuitePage() {
             {assistantConversation.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-center text-[#8D8980] space-y-2">
                 <Compass className="w-8 h-8 text-[#C9A45C]/50" />
-                <p className="font-serif text-sm text-[#F3EFE6]">How can I assist your boutique operations today?</p>
+                <p className="font-serif text-sm text-[#F3EFE6]">How can I help you today?</p>
                 <p className="text-xs max-w-sm">
-                  Click any suggested prompt above or type a natural language inquiry about sales, inventory velocity, or forecasts.
+                  Click any suggested prompt above or type a question about sales, inventory, or forecasts.
                 </p>
               </div>
             ) : (
@@ -1181,7 +1180,7 @@ export default function AnalyticsSuitePage() {
               <div className="flex justify-start">
                 <div className="p-3.5 rounded-2xl bg-[#1F1E1A] border border-[#2A261F] text-xs text-[#8D8980] flex items-center gap-2 animate-pulse">
                   <Sparkles className="w-3.5 h-3.5 text-[#C9A45C] animate-spin" />
-                  <span>Synthesizing enterprise business analytics...</span>
+                  <span>Analyzing store data...</span>
                 </div>
               </div>
             )}
@@ -1221,9 +1220,9 @@ export default function AnalyticsSuitePage() {
       {activeTab === 'audit' && (
         <div className="bg-[#171613] border border-[#2A261F] rounded-2xl p-6 shadow-xl space-y-4">
           <div>
-            <h3 className="font-serif text-lg font-bold text-[#F3EFE6]">Operational Activity Register & Audit Log</h3>
+            <h3 className="font-serif text-lg font-bold text-[#F3EFE6]">Activity Log & Audit Trail</h3>
             <p className="text-xs font-mono text-[#8D8980]">
-              Immutable event log correlated with anomaly detection signals
+              Log of staff actions and store events
             </p>
           </div>
 

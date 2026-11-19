@@ -26,7 +26,7 @@ import toast from 'react-hot-toast'
 import clsx from 'clsx'
 
 const schema = yup.object({
-  name: yup.string().required('Client full name is required'),
+  name: yup.string().required('Customer name is required'),
   phone: yup.string().required('Phone number is required').min(10, 'Valid 10-digit phone required'),
   email: yup.string().email('Invalid email address').nullable(),
   address: yup.string().nullable(),
@@ -45,28 +45,28 @@ const languages = [
 
 const getLoyaltyTier = (points: number) => {
   if (points >= 5000) return { 
-    tier: 'Platinum Connoisseur', 
+    tier: 'Platinum Tier', 
     color: 'text-[#E8D5A7]', 
     bg: 'bg-[#C9A45C]/15', 
     border: 'border-[#C9A45C]/40',
     icon: Crown 
   }
   if (points >= 2000) return { 
-    tier: 'Gold Patron', 
+    tier: 'Gold Tier', 
     color: 'text-[#C9A45C]', 
     bg: 'bg-amber-950/30', 
     border: 'border-amber-800/40',
     icon: Star 
   }
   if (points >= 500) return { 
-    tier: 'Silver Member', 
+    tier: 'Silver Tier', 
     color: 'text-[#F3EFE6]', 
     bg: 'bg-[#1F1E1A]', 
     border: 'border-[#2A261F]',
     icon: Award 
   }
   return { 
-    tier: 'Bronze Member', 
+    tier: 'Bronze Tier', 
     color: 'text-[#8D8980]', 
     bg: 'bg-[#12110F]', 
     border: 'border-[#2A261F]',
@@ -147,7 +147,7 @@ export default function CustomersPage() {
       }
     } catch (error) {
       console.error('Failed to fetch customers:', error)
-      toast.error('Failed to load clientele roster')
+      toast.error('Failed to load customers')
     } finally {
       setLoading(false)
     }
@@ -218,16 +218,16 @@ export default function CustomersPage() {
     try {
       if (selectedCustomer) {
         await api.patch(`/customers/${selectedCustomer.id}/`, data)
-        toast.success('Client profile updated')
+        toast.success('Customer profile updated')
       } else {
         await api.post('/customers/', data)
-        toast.success('New client registered in boutique CRM')
+        toast.success('Customer added successfully')
       }
       setShowFormModal(false)
       fetchCustomers()
     } catch (error: any) {
       if (error.response?.data?.phone) {
-        toast.error('Mobile number already assigned to an existing client')
+        toast.error('Phone number is already registered with another customer')
       } else {
         toast.error(error.response?.data?.detail || 'Operation failed')
       }
@@ -240,7 +240,7 @@ export default function CustomersPage() {
     if (!selectedCustomer) return
     try {
       await api.delete(`/customers/${selectedCustomer.id}/`)
-      toast.success('Client record archived')
+      toast.success('Customer deleted successfully')
       setShowDeleteModal(false)
       fetchCustomers()
     } catch (error) {
@@ -256,7 +256,7 @@ export default function CustomersPage() {
     const cleanPhone = phone.replace(/\D/g, '')
     const phoneWithCountry = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone
     const msg = encodeURIComponent(
-      `Hello ${name || 'Valued Client'},\nGreetings from Meghani Watch Co. (Est. 1984), Vadodara.`
+      `Hello ${name || 'Customer'},\nGreetings from Meghani Watch Co., Vadodara.`
     )
     window.open(`https://wa.me/${phoneWithCountry}?text=${msg}`, '_blank')
   }
@@ -295,12 +295,12 @@ export default function CustomersPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Clientele CRM & VIP Concierge</h1>
+              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Customers & CRM</h1>
               <span className="text-xs px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F] font-mono">
-                {stats.total} patrons
+                {stats.total} customers
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[#8D8980]">Client directories, purchase histories, and luxury loyalty tier programs</p>
+            <p className="text-xs sm:text-sm text-[#8D8980]">Customer directories, purchase histories, and loyalty points</p>
           </div>
         </div>
 
@@ -308,10 +308,10 @@ export default function CustomersPage() {
           <ExportButton 
             data={customers} 
             columns={customerExportColumns} 
-            filename={`meghani_clientele_${new Date().toISOString().split('T')[0]}`} 
+            filename={`meghani_customers_${new Date().toISOString().split('T')[0]}`} 
           />
           <Button onClick={openAddModal} icon={<Plus className="w-4 h-4" />} className="shadow-gold">
-            <span>Register New Client</span>
+            <span>Add Customer</span>
           </Button>
         </div>
       </div>
@@ -324,7 +324,7 @@ export default function CustomersPage() {
               <Users className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Total Clientele</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Total Customers</p>
               <p className="text-2xl font-bold font-mono text-[#F3EFE6]">{stats.total}</p>
             </div>
           </div>
@@ -336,7 +336,7 @@ export default function CustomersPage() {
               <TrendingUp className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Cumulative Spend</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Total Sales</p>
               <p className="text-xl sm:text-2xl font-bold font-mono text-emerald-400">
                 {formatCurrency(stats.totalPurchases)}
               </p>
@@ -350,7 +350,7 @@ export default function CustomersPage() {
               <Gift className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Loyalty Escrow</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Total Loyalty Points</p>
               <p className="text-2xl font-bold font-mono text-[#C9A45C]">{stats.totalPoints.toLocaleString()}</p>
             </div>
           </div>
@@ -363,7 +363,7 @@ export default function CustomersPage() {
             </div>
             <div>
               <p className="text-xs text-[#8D8980] uppercase tracking-wider">Platinum Tier</p>
-              <p className="text-2xl font-bold font-mono text-[#E8D5A7]">{stats.platinum} VIPs</p>
+              <p className="text-2xl font-bold font-mono text-[#E8D5A7]">{stats.platinum} members</p>
             </div>
           </div>
         </div>
@@ -376,7 +376,7 @@ export default function CustomersPage() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8D8980] group-focus-within:text-[#C9A45C] transition-colors" />
             <input
               type="text"
-              placeholder="Search clientele by name, phone number, email or loyalty rank..."
+              placeholder="Search customers by name, phone, email, or tier..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl 
@@ -407,7 +407,7 @@ export default function CustomersPage() {
                   ? 'bg-[#C9A45C] text-[#0B0B0A] font-semibold shadow-sm' 
                   : 'text-[#8D8980] hover:text-[#F3EFE6]'
               )}
-              title="Ledger Table"
+              title="Table View"
             >
               <List className="w-4 h-4" />
             </button>
@@ -436,10 +436,10 @@ export default function CustomersPage() {
           <div className="w-16 h-16 mx-auto bg-[#1F1E1A] border border-[#2A261F] rounded-2xl flex items-center justify-center mb-4">
             <Users className="w-8 h-8 text-[#8D8980]" />
           </div>
-          <h3 className="text-lg font-serif font-bold text-[#F3EFE6] mb-1">No Patrons Found</h3>
-          <p className="text-sm text-[#8D8980] mb-5">Start by adding your first client into the Meghani CRM roster.</p>
+          <h3 className="text-lg font-serif font-bold text-[#F3EFE6] mb-1">No Customers Found</h3>
+          <p className="text-sm text-[#8D8980] mb-5">Start by adding your first customer to the Meghani CRM.</p>
           <Button onClick={openAddModal} icon={<Plus className="w-4 h-4" />}>
-            Register First Client
+            Add Customer
           </Button>
         </div>
       ) : viewMode === 'grid' ? (
@@ -528,7 +528,7 @@ export default function CustomersPage() {
                       onClick={() => openViewModal(customer)}
                       className="flex-1"
                     >
-                      <Eye className="w-3.5 h-3.5 mr-1" /> Dossier
+                      <Eye className="w-3.5 h-3.5 mr-1" /> View
                     </Button>
                     <Button 
                       variant="secondary" 
@@ -541,7 +541,7 @@ export default function CustomersPage() {
                     <button
                       onClick={() => openDeleteModal(customer)}
                       className="p-2 text-[#8D8980] hover:text-rose-400 hover:bg-rose-950/30 rounded-lg transition-colors border border-[#2A261F]"
-                      title="Archive Record"
+                      title="Delete Customer"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -552,17 +552,17 @@ export default function CustomersPage() {
           </AnimatePresence>
         </div>
       ) : (
-        /* Ledger Table View */
+        /* Table View */
         <div className="bg-[#171613] rounded-2xl border border-[#2A261F] overflow-hidden shadow-xl">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[850px]">
               <thead className="bg-[#12110F] border-b border-[#2A261F]">
                 <tr>
                   <th className="px-5 py-3.5 text-left">
-                    <SortableHeader label="Client Full Name" field="name" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                    <SortableHeader label="Customer Name" field="name" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
-                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Contact & Phone</th>
-                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">VIP Loyalty Tier</th>
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Phone & Email</th>
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Loyalty Tier</th>
                   <th className="px-4 py-3.5 text-right text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Total Purchases</th>
                   <th className="px-4 py-3.5 text-right">
                     <SortableHeader label="Points" field="loyalty_points" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
@@ -622,7 +622,7 @@ export default function CustomersPage() {
                           <button 
                             onClick={() => openViewModal(customer)}
                             className="p-1.5 hover:bg-[#2A261F] text-[#8D8980] hover:text-[#F3EFE6] rounded-lg transition-colors"
-                            title="Inspect Dossier"
+                            title="View Customer Details"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
@@ -665,17 +665,17 @@ export default function CustomersPage() {
         </div>
       )}
 
-      {/* Add / Edit Client Modal */}
+      {/* Add / Edit Customer Modal */}
       <Modal 
         isOpen={showFormModal} 
         onClose={() => setShowFormModal(false)} 
-        title={selectedCustomer ? 'Update Client Dossier' : 'Register New Boutique Client'}
-        description={selectedCustomer ? `Editing CRM profile for ${selectedCustomer.name}` : 'Create a dedicated VIP customer record in the Meghani boutique roster'}
+        title={selectedCustomer ? 'Edit Customer' : 'Add New Customer'}
+        description={selectedCustomer ? `Edit details for ${selectedCustomer.name}` : 'Add a new customer to the store CRM'}
         size="md"
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Input 
-            label="Client Full Name *" 
+            label="Customer Name *" 
             placeholder="e.g. Dr. Rajesh Meghani" 
             {...register('name')} 
             error={errors.name?.message} 
@@ -683,7 +683,7 @@ export default function CustomersPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <Input 
-              label="Mobile Phone *" 
+              label="Phone Number *" 
               placeholder="e.g. 98250XXXXX" 
               {...register('phone')} 
               error={errors.phone?.message} 
@@ -691,7 +691,7 @@ export default function CustomersPage() {
             <Input 
               label="Email Address" 
               type="email"
-              placeholder="client@domain.com" 
+              placeholder="customer@domain.com" 
               {...register('email')} 
               error={errors.email?.message} 
             />
@@ -699,7 +699,7 @@ export default function CustomersPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <Input 
-              label="Date of Birth / Anniversary" 
+              label="Date of Birth" 
               type="date"
               {...register('date_of_birth')} 
             />
@@ -717,7 +717,7 @@ export default function CustomersPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Residential / Boutique Delivery Address</label>
+            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Address</label>
             <textarea
               {...register('address')}
               rows={2}
@@ -727,12 +727,12 @@ export default function CustomersPage() {
           </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">VIP Notes & Horological Preferences</label>
+            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Customer Notes</label>
             <textarea
               {...register('notes')}
               rows={2}
               className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-xs text-[#F3EFE6] resize-none"
-              placeholder="Collector of Swiss chronographs, prefers 38-40mm case sizes, gold dials..."
+              placeholder="Customer preferences, favorite watch brands, or notes..."
             />
           </div>
 
@@ -741,23 +741,23 @@ export default function CustomersPage() {
               Cancel
             </Button>
             <Button type="submit" loading={isSubmitting} className="shadow-gold">
-              {selectedCustomer ? 'Save Changes' : 'Register Client'}
+              {selectedCustomer ? 'Save Changes' : 'Add Customer'}
             </Button>
           </div>
         </form>
       </Modal>
 
-      {/* Client Profile Dossier Modal */}
+      {/* Customer Details Modal */}
       <Modal 
         isOpen={showViewModal} 
         onClose={() => setShowViewModal(false)} 
-        title="Patron Dossier & Concierge Summary"
-        description="Comprehensive client purchase record, atelier service history, and loyalty awards"
+        title="Customer Details"
+        description="Customer details, purchase history, and watch repair tickets"
         size="lg"
       >
         {selectedCustomer && (
           <div className="space-y-5">
-            {/* Patron Profile Header */}
+            {/* Customer Profile Header */}
             <div className="p-4 bg-[#12110F] border border-[#2A261F] rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="flex items-center gap-3.5">
                 <div className="w-14 h-14 rounded-2xl bg-[#171613] border border-[#2A261F] flex items-center justify-center font-serif font-bold text-xl text-[#C9A45C]">
@@ -774,7 +774,7 @@ export default function CustomersPage() {
                         </span>
                       )
                     })()}
-                    <span className="text-xs text-[#8D8980] font-mono">Mobile: {selectedCustomer.phone}</span>
+                    <span className="text-xs text-[#8D8980] font-mono">Phone: {selectedCustomer.phone}</span>
                   </div>
                 </div>
               </div>
@@ -787,7 +787,7 @@ export default function CustomersPage() {
                   className="bg-emerald-950/40 text-emerald-400 border border-emerald-800/40 hover:bg-emerald-900/50"
                 >
                   <Send className="w-3.5 h-3.5 mr-1" />
-                  <span>WhatsApp Concierge</span>
+                  <span>WhatsApp</span>
                 </Button>
               </div>
             </div>
@@ -803,7 +803,7 @@ export default function CustomersPage() {
                     : 'text-[#8D8980] hover:text-[#F3EFE6]'
                 )}
               >
-                1. General Profile
+                1. Details
               </button>
               <button
                 onClick={() => setDetailTab('purchases')}
@@ -814,7 +814,7 @@ export default function CustomersPage() {
                     : 'text-[#8D8980] hover:text-[#F3EFE6]'
                 )}
               >
-                2. Purchase Invoices ({purchases.length})
+                2. Purchases ({purchases.length})
               </button>
               <button
                 onClick={() => setDetailTab('repairs')}
@@ -825,7 +825,7 @@ export default function CustomersPage() {
                     : 'text-[#8D8980] hover:text-[#F3EFE6]'
                 )}
               >
-                3. Atelier Tickets ({repairs.length})
+                3. Watch Repairs ({repairs.length})
               </button>
             </div>
 
@@ -834,19 +834,19 @@ export default function CustomersPage() {
               <div className="space-y-4">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-[#12110F] border border-[#2A261F] rounded-xl text-center">
                   <div>
-                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Total Lifetime Spend</span>
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Total Purchases</span>
                     <p className="font-mono font-bold text-base text-[#F3EFE6] mt-0.5">
                       {formatCurrency(selectedCustomer.total_purchases || 0)}
                     </p>
                   </div>
                   <div>
-                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Available Rewards</span>
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Loyalty Points</span>
                     <p className="font-mono font-bold text-base text-[#C9A45C] mt-0.5">
                       {(selectedCustomer.loyalty_points || 0).toLocaleString()} pts
                     </p>
                   </div>
                   <div>
-                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Member Since</span>
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Customer Since</span>
                     <p className="font-mono text-xs text-[#F3EFE6] mt-1">
                       {formatDate(selectedCustomer.created_at)}
                     </p>
@@ -861,14 +861,14 @@ export default function CustomersPage() {
 
                 {selectedCustomer.address && (
                   <div className="p-3 bg-[#12110F] border border-[#2A261F] rounded-xl">
-                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block mb-1">Registered Address</span>
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block mb-1">Address</span>
                     <p className="text-xs text-[#F3EFE6]">{selectedCustomer.address}</p>
                   </div>
                 )}
 
                 {selectedCustomer.notes && (
                   <div className="p-3 bg-[#12110F] border border-[#2A261F] rounded-xl">
-                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block mb-1">Concierge & Horological Notes</span>
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block mb-1">Customer Notes</span>
                     <p className="text-xs text-[#F3EFE6] leading-relaxed">{selectedCustomer.notes}</p>
                   </div>
                 )}
@@ -881,7 +881,7 @@ export default function CustomersPage() {
                 {purchases.length === 0 ? (
                   <div className="p-8 text-center bg-[#12110F] border border-[#2A261F] rounded-xl">
                     <Receipt className="w-8 h-8 text-[#8D8980] mx-auto mb-2" />
-                    <p className="text-xs text-[#8D8980]">No purchase invoices on record for this client yet.</p>
+                    <p className="text-xs text-[#8D8980]">No purchases found for this customer.</p>
                   </div>
                 ) : (
                   <div className="border border-[#2A261F] rounded-xl overflow-hidden bg-[#12110F]">
@@ -890,7 +890,7 @@ export default function CustomersPage() {
                         <tr>
                           <th className="px-4 py-2.5 text-left font-medium">Invoice #</th>
                           <th className="px-4 py-2.5 text-left font-medium">Date</th>
-                          <th className="px-4 py-2.5 text-left font-medium">Tender</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Payment Method</th>
                           <th className="px-4 py-2.5 text-right font-medium">Amount</th>
                         </tr>
                       </thead>
@@ -916,7 +916,7 @@ export default function CustomersPage() {
                 {repairs.length === 0 ? (
                   <div className="p-8 text-center bg-[#12110F] border border-[#2A261F] rounded-xl">
                     <Wrench className="w-8 h-8 text-[#8D8980] mx-auto mb-2" />
-                    <p className="text-xs text-[#8D8980]">No atelier restoration tickets on record for this client.</p>
+                    <p className="text-xs text-[#8D8980]">No repair tickets found for this customer.</p>
                   </div>
                 ) : (
                   <div className="border border-[#2A261F] rounded-xl overflow-hidden bg-[#12110F]">
@@ -924,9 +924,9 @@ export default function CustomersPage() {
                       <thead className="bg-[#171613] border-b border-[#2A261F] text-[#8D8980]">
                         <tr>
                           <th className="px-4 py-2.5 text-left font-medium">Ticket #</th>
-                          <th className="px-4 py-2.5 text-left font-medium">Article</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Watch / Item</th>
                           <th className="px-4 py-2.5 text-left font-medium">Status</th>
-                          <th className="px-4 py-2.5 text-right font-medium">Charge</th>
+                          <th className="px-4 py-2.5 text-right font-medium">Cost</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#2A261F]">
@@ -949,11 +949,11 @@ export default function CustomersPage() {
 
             <div className="flex justify-end gap-2.5 pt-3 border-t border-[#2A261F]">
               <Button variant="secondary" onClick={() => setShowViewModal(false)}>
-                Dismiss
+                Close
               </Button>
               <Button onClick={() => { setShowViewModal(false); openEditModal(selectedCustomer); }}>
                 <Edit className="w-4 h-4 mr-1.5" />
-                Edit Profile
+                Edit Customer
               </Button>
             </div>
           </div>
@@ -965,9 +965,9 @@ export default function CustomersPage() {
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
-        title="Archive Client Profile"
-        message={`Are you certain you wish to archive the profile for "${selectedCustomer?.name}"? All transaction associations will remain permanently locked.`}
-        confirmText="Archive Client"
+        title="Delete Customer"
+        message={`Are you sure you want to delete "${selectedCustomer?.name}"? All transaction records will be preserved.`}
+        confirmText="Delete Customer"
         variant="danger"
       />
     </div>

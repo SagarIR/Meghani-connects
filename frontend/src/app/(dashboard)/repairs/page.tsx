@@ -44,7 +44,7 @@ type FormData = yup.InferType<typeof schema>
 
 const statusConfig: Record<string, { label: string; stageNumber: number; next: string | null; icon: any; color: string; bg: string; border: string }> = {
   received: { 
-    label: 'Intake Logged', 
+    label: 'Received', 
     stageNumber: 1, 
     next: 'in_repair', 
     icon: Package, 
@@ -53,7 +53,7 @@ const statusConfig: Record<string, { label: string; stageNumber: number; next: s
     border: 'border-[#2A261F]' 
   },
   in_repair: { 
-    label: 'Atelier Bench', 
+    label: 'In Repair', 
     stageNumber: 2, 
     next: 'ready', 
     icon: Wrench, 
@@ -62,7 +62,7 @@ const statusConfig: Record<string, { label: string; stageNumber: number; next: s
     border: 'border-amber-800/40' 
   },
   ready: { 
-    label: 'Ready for Collection', 
+    label: 'Ready for Pickup', 
     stageNumber: 3, 
     next: 'delivered', 
     icon: CheckCircle, 
@@ -71,7 +71,7 @@ const statusConfig: Record<string, { label: string; stageNumber: number; next: s
     border: 'border-emerald-800/40' 
   },
   delivered: { 
-    label: 'Discharged / Delivered', 
+    label: 'Delivered', 
     stageNumber: 4, 
     next: null, 
     icon: Truck, 
@@ -80,7 +80,7 @@ const statusConfig: Record<string, { label: string; stageNumber: number; next: s
     border: 'border-sky-800/40' 
   },
   cancelled: { 
-    label: 'Archived / Returned', 
+    label: 'Cancelled', 
     stageNumber: 0, 
     next: null, 
     icon: XCircle, 
@@ -92,12 +92,12 @@ const statusConfig: Record<string, { label: string; stageNumber: number; next: s
 
 const itemTypes = [
   'Automatic / Mechanical Watch',
-  'Swiss Quartz Wristwatch',
-  'Luxury Chronograph',
-  'Vintage Pocket Watch',
-  'Grandfather / Wall Clock',
-  'Smartwatch / Digital',
-  'Fine Jewelry / Clasp'
+  'Quartz Watch',
+  'Chronograph Watch',
+  'Pocket Watch',
+  'Wall Clock',
+  'Smartwatch',
+  'Strap / Clasp Repair'
 ]
 
 export default function RepairsPage() {
@@ -258,11 +258,11 @@ export default function RepairsPage() {
       }
       
       await api.post('/repairs/', payload)
-      toast.success('Horological repair ticket registered')
+      toast.success('Repair ticket created successfully')
       setShowFormModal(false)
       fetchRepairs()
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Operation failed')
+      toast.error(error.response?.data?.detail || 'Failed to create repair ticket')
     } finally {
       setIsSubmitting(false)
     }
@@ -282,9 +282,9 @@ export default function RepairsPage() {
       link.click()
       link.remove()
       window.URL.revokeObjectURL(url)
-      toast.success(`Service ticket ${ticketNumber} downloaded`)
+      toast.success(`Repair ticket ${ticketNumber} downloaded`)
     } catch (error) {
-      toast.error('Failed to download repair docket')
+      toast.error('Failed to download repair ticket')
     } finally {
       setDownloadingId(null)
     }
@@ -299,12 +299,12 @@ export default function RepairsPage() {
         repair_charge: repairCharge ? parseFloat(repairCharge) : undefined,
         notes: statusNote,
       })
-      toast.success('Atelier workflow state updated')
+      toast.success('Repair status updated successfully')
       setShowStatusModal(false)
       setShowViewModal(false)
       fetchRepairs()
     } catch (error) {
-      toast.error('Failed to update repair state')
+      toast.error('Failed to update repair status')
     } finally {
       setIsSubmitting(false)
     }
@@ -318,9 +318,9 @@ export default function RepairsPage() {
     const cleanPhone = repair.customer_phone.replace(/\D/g, '')
     const phoneWithCountry = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone
     const msg = encodeURIComponent(
-      `Dear ${repair.customer_name || 'Valued Client'},\n\n` +
-      `Update from Meghani Watch Co. Atelier (Est. 1984):\n` +
-      `Your repair ticket *#${repair.ticket_number}* for *${repair.brand || ''} ${repair.item_type}* is now: *${statusConfig[repair.status]?.label?.toUpperCase()}*.\n\n` +
+      `Dear ${repair.customer_name || 'Customer'},\n\n` +
+      `Update from Meghani Watch Co. (Est. 1984):\n` +
+      `Your repair ticket *#${repair.ticket_number}* for *${repair.brand || 'Watch'} (${repair.item_type})* is now: *${statusConfig[repair.status]?.label?.toUpperCase()}*.\n\n` +
       `Estimated/Charge: ₹${(repair.repair_charge || repair.estimated_cost || 0).toLocaleString('en-IN')}\n` +
       `Thank you for trusting Meghani Watch Co. Vadodara.`
     )
@@ -355,12 +355,12 @@ export default function RepairsPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Master Watchmaker Atelier</h1>
+              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Watch Repairs & Service</h1>
               <span className="text-xs px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F] font-mono">
                 {stats.total} total tickets
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[#8D8980]">Precision horological restoration, service tracking, and client notifications</p>
+            <p className="text-xs sm:text-sm text-[#8D8980]">Watch servicing, repair tracking, and customer notifications</p>
           </div>
         </div>
 
@@ -368,15 +368,15 @@ export default function RepairsPage() {
           <ExportButton 
             data={repairs} 
             columns={repairExportColumns} 
-            filename={`meghani_atelier_${new Date().toISOString().split('T')[0]}`} 
+            filename={`meghani_repairs_${new Date().toISOString().split('T')[0]}`} 
           />
           <Button onClick={openAddModal} icon={<Plus className="w-4 h-4" />} className="shadow-gold">
-            <span>New Repair Intake</span>
+            <span>New Repair Ticket</span>
           </Button>
         </div>
       </div>
 
-      {/* Atelier Status Metrics */}
+      {/* Repair Status Metrics */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
           <div className="flex items-center gap-3">
@@ -384,7 +384,7 @@ export default function RepairsPage() {
               <Package className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Total Atelier Jobs</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Total Repairs</p>
               <p className="text-2xl font-bold font-mono text-[#F3EFE6]">{stats.total}</p>
             </div>
           </div>
@@ -396,7 +396,7 @@ export default function RepairsPage() {
               <Timer className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">On Service Bench</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">In Repair</p>
               <p className="text-2xl font-bold font-mono text-amber-400">{stats.pending}</p>
             </div>
           </div>
@@ -420,21 +420,21 @@ export default function RepairsPage() {
               <Truck className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Discharged</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Delivered</p>
               <p className="text-2xl font-bold font-mono text-sky-400">{stats.completed}</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Search & Atelier Stages Filter */}
+      {/* Search & Repair Stages Filter */}
       <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-4 shadow-xl space-y-3">
         <div className="flex flex-col md:flex-row gap-3">
           <div className="relative flex-1 group">
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8D8980] group-focus-within:text-[#C9A45C] transition-colors" />
             <input
               type="text"
-              placeholder="Search by ticket # (e.g. REP-1002), client name, timepiece brand or serial..."
+              placeholder="Search by ticket # (e.g. REP-1002), customer name, watch brand or serial..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl 
@@ -524,10 +524,10 @@ export default function RepairsPage() {
           <div className="w-16 h-16 mx-auto bg-[#1F1E1A] border border-[#2A261F] rounded-2xl flex items-center justify-center mb-4">
             <Wrench className="w-8 h-8 text-[#8D8980]" />
           </div>
-          <h3 className="text-lg font-serif font-bold text-[#F3EFE6] mb-1">No Atelier Tickets in Stage</h3>
+          <h3 className="text-lg font-serif font-bold text-[#F3EFE6] mb-1">No Repair Tickets Found</h3>
           <p className="text-sm text-[#8D8980] mb-5">There are no repair tickets matching your active filter criteria.</p>
           <Button onClick={openAddModal} icon={<Plus className="w-4 h-4" />}>
-            Register Service Intake
+            New Repair Ticket
           </Button>
         </div>
       ) : viewMode === 'grid' ? (
@@ -583,14 +583,14 @@ export default function RepairsPage() {
                             downloadPDF(repair.id, repair.ticket_number)
                           }}
                           className="p-1.5 hover:bg-[#2A261F] text-[#8D8980] hover:text-[#F3EFE6] rounded-lg transition-colors"
-                          title="Print Docket"
+                          title="Download Ticket PDF"
                         >
                           <Download className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     </div>
 
-                    {/* Customer & Timepiece */}
+                    {/* Customer & Watch */}
                     <div className="space-y-2 mb-3.5">
                       <div className="flex items-center gap-2 text-xs">
                         <User className="w-3.5 h-3.5 text-[#C9A45C] flex-shrink-0" />
@@ -601,7 +601,7 @@ export default function RepairsPage() {
                       </div>
                       <div className="flex items-center gap-2 text-xs text-[#8D8980]">
                         <Watch className="w-3.5 h-3.5 text-[#8D8980] flex-shrink-0" />
-                        <span className="text-[#E8D5A7] truncate font-medium">{repair.brand || 'Horological Article'}</span>
+                        <span className="text-[#E8D5A7] truncate font-medium">{repair.brand || 'Watch'}</span>
                         <span className="text-[#8D8980]">| {repair.item_type}</span>
                       </div>
                     </div>
@@ -619,7 +619,7 @@ export default function RepairsPage() {
                       </div>
                       <div className="text-right">
                         <span className="text-[10px] text-[#8D8980] block uppercase tracking-wider">
-                          {repair.repair_charge ? 'Final Charge' : 'Estimated'}
+                          {repair.repair_charge ? 'Final Cost' : 'Estimated Cost'}
                         </span>
                         <span className="font-mono font-bold text-sm text-[#C9A45C]">
                           {formatCurrency(repair.repair_charge || repair.estimated_cost)}
@@ -652,18 +652,18 @@ export default function RepairsPage() {
                   <th className="px-5 py-3.5 text-left">
                     <SortableHeader label="Ticket #" field="ticket_number" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
-                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Client & Phone</th>
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Customer & Phone</th>
                   <th className="px-4 py-3.5 text-left">
-                    <SortableHeader label="Timepiece" field="item_type" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                    <SortableHeader label="Watch / Item" field="item_type" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
                   <th className="px-4 py-3.5 text-left">
-                    <SortableHeader label="Atelier Status" field="status" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                    <SortableHeader label="Status" field="status" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
                   <th className="px-4 py-3.5 text-left">
                     <SortableHeader label="Due Date" field="expected_delivery" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
                   <th className="px-4 py-3.5 text-right">
-                    <SortableHeader label="Estimated / Final" field="estimated_cost" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                    <SortableHeader label="Estimated / Final Cost" field="estimated_cost" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
                   <th className="px-5 py-3.5 text-right text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Actions</th>
                 </tr>
@@ -690,7 +690,7 @@ export default function RepairsPage() {
                       </td>
 
                       <td className="px-4 py-4">
-                        <p className="text-sm font-medium text-[#F3EFE6]">{repair.brand || 'Luxury Horology'}</p>
+                        <p className="text-sm font-medium text-[#F3EFE6]">{repair.brand || 'Watch'}</p>
                         <p className="text-xs text-[#8D8980] truncate max-w-[140px]">{repair.item_type}</p>
                       </td>
 
@@ -718,7 +718,7 @@ export default function RepairsPage() {
                                 sendWhatsAppNotification(repair)
                               }}
                               className="p-1.5 hover:bg-emerald-950/40 text-emerald-400 rounded-lg transition-colors"
-                              title="WhatsApp Notification"
+                              title="Send WhatsApp Update"
                             >
                               <Send className="w-3.5 h-3.5" />
                             </button>
@@ -729,7 +729,7 @@ export default function RepairsPage() {
                               openViewModal(repair)
                             }}
                             className="p-1.5 hover:bg-[#2A261F] text-[#8D8980] hover:text-[#F3EFE6] rounded-lg transition-colors"
-                            title="Inspect"
+                            title="View Details"
                           >
                             <Eye className="w-4 h-4" />
                           </button>
@@ -770,18 +770,18 @@ export default function RepairsPage() {
         </div>
       )}
 
-      {/* Create Repair Intake Modal */}
+      {/* Create Repair Ticket Modal */}
       <Modal 
         isOpen={showFormModal} 
         onClose={() => setShowFormModal(false)} 
-        title="Register Watchmaker Atelier Intake" 
-        description="Issue official service ticket and record client timepiece characteristics"
+        title="New Repair Ticket" 
+        description="Create an official repair ticket and record watch details"
         size="lg"
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-          {/* Clientele Lookup */}
+          {/* Customer Lookup */}
           <div className="space-y-2">
-            <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">1. Client Identification</span>
+            <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">1. Customer Information</span>
             {selectedCustomer ? (
               <div className="p-3.5 bg-[#12110F] rounded-xl flex items-center justify-between border border-[#2A261F]">
                 <div className="flex items-center gap-3 min-w-0">
@@ -794,7 +794,7 @@ export default function RepairsPage() {
                   </div>
                 </div>
                 <Button type="button" variant="secondary" size="sm" onClick={() => setSelectedCustomer(null)}>
-                  Change Client
+                  Change Customer
                 </Button>
               </div>
             ) : (
@@ -805,7 +805,7 @@ export default function RepairsPage() {
                     type="text"
                     value={customerSearch}
                     onChange={(e) => searchCustomers(e.target.value)}
-                    placeholder="Search existing clientele directory by name or mobile..."
+                    placeholder="Search customers by name or phone..."
                     className="w-full pl-10 pr-4 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl text-sm text-[#F3EFE6] placeholder-[#8D8980]/70 focus:border-[#C9A45C] outline-none"
                   />
                   {searchResults.length > 0 && (
@@ -831,24 +831,24 @@ export default function RepairsPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                  <Input label="Direct Client Name" {...register('customer_name')} placeholder="Full name if new client" />
-                  <Input label="Client Mobile Phone" {...register('customer_phone')} placeholder="+91 XXXXXXXXXX" />
+                  <Input label="Customer Name" {...register('customer_name')} placeholder="Full name if new customer" />
+                  <Input label="Customer Phone" {...register('customer_phone')} placeholder="+91 XXXXXXXXXX" />
                 </div>
               </div>
             )}
           </div>
 
-          {/* Timepiece & Diagnostic */}
+          {/* Watch Details & Diagnostics */}
           <div className="space-y-2 pt-2 border-t border-[#2A261F]">
-            <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">2. Horological Article & Diagnostics</span>
+            <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">2. Watch Details & Diagnostics</span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
-                <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Article Classification *</label>
+                <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Watch / Item Type *</label>
                 <select 
                   {...register('item_type')} 
                   className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6]"
                 >
-                  <option value="">Select horological class...</option>
+                  <option value="">Select item type...</option>
                   {itemTypes.map((type) => (
                     <option key={type} value={type} className="bg-[#171613]">{type}</option>
                   ))}
@@ -856,17 +856,17 @@ export default function RepairsPage() {
                 {errors.item_type && <p className="text-rose-400 text-xs mt-1">{errors.item_type.message}</p>}
               </div>
 
-              <Input label="Brand / Maison" {...register('brand')} placeholder="e.g. Omega, Seiko, Titan" />
-              <Input label="Model / Calibre Reference" {...register('model_number')} placeholder="e.g. Speedmaster 3861" />
-              <Input label="Case / Movement Serial Number" {...register('serial_number')} placeholder="e.g. SN-89240182" />
+              <Input label="Brand" {...register('brand')} placeholder="e.g. Omega, Seiko, Titan, Tissot" />
+              <Input label="Model Reference" {...register('model_number')} placeholder="e.g. Speedmaster 3861" />
+              <Input label="Serial Number" {...register('serial_number')} placeholder="e.g. SN-89240182" />
 
               <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Issue Diagnostic & Customer Statement *</label>
+                <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Problem / Issue Description *</label>
                 <textarea 
                   {...register('issue_description')} 
                   rows={3} 
                   className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6] resize-none" 
-                  placeholder="Detail symptoms (e.g., losing 45 sec/day, stem dislodged, crystal scratched, water ingress, full overhaul required)..." 
+                  placeholder="Describe the issue (e.g., losing time, battery replacement, glass replacement, water damage, full service)..." 
                 />
                 {errors.issue_description && <p className="text-rose-400 text-xs mt-1">{errors.issue_description.message}</p>}
               </div>
@@ -875,11 +875,11 @@ export default function RepairsPage() {
 
           {/* Charges & Target Delivery */}
           <div className="space-y-2 pt-2 border-t border-[#2A261F]">
-            <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">3. Estimates & Restoration Schedule</span>
+            <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">3. Cost Estimates & Expected Delivery</span>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Input label="Estimated Cost (₹)" type="number" {...register('estimated_cost')} placeholder="0" />
               <Input label="Advance Paid (₹)" type="number" {...register('advance_paid')} placeholder="0" />
-              <Input label="Target Ready Date" type="date" {...register('expected_delivery')} />
+              <Input label="Expected Delivery Date" type="date" {...register('expected_delivery')} />
             </div>
           </div>
 
@@ -888,23 +888,23 @@ export default function RepairsPage() {
               Cancel
             </Button>
             <Button type="submit" loading={isSubmitting} className="shadow-gold">
-              Create Service Ticket
+              Create Repair Ticket
             </Button>
           </div>
         </form>
       </Modal>
 
-      {/* Inspect View Dossier Modal */}
+      {/* View Repair Ticket Details Modal */}
       <Modal 
         isOpen={showViewModal} 
         onClose={() => setShowViewModal(false)} 
-        title={`Atelier Dossier: ${selectedRepair?.ticket_number}`}
-        description="Comprehensive diagnostic card, workshop history, and client notification status"
+        title={`Repair Ticket: ${selectedRepair?.ticket_number}`}
+        description="Repair ticket details, diagnostic notes, and customer updates"
         size="lg"
       >
         {selectedRepair && (
           <div className="space-y-5">
-            {/* Stage Progression Banner */}
+            {/* Status Progression Banner */}
             <div className={clsx('p-4 rounded-xl border', statusConfig[selectedRepair.status]?.bg, statusConfig[selectedRepair.status]?.border)}>
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
@@ -915,7 +915,7 @@ export default function RepairsPage() {
                     })()}
                   </div>
                   <div>
-                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Atelier Stage</span>
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Repair Status</span>
                     <span className={clsx('text-base font-bold font-serif', statusConfig[selectedRepair.status]?.color)}>
                       {statusConfig[selectedRepair.status]?.label}
                     </span>
@@ -939,45 +939,45 @@ export default function RepairsPage() {
                       size="sm" 
                       onClick={() => openStatusModal(selectedRepair, 'cancelled')}
                     >
-                      Archive / Return
+                      Cancel Repair
                     </Button>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Client & Watch Details Matrix */}
+            {/* Customer & Watch Details Matrix */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-[#12110F] border border-[#2A261F] rounded-xl">
               <div>
-                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Client</span>
+                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Customer</span>
                 <p className="font-serif font-bold text-sm text-[#F3EFE6] mt-0.5 truncate">{selectedRepair.customer_name}</p>
                 <p className="text-xs text-[#8D8980] font-mono mt-0.5">{selectedRepair.customer_phone || '-'}</p>
               </div>
 
               <div>
-                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Timepiece</span>
-                <p className="text-sm font-semibold text-[#C9A45C] mt-0.5">{selectedRepair.brand || 'Horology'}</p>
+                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Watch / Item</span>
+                <p className="text-sm font-semibold text-[#C9A45C] mt-0.5">{selectedRepair.brand || 'Watch'}</p>
                 <p className="text-xs text-[#8D8980] truncate">{selectedRepair.item_type}</p>
               </div>
 
               <div>
-                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Intake Date</span>
+                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Received Date</span>
                 <p className="text-xs font-mono text-[#F3EFE6] mt-0.5">{formatDate(selectedRepair.received_date)}</p>
               </div>
 
               <div>
-                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Target Delivery</span>
+                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Expected Delivery</span>
                 <p className="text-xs font-mono text-emerald-400 mt-0.5">{formatDate(selectedRepair.expected_delivery)}</p>
               </div>
             </div>
 
             {/* Diagnostic Box */}
             <div className="p-3.5 bg-[#12110F] border border-[#2A261F] rounded-xl space-y-1">
-              <span className="text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Reported Issue & Symptoms</span>
+              <span className="text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Problem / Issue Description</span>
               <p className="text-xs text-[#F3EFE6] leading-relaxed">{selectedRepair.issue_description}</p>
             </div>
 
-            {/* Financial Ledger */}
+            {/* Cost Summary */}
             <div className="grid grid-cols-3 gap-3 p-4 bg-[#12110F] border border-[#2A261F] rounded-xl text-center">
               <div>
                 <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Estimated Cost</span>
@@ -985,12 +985,12 @@ export default function RepairsPage() {
               </div>
 
               <div>
-                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Advance Deposit</span>
+                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Advance Paid</span>
                 <p className="font-mono font-bold text-base text-emerald-400 mt-1">{formatCurrency(selectedRepair.advance_paid)}</p>
               </div>
 
               <div>
-                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Final Charge</span>
+                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Final Cost</span>
                 <p className="font-mono font-bold text-lg text-[#C9A45C] mt-1">
                   {formatCurrency(selectedRepair.repair_charge || selectedRepair.estimated_cost)}
                 </p>
@@ -1005,13 +1005,13 @@ export default function RepairsPage() {
                   className="inline-flex items-center gap-1.5 px-3 py-2 bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-800/40 text-emerald-400 rounded-xl text-xs font-semibold transition-colors"
                 >
                   <Send className="w-3.5 h-3.5" />
-                  <span>Notify Client on WhatsApp</span>
+                  <span>Send WhatsApp Update</span>
                 </button>
               ) : <div />}
 
               <div className="flex items-center gap-2">
                 <Button variant="secondary" onClick={() => setShowViewModal(false)}>
-                  Dismiss
+                  Close
                 </Button>
                 <Button 
                   onClick={() => downloadPDF(selectedRepair.id, selectedRepair.ticket_number)}
@@ -1019,7 +1019,7 @@ export default function RepairsPage() {
                   loading={downloadingId === selectedRepair.id}
                   className="shadow-gold"
                 >
-                  Download Service Docket PDF
+                  Download Repair Ticket PDF
                 </Button>
               </div>
             </div>
@@ -1031,12 +1031,12 @@ export default function RepairsPage() {
       <Modal 
         isOpen={showStatusModal} 
         onClose={() => setShowStatusModal(false)} 
-        title="Advance Atelier Stage"
-        description="Update horological bench status and finalize billable restoration charges"
+        title="Update Repair Status"
+        description="Update the repair stage and record final charges or notes"
       >
         <div className="space-y-4">
           <div className={clsx('p-4 rounded-xl border', statusConfig[newStatus]?.bg, statusConfig[newStatus]?.border)}>
-            <span className="text-xs text-[#8D8980] uppercase tracking-wider block">Target Stage</span>
+            <span className="text-xs text-[#8D8980] uppercase tracking-wider block">New Status</span>
             <p className={clsx('text-base font-bold font-serif mt-0.5', statusConfig[newStatus]?.color)}>
               {statusConfig[newStatus]?.label}
             </p>
@@ -1044,7 +1044,7 @@ export default function RepairsPage() {
 
           {(newStatus === 'ready' || newStatus === 'delivered') && (
             <Input
-              label="Final Repair Charge (₹)"
+              label="Final Repair Cost (₹)"
               type="number"
               value={repairCharge}
               onChange={(e) => setRepairCharge(e.target.value)}
@@ -1053,13 +1053,13 @@ export default function RepairsPage() {
           )}
 
           <div>
-            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Workshop Notes / Replacement Parts Logged</label>
+            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Repair Notes / Parts Replaced</label>
             <textarea
               value={statusNote}
               onChange={(e) => setStatusNote(e.target.value)}
               rows={3}
               className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-xs text-[#F3EFE6] resize-none"
-              placeholder="e.g. Replaced mainspring, new case gasket fitted, timing tested to +2 sec/day..."
+              placeholder="e.g. Replaced battery, fitted new gasket, tested water resistance..."
             />
           </div>
 
@@ -1068,7 +1068,7 @@ export default function RepairsPage() {
               Cancel
             </Button>
             <Button onClick={updateStatus} loading={isSubmitting} className="flex-1 shadow-gold">
-              Commit Status Change
+              Update Status
             </Button>
           </div>
         </div>

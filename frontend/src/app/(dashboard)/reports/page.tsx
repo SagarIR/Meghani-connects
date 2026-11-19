@@ -21,11 +21,11 @@ type ReportType = 'sales' | 'products' | 'repairs' | 'expenses' | 'customers' | 
 
 const reportConfig = {
   sales: { title: 'Sales & Revenue', icon: TrendingUp },
-  products: { title: 'Timepiece Performance', icon: Package },
-  repairs: { title: 'Atelier Service Income', icon: Wrench },
-  expenses: { title: 'Overheads & Expenses', icon: Wallet },
-  customers: { title: 'Clientele & Loyalty', icon: Users },
-  inventory: { title: 'Stock & Valuation', icon: BarChart3 },
+  products: { title: 'Product Sales', icon: Package },
+  repairs: { title: 'Watch Repair Income', icon: Wrench },
+  expenses: { title: 'Store Expenses', icon: Wallet },
+  customers: { title: 'Customer & Loyalty', icon: Users },
+  inventory: { title: 'Stock & Inventory Value', icon: BarChart3 },
 }
 
 const LUXURY_PALETTE = ['#C9A45C', '#10b981', '#E8D5A7', '#38bdf8', '#fbbf24', '#f43f5e']
@@ -107,12 +107,12 @@ export default function ReportsPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Executive Intelligence & Audits</h1>
+              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Reports & Analytics</h1>
               <span className="text-xs px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F] font-mono">
                 Real-Time
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[#8D8980]">Strategic retail analytics, profit and loss, inventory health, and fiscal compliance</p>
+            <p className="text-xs sm:text-sm text-[#8D8980]">Sales performance, product trends, repairs, expenses, and inventory reports</p>
           </div>
         </div>
 
@@ -198,7 +198,7 @@ export default function ReportsPage() {
       {loading ? (
         <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-16 text-center">
           <div className="w-8 h-8 border-2 border-[#C9A45C] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-          <p className="text-sm text-[#8D8980]">Compiling analytics dossier from database...</p>
+          <p className="text-sm text-[#8D8980]">Loading report data...</p>
         </div>
       ) : reportData ? (
         <div className="space-y-6">
@@ -207,7 +207,7 @@ export default function ReportsPage() {
             <>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
-                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Gross Sales Invoiced</span>
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Total Sales</span>
                   <p className="text-xl sm:text-2xl font-bold font-mono text-[#C9A45C] mt-1">
                     {formatCurrency(reportData.summary?.total_sales || 0)}
                   </p>
@@ -222,20 +222,20 @@ export default function ReportsPage() {
                   ) : (
                     <div className="flex items-center gap-1.5 mt-2 text-xs text-[#8D8980] font-mono">
                       <Lock className="w-3.5 h-3.5 text-[#C9A45C]" />
-                      <span>Masked for Staff</span>
+                      <span>Hidden for Staff</span>
                     </div>
                   )}
                 </div>
 
                 <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
-                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Transaction Volume</span>
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Total Invoices</span>
                   <p className="text-xl sm:text-2xl font-bold font-mono text-[#F3EFE6] mt-1">
                     {reportData.summary?.transaction_count || 0}
                   </p>
                 </div>
 
                 <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
-                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Average Ticket</span>
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Average Sale</span>
                   <p className="text-xl sm:text-2xl font-bold font-mono text-[#E8D5A7] mt-1">
                     {formatCurrency(reportData.summary?.average_sale || 0)}
                   </p>
@@ -244,7 +244,7 @@ export default function ReportsPage() {
 
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
-                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Daily Invoicing & Profit Curve</h3>
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Daily Sales & Profit Trend</h3>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart data={reportData.daily_data || []}>
@@ -261,7 +261,7 @@ export default function ReportsPage() {
                           formatter={(v: number) => formatCurrency(v)} 
                         />
                         <Legend wrapperStyle={{ fontSize: '11px' }} />
-                        <Line type="monotone" dataKey="sales" stroke="#C9A45C" name="Turnover" strokeWidth={2.5} dot={false} />
+                        <Line type="monotone" dataKey="sales" stroke="#C9A45C" name="Sales" strokeWidth={2.5} dot={false} />
                         {isManagement && (
                           <Line type="monotone" dataKey="profit" stroke="#10b981" name="Profit" strokeWidth={2} dot={false} />
                         )}
@@ -271,7 +271,7 @@ export default function ReportsPage() {
                 </div>
 
                 <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
-                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Payment Method Split</h3>
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Payment Method Breakdown</h3>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -300,12 +300,12 @@ export default function ReportsPage() {
             </>
           )}
 
-          {/* TAB 2: Timepiece Performance */}
+          {/* TAB 2: Product Sales */}
           {activeReport === 'products' && (
             <>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
-                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Top Selling Timepieces</h3>
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Top Selling Watches</h3>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={(reportData.top_sellers || []).slice(0, 5)} layout="vertical">
@@ -348,15 +348,15 @@ export default function ReportsPage() {
                 </div>
               </div>
 
-              {/* Slow Moving Inventory */}
+              {/* Slow Moving Stock */}
               <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
-                <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-3">Slow-Moving Inventory Alerts (Zero Sales in Period)</h3>
+                <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-3">Slow-Moving Stock (No Sales in Period)</h3>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                   {(reportData.slow_movers || []).map((product: any) => (
                     <div key={product.id} className="p-3 bg-[#12110F] border border-[#2A261F] rounded-xl">
                       <p className="font-medium text-sm text-[#F3EFE6] truncate">{product.name}</p>
                       <p className="text-xs text-[#C9A45C] mt-0.5 truncate">{product.brand}</p>
-                      <span className="text-[11px] font-mono text-[#8D8980] block mt-1">Holding: {product.stock} units</span>
+                      <span className="text-[11px] font-mono text-[#8D8980] block mt-1">Stock: {product.stock} units</span>
                     </div>
                   ))}
                 </div>
@@ -364,31 +364,31 @@ export default function ReportsPage() {
             </>
           )}
 
-          {/* TAB 3: Atelier Service Income */}
+          {/* TAB 3: Watch Repair Income */}
           {activeReport === 'repairs' && (
             <>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
-                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Service Tickets</span>
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Repair Tickets</span>
                   <p className="text-xl sm:text-2xl font-bold font-mono text-[#F3EFE6] mt-1">{reportData.summary?.total_repairs || 0}</p>
                 </div>
                 <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
-                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Atelier Revenue</span>
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Repair Revenue</span>
                   <p className="text-xl sm:text-2xl font-bold font-mono text-emerald-400 mt-1">{formatCurrency(reportData.summary?.total_revenue || 0)}</p>
                 </div>
                 <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
-                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Discharged Ready</span>
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Completed Repairs</span>
                   <p className="text-xl sm:text-2xl font-bold font-mono text-sky-400 mt-1">{reportData.summary?.completed || 0}</p>
                 </div>
                 <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
-                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Active On Bench</span>
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Repairs in Progress</span>
                   <p className="text-xl sm:text-2xl font-bold font-mono text-amber-400 mt-1">{reportData.summary?.pending || 0}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
-                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Tickets by Workshop Stage</h3>
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Tickets by Status</h3>
                   <div className="h-60">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -411,7 +411,7 @@ export default function ReportsPage() {
                 </div>
 
                 <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
-                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Revenue by Horological Article</h3>
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Revenue by Item Type</h3>
                   <div className="space-y-2 max-h-60 overflow-y-auto">
                     {(reportData.by_item_type || []).map((item: any, idx: number) => (
                       <div key={idx} className="flex items-center justify-between p-3 bg-[#12110F] border border-[#2A261F] rounded-xl text-xs">
@@ -437,28 +437,28 @@ export default function ReportsPage() {
                   <p className="text-2xl font-bold font-mono text-rose-400 mt-1">{formatCurrency(reportData.summary?.total_expenses || 0)}</p>
                 </div>
                 <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg text-center">
-                  <span className="text-xs text-[#8D8980] uppercase tracking-wider block">Gross Sales Margin</span>
+                  <span className="text-xs text-[#8D8980] uppercase tracking-wider block">Sales Gross Profit</span>
                   {isManagement ? (
                     <p className="text-2xl font-bold font-mono text-emerald-400 mt-1">{formatCurrency(reportData.summary?.sales_profit || 0)}</p>
                   ) : (
-                    <p className="text-xs font-mono text-[#8D8980] mt-3">Protected under Staff Role</p>
+                    <p className="text-xs font-mono text-[#8D8980] mt-3">Hidden for Staff</p>
                   )}
                 </div>
                 <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg text-center">
-                  <span className="text-xs text-[#8D8980] uppercase tracking-wider block">Realized Net Profit</span>
+                  <span className="text-xs text-[#8D8980] uppercase tracking-wider block">Net Profit</span>
                   {isManagement ? (
                     <p className={`text-2xl font-bold font-mono mt-1 ${(reportData.summary?.net_profit || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                       {formatCurrency(reportData.summary?.net_profit || 0)}
                     </p>
                   ) : (
-                    <p className="text-xs font-mono text-[#8D8980] mt-3">Protected under Staff Role</p>
+                    <p className="text-xs font-mono text-[#8D8980] mt-3">Hidden for Staff</p>
                   )}
                 </div>
               </div>
 
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
-                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Expenses by Cost Center</h3>
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Expenses by Category</h3>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <PieChart>
@@ -484,7 +484,7 @@ export default function ReportsPage() {
                 </div>
 
                 <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
-                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Daily Outflow Disbursement</h3>
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Daily Expenses</h3>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={reportData.daily_data || []}>
@@ -500,7 +500,7 @@ export default function ReportsPage() {
                           contentStyle={{ backgroundColor: '#171613', borderColor: '#2A261F', borderRadius: '12px', color: '#F3EFE6' }}
                           formatter={(v: number) => formatCurrency(v)} 
                         />
-                        <Bar dataKey="total" fill="#f43f5e" name="Disbursements" radius={[6, 6, 0, 0]} />
+                        <Bar dataKey="total" fill="#f43f5e" name="Expenses" radius={[6, 6, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -509,39 +509,39 @@ export default function ReportsPage() {
             </>
           )}
 
-          {/* TAB 5: Clientele & Loyalty */}
+          {/* TAB 5: Customers & Loyalty */}
           {activeReport === 'customers' && (
             <>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
-                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Total Directory</span>
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Total Customers</span>
                   <p className="text-2xl font-bold font-mono text-[#F3EFE6] mt-1">{reportData.summary?.total_customers || 0}</p>
                 </div>
                 <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
-                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">New Accessions</span>
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">New Customers</span>
                   <p className="text-2xl font-bold font-mono text-emerald-400 mt-1">{reportData.summary?.new_customers || 0}</p>
                 </div>
                 <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
-                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Patron Retention</span>
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Repeat Customer Rate</span>
                   <p className="text-2xl font-bold font-mono text-[#C9A45C] mt-1">{reportData.summary?.repeat_rate || 0}%</p>
                 </div>
                 <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
-                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Loyalty Escrow</span>
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Total Loyalty Points</span>
                   <p className="text-2xl font-bold font-mono text-[#E8D5A7] mt-1">{(reportData.summary?.total_loyalty_points || 0).toLocaleString()} pts</p>
                 </div>
               </div>
 
               <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
-                <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Top Clientele by Cumulative Spend</h3>
+                <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Top Customers by Total Spend</h3>
                 <div className="overflow-x-auto">
                   <table className="w-full text-xs min-w-[550px]">
                     <thead className="bg-[#12110F] border-b border-[#2A261F] text-[#8D8980]">
                       <tr>
                         <th className="px-4 py-2.5 text-left">#</th>
-                        <th className="px-4 py-2.5 text-left">Client Name</th>
+                        <th className="px-4 py-2.5 text-left">Customer Name</th>
                         <th className="px-4 py-2.5 text-left">Phone</th>
-                        <th className="px-4 py-2.5 text-right">Cumulative Spend</th>
-                        <th className="px-4 py-2.5 text-right">Points</th>
+                        <th className="px-4 py-2.5 text-right">Total Spend</th>
+                        <th className="px-4 py-2.5 text-right">Loyalty Points</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[#2A261F]">
@@ -561,30 +561,30 @@ export default function ReportsPage() {
             </>
           )}
 
-          {/* TAB 6: Inventory Valuation */}
+          {/* TAB 6: Stock & Inventory Value */}
           {activeReport === 'inventory' && (
             <>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
                 <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
-                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Timepiece SKUs</span>
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Total Products</span>
                   <p className="text-2xl font-bold font-mono text-[#F3EFE6] mt-1">{reportData.summary?.total_products || 0}</p>
                 </div>
                 <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
-                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Inventory Valuation</span>
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Total Stock Value</span>
                   {isManagement ? (
                     <p className="text-xl sm:text-2xl font-bold font-mono text-[#C9A45C] mt-1">
                       {formatCurrency(reportData.summary?.stock_cost_value || 0)}
                     </p>
                   ) : (
-                    <p className="text-xs font-mono text-[#8D8980] mt-3">Protected under Staff Role</p>
+                    <p className="text-xs font-mono text-[#8D8980] mt-3">Hidden for Staff</p>
                   )}
                 </div>
                 <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
-                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Low Stock Watch</span>
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Low Stock Items</span>
                   <p className="text-2xl font-bold font-mono text-amber-400 mt-1">{reportData.summary?.low_stock_count || 0}</p>
                 </div>
                 <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
-                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Depleted SKUs</span>
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Out of Stock Items</span>
                   <p className="text-2xl font-bold font-mono text-rose-400 mt-1">{reportData.summary?.out_of_stock_count || 0}</p>
                 </div>
               </div>
@@ -599,14 +599,14 @@ export default function ReportsPage() {
                         <XAxis dataKey="category" stroke="#8D8980" tick={{ fontSize: 10 }} />
                         <YAxis stroke="#8D8980" tick={{ fontSize: 10 }} />
                         <Tooltip contentStyle={{ backgroundColor: '#171613', borderColor: '#2A261F', borderRadius: '12px', color: '#F3EFE6' }} />
-                        <Bar dataKey="stock" fill="#C9A45C" name="In Stock Units" radius={[6, 6, 0, 0]} />
+                        <Bar dataKey="stock" fill="#C9A45C" name="Stock Units" radius={[6, 6, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 </div>
 
                 <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl">
-                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Restock Reorder Alerts</h3>
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-4">Low Stock Reorder Alerts</h3>
                   <div className="space-y-2 max-h-64 overflow-y-auto">
                     {(reportData.low_stock_items || []).map((item: any) => (
                       <div key={item.id} className="flex items-center justify-between p-3 bg-[#12110F] border border-[#2A261F] rounded-xl text-xs">
@@ -615,7 +615,7 @@ export default function ReportsPage() {
                           <p className="text-[11px] text-[#C9A45C] mt-0.5">{item.brand}</p>
                         </div>
                         <span className="font-mono font-bold text-rose-400 bg-rose-950/40 px-2 py-0.5 rounded border border-rose-800/40">
-                          {item.stock} remaining
+                          {item.stock} in stock
                         </span>
                       </div>
                     ))}

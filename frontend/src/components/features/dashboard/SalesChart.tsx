@@ -84,7 +84,7 @@ export default function SalesChart() {
             {payload[1] && (
               <div className="flex items-center justify-between gap-4">
                 <span className="flex items-center gap-1.5 text-[#8D8980]">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" /> Margin:
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" /> Profit:
                 </span>
                 <span className="font-mono font-bold text-emerald-400">
                   ₹{payload[1]?.value?.toLocaleString('en-IN')}

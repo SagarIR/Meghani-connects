@@ -35,10 +35,10 @@ export default function LoginPage() {
     setLoading(true)
     try {
       await login(data.username, data.password)
-      toast.success('Authenticated to Meghani Connect 360')
+      toast.success('Signed in successfully')
       router.push('/dashboard')
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Invalid staff credentials')
+      toast.error(error.response?.data?.detail || 'Incorrect username or password. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -85,23 +85,23 @@ export default function LoginPage() {
           >
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#1F1E1A] border border-[#2A261F] text-xs font-mono text-[#E8D5A7]">
               <Clock className="w-3.5 h-3.5 text-[#C9A45C]" />
-              <span>Operations Desk & Staff Portal</span>
+              <span>Store Operations & Staff Portal</span>
             </div>
 
             <h2 className="text-4xl font-serif font-bold text-[#F3EFE6] leading-tight tracking-tight">
-              Enterprise Horology & Boutique POS System
+              Watch Retail ERP & POS System
             </h2>
 
             <p className="text-sm text-[#8D8980] leading-relaxed">
-              Unified management for luxury watch inventories, master watchmaker atelier servicing, 
-              point-of-sale transactions, and VIP client relationships.
+              Complete management system for watch inventory, repair services, 
+              point-of-sale billing, and customer relationships.
             </p>
 
             {/* Modules Badges */}
             <div className="flex flex-wrap gap-2 pt-2">
               {[
-                'POS Terminal', 'Timepiece Vault', 'Atelier Repairs', 
-                'VIP Clientele CRM', 'Fiscal Ledgers', 'Web Showcase CMS'
+                'POS Terminal', 'Watch Inventory', 'Watch Repairs', 
+                'Customers & CRM', 'Expenses & Reports', 'Website CMS'
               ].map((mod, i) => (
                 <span
                   key={mod}
@@ -116,7 +116,7 @@ export default function LoginPage() {
           {/* Security Assurance */}
           <div className="flex items-center gap-2 text-xs text-[#8D8980] font-mono">
             <Shield className="w-4 h-4 text-[#C9A45C]" />
-            <span>Encrypted Session • Role-Based Access Control Protected</span>
+            <span>Encrypted Session • Role-Based Access Protected</span>
           </div>
         </div>
       </div>
@@ -142,8 +142,8 @@ export default function LoginPage() {
 
           {/* Heading */}
           <div className="text-center lg:text-left mb-8">
-            <h2 className="text-2xl font-serif font-bold text-[#F3EFE6]">Staff Authentication</h2>
-            <p className="text-xs text-[#8D8980] mt-1">Authenticate to access the boutique operations terminal</p>
+            <h2 className="text-2xl font-serif font-bold text-[#F3EFE6]">Staff Sign In</h2>
+            <p className="text-xs text-[#8D8980] mt-1">Sign in to access the staff portal</p>
           </div>
 
           {/* Form */}
@@ -174,7 +174,7 @@ export default function LoginPage() {
               iconPosition="right"
               className="mt-2 shadow-gold"
             >
-              Sign In to Register
+              Sign In
             </Button>
           </form>
 
@@ -183,7 +183,7 @@ export default function LoginPage() {
             <div className="flex items-start gap-2.5">
               <Sparkles className="w-4 h-4 text-[#C9A45C] mt-0.5 flex-shrink-0" />
               <div>
-                <p className="font-semibold text-[#F3EFE6]">Boutique Staff Credentials:</p>
+                <p className="font-semibold text-[#F3EFE6]">Demo Staff Credentials:</p>
                 <div className="mt-1 space-y-0.5 font-mono text-[#8D8980]">
                   <p>Username: <span className="text-[#C9A45C] font-bold">admin</span> | Password: <span className="text-[#C9A45C] font-bold">admin123</span></p>
                   <p>Username: <span className="text-[#E8D5A7]">staff</span> | Password: <span className="text-[#E8D5A7]">staff123</span></p>

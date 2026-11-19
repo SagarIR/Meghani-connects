@@ -66,7 +66,7 @@ export default function DashboardLayout({
           className="mt-6 text-center"
         >
           <p className="font-serif text-lg lg:text-xl font-bold text-[#F3EFE6] tracking-wide">Meghani Connect 360</p>
-          <p className="text-xs uppercase tracking-widest text-[#8D8980] mt-1">Authenticating Operational Session...</p>
+          <p className="text-xs uppercase tracking-widest text-[#8D8980] mt-1">Signing into Staff Portal...</p>
           <div className="mt-3 flex justify-center gap-1.5">
             {[0, 1, 2].map((i) => (
               <motion.div

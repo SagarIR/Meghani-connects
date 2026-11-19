@@ -12,17 +12,17 @@ import { useAuth } from '@/context/AuthContext'
 import clsx from 'clsx'
 
 const routeTitles: Record<string, { title: string; category: string }> = {
-  '/dashboard': { title: 'Executive Overview', category: 'Operations' },
-  '/sales': { title: 'Point of Sale (POS)', category: 'Retail Desk' },
-  '/sales/history': { title: 'Sales Ledger & Invoices', category: 'Audit' },
-  '/products': { title: 'Timepiece Catalog & Inventory', category: 'Merchandise' },
-  '/repairs': { title: 'Repair Atelier & Horology', category: 'Service' },
-  '/customers': { title: 'Clientele Portfolio (CRM)', category: 'VIP Relations' },
-  '/expenses': { title: 'Boutique Operational Expenses', category: 'Finance' },
-  '/reports': { title: 'Analytics & Financial Reports', category: 'Intelligence' },
-  '/website-cms': { title: 'Digital Boutique CMS', category: 'E-Commerce' },
-  '/notifications': { title: 'Customer Alerts & Dispatch', category: 'Messaging' },
-  '/settings': { title: 'Boutique Configuration', category: 'System' },
+  '/dashboard': { title: 'Store Dashboard', category: 'Overview' },
+  '/sales': { title: 'Point of Sale (POS)', category: 'Sales' },
+  '/sales/history': { title: 'Sales History & Invoices', category: 'Sales' },
+  '/products': { title: 'Watch Catalog & Inventory', category: 'Inventory' },
+  '/repairs': { title: 'Watch Repairs & Service', category: 'Service' },
+  '/customers': { title: 'Customers & CRM', category: 'Customers' },
+  '/expenses': { title: 'Store Expenses', category: 'Finance' },
+  '/reports': { title: 'Reports & Analytics', category: 'Reports' },
+  '/website-cms': { title: 'Website Content Management', category: 'Website' },
+  '/notifications': { title: 'Customer Notifications', category: 'Messages' },
+  '/settings': { title: 'Store Settings', category: 'Settings' },
 }
 
 interface HeaderProps {
@@ -38,7 +38,7 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
 
   // Current route metadata
   const currentRoute = routeTitles[pathname] || {
-    title: pathname.split('/').filter(Boolean).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' / ') || 'Boutique Management',
+    title: pathname.split('/').filter(Boolean).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' / ') || 'Store Management',
     category: 'Meghani 360'
   }
 
@@ -118,7 +118,7 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
           title="Search (Ctrl + K)"
         >
           <Search className="w-4 h-4 text-[#8D8980] group-hover:text-[#C9A45C] transition-colors" />
-          <span className="text-xs text-[#8D8980] hidden sm:inline">Search boutique...</span>
+          <span className="text-xs text-[#8D8980] hidden sm:inline">Search store...</span>
           <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-[#12110F] border border-[#2A261F] rounded text-[10px] text-[#8D8980] font-mono group-hover:text-[#C9A45C]">
             Ctrl K
           </kbd>
@@ -137,7 +137,7 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
         <Link
           href="/notifications"
           className="relative p-2 sm:px-2.5 sm:py-2 bg-[#171613] hover:bg-[#1F1E1A] border border-[#2A261F] hover:border-[#C9A45C]/40 rounded-xl transition-all text-[#8D8980] hover:text-[#C9A45C]"
-          title="Notifications & Dispatches"
+          title="Customer Notifications"
         >
           <Bell className="w-4 h-4" />
           <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#C9A45C] rounded-full ring-2 ring-[#0E0D0B]" />
@@ -154,7 +154,7 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
             </div>
             <div className="hidden sm:block text-left">
               <p className="font-semibold text-xs text-[#F3EFE6] leading-tight truncate max-w-[100px]">
-                {user?.name || user?.username || 'Staff'}
+                {user?.name || user?.username || 'Staff Member'}
               </p>
               <span className="text-[10px] font-mono text-[#C9A45C] font-semibold tracking-wider">
                 {roleLabel}
@@ -185,7 +185,7 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
                       {roleLabel}
                     </span>
                   </div>
-                  <p className="text-xs text-[#8D8980] truncate mt-0.5">{user?.email || 'Authenticated Staff'}</p>
+                  <p className="text-xs text-[#8D8980] truncate mt-0.5">{user?.email || 'Staff Member'}</p>
                 </div>
 
                 <div className="py-1 text-xs font-medium">
@@ -221,7 +221,7 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
                   >
                     <span className="flex items-center gap-2.5">
                       <ExternalLink className="w-4 h-4 text-[#C9A45C]" />
-                      Public Boutique
+                      View Website
                     </span>
                     <span className="text-[10px] text-[#8D8980]/70">Live</span>
                   </Link>
@@ -236,7 +236,7 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
                     className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-950/30 transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
-                    Sign Out Session
+                    Sign Out
                   </button>
                 </div>
               </motion.div>

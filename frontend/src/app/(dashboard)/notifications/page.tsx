@@ -78,7 +78,7 @@ export default function NotificationsPage() {
       setCustomers(customersRes.data.results || customersRes.data || [])
     } catch (error) {
       console.error('Failed to fetch notification data:', error)
-      toast.error('Failed to load dispatch history')
+      toast.error('Failed to load message history')
     } finally {
       setLoading(false)
     }
@@ -90,7 +90,7 @@ export default function NotificationsPage() {
       return
     }
     if (!message.trim()) {
-      toast.error('Please draft a dispatch message')
+      toast.error('Please enter a message to send')
       return
     }
 
@@ -109,13 +109,13 @@ export default function NotificationsPage() {
           type: notifType,
         })
       }
-      toast.success('Dispatches queued successfully')
+      toast.success('Messages queued successfully')
       setMessage('')
       setSelectedCustomers([])
       setActiveTab('history')
       fetchData()
     } catch (error) {
-      toast.error('Failed to queue dispatches')
+      toast.error('Failed to send messages')
     } finally {
       setIsSending(false)
     }
@@ -147,10 +147,10 @@ export default function NotificationsPage() {
     try {
       if (editingTemplate) {
         await api.patch(`/notifications/templates/${editingTemplate.id}/`, templateForm)
-        toast.success('Template updated')
+        toast.success('Template updated successfully')
       } else {
         await api.post('/notifications/templates/', templateForm)
-        toast.success('Template created')
+        toast.success('Template created successfully')
       }
       setShowTemplateModal(false)
       fetchData()
@@ -162,10 +162,10 @@ export default function NotificationsPage() {
   }
 
   const deleteTemplate = async (id: number) => {
-    if (!confirm('Are you certain you wish to delete this template?')) return
+    if (!confirm('Are you sure you want to delete this template?')) return
     try {
       await api.delete(`/notifications/templates/${id}/`)
-      toast.success('Template deleted')
+      toast.success('Template deleted successfully')
       fetchData()
     } catch (error) {
       toast.error('Failed to delete template')
@@ -212,12 +212,12 @@ export default function NotificationsPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Client Messaging & Notifications</h1>
+              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Customer Notifications & Messaging</h1>
               <span className="text-xs px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F] font-mono">
                 WhatsApp & SMS
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[#8D8980]">Broadcast repair ready updates, festive privileges, and bespoke concierge notifications</p>
+            <p className="text-xs sm:text-sm text-[#8D8980]">Send repair updates, promotional messages, and customer notifications via WhatsApp and SMS</p>
           </div>
         </div>
 
@@ -233,9 +233,9 @@ export default function NotificationsPage() {
       {/* Tabs */}
       <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
         {[
-          { id: 'history', label: 'Outbox History', icon: Bell, count: notifications.length },
+          { id: 'history', label: 'Message History', icon: Bell, count: notifications.length },
           { id: 'templates', label: 'Message Templates', icon: MessageSquare, count: templates.length },
-          { id: 'send', label: 'Direct & Bulk Dispatch', icon: Send },
+          { id: 'send', label: 'Send Messages', icon: Send },
         ].map(tab => (
           <button
             key={tab.id}
@@ -264,13 +264,13 @@ export default function NotificationsPage() {
           {loading ? (
             <div className="py-20 text-center">
               <div className="w-8 h-8 border-2 border-[#C9A45C] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-              <p className="text-sm text-[#8D8980]">Loading dispatch logs...</p>
+              <p className="text-sm text-[#8D8980]">Loading message history...</p>
             </div>
           ) : notifications.length === 0 ? (
             <div className="py-16 text-center text-[#8D8980]">
               <Bell className="w-12 h-12 mx-auto mb-3 opacity-30 text-[#C9A45C]" />
-              <p className="text-base font-serif font-bold text-[#F3EFE6]">No Dispatches Logged</p>
-              <p className="text-xs text-[#8D8980] mt-1">Direct and bulk messaging dispatches will appear here.</p>
+              <p className="text-base font-serif font-bold text-[#F3EFE6]">No Messages Sent Yet</p>
+              <p className="text-xs text-[#8D8980] mt-1">Sent and scheduled customer messages will appear here.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -278,10 +278,10 @@ export default function NotificationsPage() {
                 <thead className="bg-[#12110F] border-b border-[#2A261F] text-[#8D8980]">
                   <tr>
                     <th className="px-5 py-3.5 text-left font-semibold uppercase tracking-wider">Recipient</th>
-                    <th className="px-5 py-3.5 text-left font-semibold uppercase tracking-wider">Dispatch Content</th>
+                    <th className="px-5 py-3.5 text-left font-semibold uppercase tracking-wider">Message Content</th>
                     <th className="px-4 py-3.5 text-left font-semibold uppercase tracking-wider">Channel</th>
                     <th className="px-4 py-3.5 text-left font-semibold uppercase tracking-wider">Status</th>
-                    <th className="px-5 py-3.5 text-right font-semibold uppercase tracking-wider">Timestamp</th>
+                    <th className="px-5 py-3.5 text-right font-semibold uppercase tracking-wider">Date & Time</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#2A261F]">
@@ -291,7 +291,7 @@ export default function NotificationsPage() {
                     return (
                       <tr key={notif.id} className="hover:bg-[#1F1E1A] transition-colors">
                         <td className="px-5 py-3.5">
-                          <p className="font-serif font-bold text-[#F3EFE6] text-sm">{notif.customer_name || 'Client'}</p>
+                          <p className="font-serif font-bold text-[#F3EFE6] text-sm">{notif.customer_name || 'Customer'}</p>
                           <p className="font-mono text-[11px] text-[#8D8980]">{notif.customer_phone}</p>
                         </td>
 
@@ -332,7 +332,7 @@ export default function NotificationsPage() {
       {activeTab === 'templates' && (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <p className="text-xs text-[#8D8980]">Standardized messaging templates for repair alerts, receipts, and festival greetings</p>
+            <p className="text-xs text-[#8D8980]">Message templates for repair alerts, payment receipts, and festival greetings</p>
             <Button onClick={() => openTemplateModal()} icon={<Plus className="w-4 h-4" />} className="shadow-gold">
               New Template
             </Button>
@@ -371,7 +371,7 @@ export default function NotificationsPage() {
                   onClick={() => applyTemplate(tpl)}
                   className="w-full"
                 >
-                  Apply in Composer
+                  Use Template
                 </Button>
               </div>
             ))}
@@ -379,13 +379,13 @@ export default function NotificationsPage() {
         </div>
       )}
 
-      {/* TAB 3: Send New Dispatch */}
+      {/* TAB 3: Send Messages */}
       {activeTab === 'send' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Clientele Selector */}
+          {/* Customer Selector */}
           <div className="lg:col-span-1 bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl space-y-3">
             <div className="flex items-center justify-between">
-              <h3 className="font-serif font-bold text-base text-[#F3EFE6]">Target Clientele</h3>
+              <h3 className="font-serif font-bold text-base text-[#F3EFE6]">Select Customers</h3>
               <button 
                 onClick={selectAllCustomers}
                 className="text-xs text-[#C9A45C] hover:underline font-semibold"
@@ -399,7 +399,7 @@ export default function NotificationsPage() {
                 type="text"
                 value={customerSearch}
                 onChange={(e) => setCustomerSearch(e.target.value)}
-                placeholder="Filter clients by name or phone..."
+                placeholder="Search customers by name or phone..."
                 className="w-full px-3 py-1.5 bg-[#12110F] border border-[#2A261F] rounded-lg text-xs text-[#F3EFE6] outline-none placeholder-[#8D8980]/70"
               />
             </div>
@@ -431,13 +431,13 @@ export default function NotificationsPage() {
 
             <div className="pt-2 border-t border-[#2A261F] flex items-center justify-between text-xs text-[#8D8980]">
               <span>Selected Recipients:</span>
-              <span className="font-mono font-bold text-[#C9A45C]">{selectedCustomers.length} clients</span>
+              <span className="font-mono font-bold text-[#C9A45C]">{selectedCustomers.length} customers</span>
             </div>
           </div>
 
           {/* Message Composer */}
           <div className="lg:col-span-2 bg-[#171613] rounded-2xl border border-[#2A261F] p-6 shadow-xl space-y-4">
-            <h3 className="font-serif font-bold text-base text-[#F3EFE6]">Dispatch Composer</h3>
+            <h3 className="font-serif font-bold text-base text-[#F3EFE6]">Compose Message</h3>
             
             {/* Channel Selection */}
             <div className="flex gap-3">
@@ -459,7 +459,7 @@ export default function NotificationsPage() {
                     onChange={(e) => setNotifType(e.target.value as any)}
                     className="hidden"
                   />
-                  <span>{type === 'whatsapp' ? 'WhatsApp API Gateway' : 'Transactional SMS'}</span>
+                  <span>{type === 'whatsapp' ? 'WhatsApp' : 'SMS'}</span>
                 </label>
               ))}
             </div>
@@ -490,7 +490,7 @@ export default function NotificationsPage() {
                 onChange={(e) => setMessage(e.target.value)}
                 rows={6}
                 className="w-full px-3.5 py-3 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-xs text-[#F3EFE6] resize-none leading-relaxed"
-                placeholder="Draft bespoke concierge message... Supports {name}, {phone}, {invoice_number} placeholders"
+                placeholder="Type your message here... Use {name}, {phone}, {invoice_number} for customer details"
               />
               <div className="flex items-center justify-between text-[11px] text-[#8D8980] font-mono">
                 <span>Variables: {'{name}'}, {'{phone}'}, {'{invoice_number}'}</span>
@@ -518,22 +518,22 @@ export default function NotificationsPage() {
       <Modal 
         isOpen={showTemplateModal} 
         onClose={() => setShowTemplateModal(false)} 
-        title={editingTemplate ? 'Update Message Template' : 'Create Dispatch Template'}
-        description="Standardized broadcast wording with personalization variable placeholders"
+        title={editingTemplate ? 'Edit Message Template' : 'Create Message Template'}
+        description="Create a reusable message template with customer variables"
       >
         <div className="space-y-4">
           <Input
             label="Template Title *"
             value={templateForm.name}
             onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })}
-            placeholder="e.g. VIP Birthday Privilege"
+            placeholder="e.g. Birthday Greetings"
           />
 
           <Input
-            label="Contextual Description"
+            label="Description"
             value={templateForm.description}
             onChange={(e) => setTemplateForm({ ...templateForm, description: e.target.value })}
-            placeholder="e.g. Dispatched to VIP patrons celebrating their milestone"
+            placeholder="e.g. Sent to customers celebrating their birthday"
           />
 
           <div>
@@ -543,7 +543,7 @@ export default function NotificationsPage() {
               onChange={(e) => setTemplateForm({ ...templateForm, template: e.target.value })}
               rows={4}
               className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-xs text-[#F3EFE6] resize-none"
-              placeholder="Greetings {name}, your timepiece is now ready for collection at Meghani Watch Co..."
+              placeholder="Dear {name}, your watch is now ready for pickup at Meghani Watch Co..."
             />
             <p className="text-[11px] text-[#8D8980] mt-1 font-mono">Placeholders: {'{name}'}, {'{phone}'}, {'{invoice_number}'}</p>
           </div>
@@ -553,7 +553,7 @@ export default function NotificationsPage() {
               Cancel
             </Button>
             <Button onClick={saveTemplate} loading={isSubmitting} className="shadow-gold">
-              {editingTemplate ? 'Commit Template' : 'Save Template'}
+              {editingTemplate ? 'Update Template' : 'Save Template'}
             </Button>
           </div>
         </div>

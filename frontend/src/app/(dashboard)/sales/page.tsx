@@ -205,7 +205,7 @@ export default function POSPage() {
     
     if (existing) {
       if (existing.quantity >= product.stock) {
-        toast.error(`Insufficient stock for ${product.name} (Max: ${product.stock})`)
+        toast.error(`Not enough stock available for ${product.name}. Only ${product.stock} available.`)
         return
       }
       setCart(cart.map(item =>
@@ -232,7 +232,7 @@ export default function POSPage() {
         const newQty = item.quantity + delta
         if (newQty < 1) return item
         if (newQty > item.product.stock) {
-          toast.error(`Maximum available stock is ${item.product.stock}`)
+          toast.error(`Not enough stock available. Only ${item.product.stock} available.`)
           return item
         }
         return { ...item, quantity: newQty }
@@ -250,7 +250,7 @@ export default function POSPage() {
     setShowCustomerSearch(false)
     setCustomerSearch('')
     setCustomerResults([])
-    toast.success(`Client Attached: ${c.name}`, { duration: 1500 })
+    toast.success(`Customer Selected: ${c.name}`, { duration: 1500 })
   }
 
   const subtotal = cart.reduce((sum, item) => sum + (item.unit_price * item.quantity), 0)
@@ -262,7 +262,7 @@ export default function POSPage() {
   const handleCreateCustomer = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newCustomerName.trim() || !newCustomerPhone.trim()) {
-      toast.error('Client name and mobile number are required')
+      toast.error('Customer name and phone number are required')
       return
     }
     setIsCreatingCustomer(true)
@@ -277,9 +277,9 @@ export default function POSPage() {
       setNewCustomerName('')
       setNewCustomerPhone('')
       setNewCustomerEmail('')
-      toast.success(`Client ${res.data.name} registered and attached`)
+      toast.success(`Customer ${res.data.name} added successfully`)
     } catch (err: any) {
-      toast.error(err.response?.data?.phone?.[0] || err.response?.data?.name?.[0] || 'Failed to create client')
+      toast.error(err.response?.data?.phone?.[0] || err.response?.data?.name?.[0] || 'Failed to add customer')
     } finally {
       setIsCreatingCustomer(false)
     }
@@ -295,18 +295,18 @@ export default function POSPage() {
 
   const handleCheckout = async () => {
     if (cart.length === 0) {
-      toast.error('Register cart is empty')
+      toast.error('Cart is empty. Please add products to continue.')
       return
     }
 
     if (paymentMode === 'mixed') {
       const activeMethods = Object.entries(splitPayments).filter(([_, v]) => Number(v) > 0)
       if (activeMethods.length < 2) {
-        toast.error('Split payment requires at least two payment methods with non-zero amounts')
+        toast.error('Please enter amounts for at least two payment methods.')
         return
       }
       if (Math.abs(remainingToPay) > 0.01) {
-        toast.error(`Split tender must equal total payable amount. Remaining: ${formatCurrency(remainingToPay)}`)
+        toast.error(`Split payment amounts must equal the total bill. Remaining: ${formatCurrency(remainingToPay)}`)
         return
       }
     }
@@ -407,7 +407,7 @@ export default function POSPage() {
             <input
               ref={searchInputRef}
               type="text"
-              placeholder="Search by timepiece name, brand, or scan barcode wedge (Enter)..."
+              placeholder="Search by watch name, brand, or scan barcode (Enter)..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={async (e) => {
@@ -482,14 +482,14 @@ export default function POSPage() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <p className="font-semibold text-sm text-[#F3EFE6] truncate">{customer.name}</p>
                       <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-950/70 border border-amber-800/50 text-amber-300 font-medium flex items-center gap-1">
-                        <Star className="w-2.5 h-2.5 text-amber-400" /> {customer.loyalty_points} VIP pts
+                        <Star className="w-2.5 h-2.5 text-amber-400" /> {customer.loyalty_points} pts
                       </span>
                     </div>
                     <p className="text-xs text-[#8D8980] font-mono">{customer.phone}</p>
                   </div>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => { setCustomer(null); setPointsToRedeem(0); }} className="flex-shrink-0">
-                  <X className="w-4 h-4 mr-1" /> Detach
+                  <X className="w-4 h-4 mr-1" /> Remove
                 </Button>
               </div>
 
@@ -524,7 +524,7 @@ export default function POSPage() {
                           return;
                         }
                         setPointsToRedeem(redeemable);
-                        toast.success(`Applied ${redeemable} VIP pts (-₹${(redeemable * 0.5).toFixed(0)})`);
+                        toast.success(`Applied ${redeemable} loyalty points (-₹${(redeemable * 0.5).toFixed(0)})`);
                       }}
                       className="text-xs px-2.5 py-1 rounded-lg bg-[#C9A45C] hover:bg-[#E8D5A7] text-[#0B0B0A] font-semibold transition-colors"
                     >
@@ -544,8 +544,8 @@ export default function POSPage() {
                   <User className="w-4 h-4" />
                 </div>
                 <div className="text-left">
-                  <p className="text-xs sm:text-sm font-semibold text-[#F3EFE6]">Attach Customer Profile</p>
-                  <p className="text-[11px] text-[#8D8980]">Earn loyalty points & link invoice to warranty CRM</p>
+                  <p className="text-xs sm:text-sm font-semibold text-[#F3EFE6]">Select Customer</p>
+                  <p className="text-[11px] text-[#8D8980]">Earn loyalty points and link invoice to warranty</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-[#8D8980] group-hover:text-[#C9A45C] group-hover:translate-x-0.5 transition-all" />
@@ -553,21 +553,21 @@ export default function POSPage() {
           )}
         </div>
 
-        {/* Timepiece Selection Grid / Instant Search Results */}
+        {/* Watch Selection Grid / Instant Search Results */}
         <div className="flex-1 overflow-y-auto bg-[#171613] border border-[#2A261F] rounded-2xl p-3 sm:p-4 shadow-xl min-h-0">
           <div className="flex items-center justify-between mb-3 px-1">
             <span className="text-xs font-semibold uppercase tracking-wider text-[#8D8980]">
-              {search.length >= 2 ? `Search Results (${products.length})` : 'Timepiece Quick Select'}
+              {search.length >= 2 ? `Search Results (${products.length})` : 'Watch Catalog'}
             </span>
             <span className="text-[11px] font-mono text-[#8D8980]/70">
-              Wedge scanner active
+              Scanner ready
             </span>
           </div>
 
           {displayedProducts.length === 0 ? (
             <div className="h-64 flex flex-col items-center justify-center text-center p-6 text-[#8D8980]">
               <Barcode className="w-12 h-12 text-[#2A261F] mb-3" />
-              <p className="text-sm font-medium text-[#F3EFE6]">No matching timepieces found</p>
+              <p className="text-sm font-medium text-[#F3EFE6]">No matching watches found</p>
               <p className="text-xs mt-1">Try another brand name or scan with the barcode scanner</p>
             </div>
           ) : (
@@ -593,7 +593,7 @@ export default function POSPage() {
                     <div>
                       <div className="flex items-start justify-between gap-2 mb-1.5">
                         <span className="text-[10px] font-mono font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#1F1E1A] text-[#8D8980] border border-[#2A261F]">
-                          {product.brand || 'Boutique'}
+                          {product.brand || 'Meghani'}
                         </span>
                         <span className={clsx(
                           'text-[10px] font-mono px-1.5 py-0.5 rounded-full font-medium',
@@ -647,8 +647,8 @@ export default function POSPage() {
               <Receipt className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="font-serif font-bold text-base text-[#F3EFE6]">Register Order</h2>
-              <p className="text-[11px] font-mono text-[#8D8980]">{cart.length} item(s) in tender</p>
+              <h2 className="font-serif font-bold text-base text-[#F3EFE6]">Current Sale</h2>
+              <p className="text-[11px] font-mono text-[#8D8980]">{cart.length} item(s) in cart</p>
             </div>
           </div>
           {cart.length > 0 && (
@@ -666,8 +666,8 @@ export default function POSPage() {
           {cart.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-6 text-[#8D8980]">
               <ShoppingCart className="w-10 h-10 text-[#2A261F] mb-3" />
-              <p className="text-sm font-semibold text-[#F3EFE6]">Register Cart is Empty</p>
-              <p className="text-xs text-[#8D8980] mt-1">Scan a barcode or tap a timepiece to begin sale</p>
+              <p className="text-sm font-semibold text-[#F3EFE6]">Cart is Empty</p>
+              <p className="text-xs text-[#8D8980] mt-1">Scan a barcode or select a watch to start sale</p>
             </div>
           ) : (
             cart.map((item) => (
@@ -728,7 +728,7 @@ export default function POSPage() {
               <span className="font-mono text-[#F3EFE6]">{formatCurrency(subtotal)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[#8D8980]">Special Courtesy Discount</span>
+              <span className="text-[#8D8980]">Discount</span>
               <div className="relative">
                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#8D8980] text-xs font-semibold">₹</span>
                 <input
@@ -744,13 +744,13 @@ export default function POSPage() {
             {loyaltyDiscount > 0 && (
               <div className="flex justify-between text-emerald-400 font-medium">
                 <span className="flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-[#C9A45C]" /> VIP Loyalty Redemption ({pointsToRedeem} pts)
+                  <Sparkles className="w-3 h-3 text-[#C9A45C]" /> Loyalty Points Discount ({pointsToRedeem} pts)
                 </span>
                 <span className="font-mono font-semibold">-{formatCurrency(loyaltyDiscount)}</span>
               </div>
             )}
             <div className="flex justify-between items-baseline pt-2.5 border-t border-[#2A261F]">
-              <span className="font-serif text-sm font-semibold text-[#F3EFE6]">Total Payable</span>
+              <span className="font-serif text-sm font-semibold text-[#F3EFE6]">Total Amount</span>
               <span className="font-serif text-2xl font-bold text-[#C9A45C] tracking-tight">
                 {formatCurrency(total)}
               </span>
@@ -857,7 +857,7 @@ export default function POSPage() {
 
               <div className="p-4 border-t border-[#2A261F] bg-[#12110F] space-y-3">
                 <div className="flex justify-between items-baseline">
-                  <span className="text-sm font-semibold">Total Payable</span>
+                  <span className="text-sm font-semibold">Total Amount</span>
                   <span className="text-xl font-bold font-serif text-[#C9A45C]">{formatCurrency(total)}</span>
                 </div>
                 <Button
@@ -869,7 +869,7 @@ export default function POSPage() {
                     setShowPaymentModal(true)
                   }}
                 >
-                  Proceed to Payment
+                  Pay Now
                 </Button>
               </div>
             </motion.div>
@@ -884,8 +884,8 @@ export default function POSPage() {
           setShowCustomerSearch(false)
           setIsRegisteringCustomer(false)
         }}
-        title={isRegisteringCustomer ? "Register New Boutique Client" : "Lookup Boutique Client"}
-        description={isRegisteringCustomer ? "Enter client contact details to create and attach instantly" : "Search client by full name or phone number"}
+        title={isRegisteringCustomer ? "Add New Customer" : "Select Customer"}
+        description={isRegisteringCustomer ? "Enter customer contact details to add immediately" : "Search customer by name or phone number"}
       >
         <div className="space-y-4">
           <div className="flex items-center gap-2 border-b border-[#2A261F] pb-2">
@@ -897,7 +897,7 @@ export default function POSPage() {
                 !isRegisteringCustomer ? "bg-[#C9A45C] text-[#0B0B0A]" : "text-[#8D8980] hover:text-[#F3EFE6]"
               )}
             >
-              Lookup Client
+              Search Customer
             </button>
             <button
               type="button"
@@ -916,7 +916,7 @@ export default function POSPage() {
                 isRegisteringCustomer ? "bg-[#C9A45C] text-[#0B0B0A]" : "text-[#8D8980] hover:text-[#F3EFE6]"
               )}
             >
-              <Plus className="w-3.5 h-3.5" /> Quick Register
+              <Plus className="w-3.5 h-3.5" /> Add Customer
             </button>
           </div>
 
@@ -926,7 +926,7 @@ export default function POSPage() {
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#C9A45C]" />
                 <input
                   type="text"
-                  placeholder="Search by client name or mobile..."
+                  placeholder="Search by customer name or phone..."
                   value={customerSearch}
                   onChange={(e) => setCustomerSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl text-sm text-[#F3EFE6] placeholder-[#8D8980] focus:border-[#C9A45C] outline-none"
@@ -958,7 +958,7 @@ export default function POSPage() {
                 {customerSearch.length >= 2 && customerResults.length === 0 && (
                   <div className="text-center py-6 text-[#8D8980] space-y-3">
                     <User className="w-8 h-8 mx-auto text-[#2A261F]" />
-                    <p className="text-sm">No client found matching &ldquo;{customerSearch}&rdquo;</p>
+                    <p className="text-sm">No customer found matching &ldquo;{customerSearch}&rdquo;</p>
                     <button
                       type="button"
                       onClick={() => {
@@ -971,7 +971,7 @@ export default function POSPage() {
                       }}
                       className="px-3 py-1.5 bg-[#C9A45C] text-[#0B0B0A] text-xs font-bold rounded-lg hover:bg-[#E8D5A7] transition-colors"
                     >
-                      + Quick Register as New Client
+                      + Add New Customer
                     </button>
                   </div>
                 )}
@@ -992,7 +992,7 @@ export default function POSPage() {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-[#8D8980] block mb-1">Mobile Number *</label>
+                <label className="text-xs font-semibold text-[#8D8980] block mb-1">Phone Number *</label>
                 <input
                   type="tel"
                   required
@@ -1006,7 +1006,7 @@ export default function POSPage() {
                 <label className="text-xs font-semibold text-[#8D8980] block mb-1">Email (Optional)</label>
                 <input
                   type="email"
-                  placeholder="e.g. client@example.com"
+                  placeholder="e.g. customer@example.com"
                   value={newCustomerEmail}
                   onChange={(e) => setNewCustomerEmail(e.target.value)}
                   className="w-full px-3 py-2 bg-[#12110F] border border-[#2A261F] rounded-xl text-sm text-[#F3EFE6] placeholder-[#8D8980] focus:border-[#C9A45C] outline-none"
@@ -1027,7 +1027,7 @@ export default function POSPage() {
                   size="sm"
                   disabled={isCreatingCustomer}
                 >
-                  {isCreatingCustomer ? 'Registering...' : 'Register & Select Client'}
+                  {isCreatingCustomer ? 'Adding...' : 'Add & Select Customer'}
                 </Button>
               </div>
             </form>
@@ -1035,12 +1035,12 @@ export default function POSPage() {
         </div>
       </Modal>
 
-      {/* Complete Payment & Split Tender Modal */}
+      {/* Complete Payment & Split Payment Modal */}
       <Modal
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
-        title="Complete Boutique Tender"
-        description="Select tender method and confirm payment allocation"
+        title="Complete Payment"
+        description="Select payment method and confirm amounts"
         size="lg"
       >
         <div className="space-y-5">
@@ -1051,10 +1051,10 @@ export default function POSPage() {
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {[
-                { mode: 'cash', label: 'Cash Tender', icon: Wallet },
+                { mode: 'cash', label: 'Cash', icon: Wallet },
                 { mode: 'upi', label: 'UPI / QR', icon: Smartphone },
                 { mode: 'card', label: 'Credit / Debit', icon: CreditCard },
-                { mode: 'mixed', label: 'Split Tender', icon: Split },
+                { mode: 'mixed', label: 'Split Payment', icon: Split },
               ].map(({ mode, label, icon: Icon }) => (
                 <button
                   key={mode}
@@ -1091,14 +1091,14 @@ export default function POSPage() {
             <div className="bg-[#12110F] border border-[#2A261F] rounded-xl p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-[#C9A45C] uppercase tracking-wider flex items-center gap-1.5">
-                  <Split className="w-4 h-4" /> Split Tender Breakdown
+                  <Split className="w-4 h-4" /> Split Payment Breakdown
                 </span>
                 <button
                   type="button"
                   onClick={() => setSplitPayments({ cash: 0, upi: 0, card: 0 })}
                   className="text-xs text-[#8D8980] hover:text-[#F3EFE6] underline"
                 >
-                  Clear Tender
+                  Clear Amounts
                 </button>
               </div>
 
@@ -1201,7 +1201,7 @@ export default function POSPage() {
                   </span>
                 ) : (
                   <span className="text-red-300 font-bold bg-red-950/70 border border-red-800/50 px-2 py-0.5 rounded">
-                    Overallocated: +{formatCurrency(Math.abs(remainingToPay))}
+                    Overpaid: +{formatCurrency(Math.abs(remainingToPay))}
                   </span>
                 )}
               </div>
@@ -1211,7 +1211,7 @@ export default function POSPage() {
           {/* Tender Summary Box */}
           <div className="p-4 bg-[#12110F] border border-[#2A261F] rounded-xl space-y-2 text-xs">
             <div className="flex justify-between text-[#8D8980]">
-              <span>Cart Timepieces ({cart.length})</span>
+              <span>Watches ({cart.length})</span>
               <span className="font-mono text-[#F3EFE6]">{formatCurrency(subtotal)}</span>
             </div>
             {discount > 0 && (
@@ -1223,19 +1223,19 @@ export default function POSPage() {
             {loyaltyDiscount > 0 && (
               <div className="flex justify-between text-emerald-400 font-medium">
                 <span className="flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-[#C9A45C]" /> VIP Loyalty Points ({pointsToRedeem} pts)
+                  <Sparkles className="w-3 h-3 text-[#C9A45C]" /> Loyalty Points ({pointsToRedeem} pts)
                 </span>
                 <span className="font-mono font-semibold">-{formatCurrency(loyaltyDiscount)}</span>
               </div>
             )}
             {customer && (
               <div className="flex justify-between text-[#8D8980]">
-                <span>Boutique Client</span>
+                <span>Customer</span>
                 <span className="text-[#F3EFE6] font-semibold">{customer.name}</span>
               </div>
             )}
             <div className="pt-2.5 border-t border-[#2A261F] flex justify-between items-baseline">
-              <span className="text-sm font-semibold text-[#F3EFE6]">Total Payable Amount</span>
+              <span className="text-sm font-semibold text-[#F3EFE6]">Total Amount</span>
               <span className="font-serif text-2xl font-bold text-[#C9A45C]">{formatCurrency(total)}</span>
             </div>
           </div>
@@ -1250,16 +1250,16 @@ export default function POSPage() {
               disabled={paymentMode === 'mixed' && (remainingToPay !== 0 || Object.values(splitPayments).filter(v => Number(v) > 0).length < 2)}
             >
               <Check className="w-4 h-4 mr-1.5" />
-              Authorize & Complete Sale
+              Complete Sale
             </Button>
             {paymentMode === 'mixed' && remainingToPay !== 0 && (
               <p className="text-[11px] text-center text-amber-300">
-                Split tender must match the total payable amount exactly before authorising transaction.
+                Split payment amounts must equal the total amount before completing the sale.
               </p>
             )}
             {paymentMode === 'mixed' && remainingToPay === 0 && Object.values(splitPayments).filter(v => Number(v) > 0).length < 2 && (
               <p className="text-[11px] text-center text-amber-300">
-                Please allocate across at least two payment methods for a split transaction.
+                Please enter amounts for at least two payment methods.
               </p>
             )}
           </div>

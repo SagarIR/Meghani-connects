@@ -53,11 +53,11 @@ const schema = yup.object({
 type FormData = yup.InferType<typeof schema>
 
 const categories = [
-  { value: 'analog', label: 'Analog Timepiece' },
+  { value: 'analog', label: 'Analog Watch' },
   { value: 'digital', label: 'Digital Watch' },
-  { value: 'smart', label: 'Smart Wearable' },
+  { value: 'smart', label: 'Smartwatch' },
   { value: 'wall', label: 'Wall Clock' },
-  { value: 'accessory', label: 'Horological Accessory' },
+  { value: 'accessory', label: 'Accessories' },
 ]
 
 export default function ProductsPage() {
@@ -314,15 +314,15 @@ export default function ProductsPage() {
 
       if (selectedProduct) {
         await api.patch(`/products/${selectedProduct.id}/`, payload)
-        toast.success('Timepiece record updated')
+        toast.success('Watch updated successfully')
       } else {
         await api.post('/products/', payload)
-        toast.success('New product cataloged successfully')
+        toast.success('Watch added successfully')
       }
       setShowFormModal(false)
       fetchProducts()
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Operation failed')
+      toast.error(error.response?.data?.detail || 'Failed to save watch')
     } finally {
       setIsSubmitting(false)
     }
@@ -332,11 +332,11 @@ export default function ProductsPage() {
     if (!selectedProduct) return
     try {
       await api.delete(`/products/${selectedProduct.id}/`)
-      toast.success('Product deleted from inventory')
+      toast.success('Watch deleted successfully')
       setShowDeleteModal(false)
       fetchProducts()
     } catch (error) {
-      toast.error('Failed to delete product')
+      toast.error('Failed to delete watch')
     }
   }
 
@@ -359,12 +359,12 @@ export default function ProductsPage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Timepiece & Inventory Catalog</h1>
+                <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Watch Catalog & Inventory</h1>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F] font-mono">
                   {totalItems} items
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-[#8D8980]">Manage luxury watches, clocks, accessories & stock valuation</p>
+              <p className="text-xs sm:text-sm text-[#8D8980]">Manage watches, clocks, accessories & stock inventory</p>
             </div>
           </div>
         </div>
@@ -388,7 +388,7 @@ export default function ProductsPage() {
             icon={<Plus className="w-4 h-4" />} 
             className="flex-1 sm:flex-none shadow-gold"
           >
-            <span>Add Timepiece</span>
+            <span>Add Watch</span>
           </Button>
         </div>
       </div>
@@ -401,7 +401,7 @@ export default function ProductsPage() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8D8980] group-focus-within:text-[#C9A45C] transition-colors" />
             <input
               type="text"
-              placeholder="Search by model, brand, reference number or barcode..."
+              placeholder="Search by watch name, brand, model, or barcode..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl 
@@ -421,7 +421,7 @@ export default function ProductsPage() {
                          text-[#F3EFE6] text-sm focus:border-[#C9A45C] focus:ring-1 focus:ring-[#C9A45C]
                          outline-none cursor-pointer"
               >
-                <option value="">All Horological Classes</option>
+                <option value="">All Categories</option>
                 {categories.map((cat) => (
                   <option key={cat.value} value={cat.value} className="bg-[#171613] text-[#F3EFE6]">{cat.label}</option>
                 ))}
@@ -438,7 +438,7 @@ export default function ProductsPage() {
                     ? 'bg-[#C9A45C] text-[#0B0B0A] shadow-sm font-semibold' 
                     : 'text-[#8D8980] hover:text-[#F3EFE6]'
                 )}
-                title="Grid Showcase"
+                title="Grid View"
               >
                 <Grid3X3 className="w-4 h-4" />
               </button>
@@ -450,7 +450,7 @@ export default function ProductsPage() {
                     ? 'bg-[#C9A45C] text-[#0B0B0A] shadow-sm font-semibold' 
                     : 'text-[#8D8980] hover:text-[#F3EFE6]'
                 )}
-                title="Ledger Table"
+                title="Table View"
               >
                 <List className="w-4 h-4" />
               </button>
@@ -480,10 +480,10 @@ export default function ProductsPage() {
           <div className="w-16 h-16 mx-auto bg-[#1F1E1A] border border-[#2A261F] rounded-2xl flex items-center justify-center mb-4">
             <Package className="w-8 h-8 text-[#8D8980]" />
           </div>
-          <h3 className="text-lg font-serif font-bold text-[#F3EFE6] mb-1">No Timepieces Found</h3>
-          <p className="text-sm text-[#8D8980] mb-6">Refine your search keywords or add a new piece to the catalog.</p>
+          <h3 className="text-lg font-serif font-bold text-[#F3EFE6] mb-1">No Watches Found</h3>
+          <p className="text-sm text-[#8D8980] mb-6">Try changing your search or add a new watch to inventory.</p>
           <Button onClick={openAddModal} icon={<Plus className="w-4 h-4" />}>
-            Add Timepiece to Inventory
+            Add Watch to Inventory
           </Button>
         </motion.div>
       ) : viewMode === 'grid' ? (
@@ -561,27 +561,27 @@ export default function ProductsPage() {
                   {/* Product Metadata */}
                   <div className="p-4">
                     <p className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider mb-1 truncate">
-                      {product.brand || 'Luxury Horology'}
+                      {product.brand || 'Watch'}
                     </p>
                     <h3 className="font-serif font-bold text-[#F3EFE6] text-base line-clamp-1 group-hover:text-[#E8D5A7] transition-colors">
                       {product.name}
                     </h3>
                     {product.barcode && (
                       <p className="text-[11px] font-mono text-[#8D8980] mt-0.5 truncate">
-                        REF: {product.barcode}
+                        SKU: {product.barcode}
                       </p>
                     )}
                     
                     {/* Pricing Grid */}
                     <div className="mt-4 pt-3 border-t border-[#2A261F] flex items-end justify-between">
                       <div>
-                        <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Retail Price</span>
+                        <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Selling Price</span>
                         <p className="text-xl font-bold font-mono text-[#C9A45C]">{formatCurrency(product.selling_price)}</p>
                       </div>
 
                       {/* RBAC Protected Cost / Profit */}
                       <div className="text-right">
-                        <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Cost / Margin</span>
+                        <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Cost / Profit</span>
                         {isManagement ? (
                           <div>
                             <p className="text-xs font-mono text-[#8D8980]">
@@ -624,7 +624,7 @@ export default function ProductsPage() {
                       onClick={() => openViewModal(product)}
                       className="flex-1 py-1.5 text-xs text-[#8D8980] hover:text-[#F3EFE6] bg-[#1F1E1A] hover:bg-[#2A261F] border border-[#2A261F] rounded-lg transition-colors"
                     >
-                      Inspect
+                      View
                     </button>
                     <button
                       onClick={() => openEditModal(product)}
@@ -639,24 +639,24 @@ export default function ProductsPage() {
           </AnimatePresence>
         </div>
       ) : (
-        /* Ledger Table View */
+        /* Table View */
         <div className="bg-[#171613] rounded-2xl border border-[#2A261F] overflow-hidden shadow-xl">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[800px]">
               <thead className="bg-[#12110F] border-b border-[#2A261F]">
                 <tr>
                   <th className="px-5 py-3.5 text-left">
-                    <SortableHeader label="Timepiece & Reference" field="name" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                    <SortableHeader label="Watch & Brand" field="name" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
                   <th className="px-4 py-3.5 text-left">
                     <SortableHeader label="Category" field="category" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
                   <th className="px-4 py-3.5 text-right">
-                    <SortableHeader label="Retail Price" field="selling_price" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                    <SortableHeader label="Selling Price" field="selling_price" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
                   <th className="px-4 py-3.5 text-right">
                     <span className="text-xs font-semibold text-[#8D8980] uppercase tracking-wider">
-                      {isManagement ? 'Wholesale / Margin' : 'Margin Access'}
+                      {isManagement ? 'Cost / Profit' : 'Profit Access'}
                     </span>
                   </th>
                   <th className="px-4 py-3.5 text-center">
@@ -787,8 +787,8 @@ export default function ProductsPage() {
       <Modal 
         isOpen={showFormModal} 
         onClose={() => setShowFormModal(false)} 
-        title={selectedProduct ? 'Update Timepiece Record' : 'Catalog New Timepiece'}
-        description={selectedProduct ? `Editing specifications for ${selectedProduct.name}` : 'Register a new luxury watch or accessory into the boutique repository'}
+        title={selectedProduct ? 'Edit Watch' : 'Add New Watch'}
+        description={selectedProduct ? `Editing details for ${selectedProduct.name}` : 'Add a new watch or product to inventory'}
         size="xl"
       >
         <form onSubmit={handleSubmit(onSubmit, onFormError)} className="space-y-4">
@@ -822,7 +822,7 @@ export default function ProductsPage() {
               )}
             >
               <ImageIcon className="w-3.5 h-3.5" />
-              <span>2. Media & Story</span>
+              <span>2. Product Photo</span>
               {watchedImage && (
                 <span className="w-2 h-2 rounded-full bg-emerald-400" />
               )}
@@ -839,7 +839,7 @@ export default function ProductsPage() {
               )}
             >
               <Sliders className="w-3.5 h-3.5" />
-              <span>3. Horological Specs</span>
+              <span>3. Technical Specifications</span>
             </button>
           </div>
 
@@ -850,7 +850,7 @@ export default function ProductsPage() {
                 {/* Product Name */}
                 <div className="sm:col-span-2">
                   <Input 
-                    label="Timepiece Full Name *" 
+                    label="Watch Name *" 
                     placeholder="e.g. Tissot PRX Powermatic 80 Blue Dial" 
                     {...register('name')} 
                     error={errors.name?.message} 
@@ -860,7 +860,7 @@ export default function ProductsPage() {
                 {/* Brand Selection */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="block text-xs font-medium text-[#F3EFE6]">Brand / Maison</label>
+                    <label className="block text-xs font-medium text-[#F3EFE6]">Brand</label>
                     <button
                       type="button"
                       onClick={() => {
@@ -919,8 +919,8 @@ export default function ProductsPage() {
                 {/* Barcode & Reference */}
                 <div>
                   <Input 
-                    label="Barcode / Reference Number" 
-                    placeholder="Scan barcode or enter ref SKU" 
+                    label="Barcode / SKU Number" 
+                    placeholder="Scan barcode or enter SKU" 
                     {...register('barcode')} 
                   />
                 </div>
@@ -928,7 +928,7 @@ export default function ProductsPage() {
                 {/* Supplier Name */}
                 <div>
                   <Input 
-                    label="Authorized Distributor / Vendor" 
+                    label="Supplier / Vendor" 
                     placeholder="e.g. Swatch Group India Ltd" 
                     {...register('supplier_name')} 
                   />
@@ -937,7 +937,7 @@ export default function ProductsPage() {
                 {/* Cost Price - RBAC Protected */}
                 <div>
                   <Input 
-                    label="Wholesale Cost Price (₹) *" 
+                    label="Cost Price (₹) *" 
                     type="number" 
                     step="any"
                     placeholder="0" 
@@ -947,7 +947,7 @@ export default function ProductsPage() {
                   />
                   {!isManagement && (
                     <p className="text-[10px] text-amber-400 mt-1 flex items-center gap-1">
-                      <Lock className="w-3 h-3" /> Cost price editing requires Manager authority
+                      <Lock className="w-3 h-3" /> Cost price editing requires Manager permissions
                     </p>
                   )}
                 </div>
@@ -955,7 +955,7 @@ export default function ProductsPage() {
                 {/* Selling Price */}
                 <div>
                   <Input 
-                    label="Retail Selling Price (₹) *" 
+                    label="Selling Price (₹) *" 
                     type="number" 
                     step="any"
                     placeholder="0" 
@@ -967,7 +967,7 @@ export default function ProductsPage() {
                 {/* Real-time Profit & Margin Pill (Visible to Management) */}
                 {isManagement && (
                   <div className="sm:col-span-2 p-3 bg-[#12110F] border border-[#2A261F] rounded-xl flex items-center justify-between">
-                    <span className="text-xs font-semibold text-[#8D8980]">Calculated Gross Margin:</span>
+                    <span className="text-xs font-semibold text-[#8D8980]">Calculated Profit:</span>
                     <div className="flex items-center gap-2">
                       <span className={clsx(
                         "text-xs font-bold font-mono px-2.5 py-1 rounded-md border",
@@ -987,7 +987,7 @@ export default function ProductsPage() {
                 {/* Stock Quantity */}
                 <div>
                   <Input 
-                    label="Stock Quantity Available *" 
+                    label="Stock Quantity *" 
                     type="number" 
                     placeholder="0" 
                     {...register('stock')} 
@@ -998,7 +998,7 @@ export default function ProductsPage() {
                 {/* Warranty */}
                 <div>
                   <Input 
-                    label="Official Warranty (Months)" 
+                    label="Warranty (Months)" 
                     type="number" 
                     placeholder="24" 
                     {...register('warranty_months')} 
@@ -1013,7 +1013,7 @@ export default function ProductsPage() {
             <div className="space-y-4 pt-1">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <label className="block text-xs font-semibold text-[#F3EFE6]">Timepiece Studio Photograph</label>
+                  <label className="block text-xs font-semibold text-[#F3EFE6]">Watch Photo</label>
                   <button
                     type="button"
                     onClick={() => setShowUrlInput(!showUrlInput)}
@@ -1029,7 +1029,7 @@ export default function ProductsPage() {
                       placeholder="https://images.example.com/tissot-prx.webp" 
                       {...register('image')} 
                     />
-                    <p className="text-xs text-[#8D8980]">Direct secure HTTPS link to high-resolution product photography.</p>
+                    <p className="text-xs text-[#8D8980]">Direct link to product photo.</p>
                   </div>
                 ) : (
                   <div>
@@ -1088,8 +1088,8 @@ export default function ProductsPage() {
                         {isUploadingImage ? (
                           <div className="py-2 flex flex-col items-center gap-2">
                             <Loader2 className="w-8 h-8 text-[#C9A45C] animate-spin" />
-                            <p className="text-sm font-semibold text-[#C9A45C]">Uploading asset to cloud storage...</p>
-                            <p className="text-xs text-[#8D8980]">Optimizing image fidelity</p>
+                            <p className="text-sm font-semibold text-[#C9A45C]">Uploading photo...</p>
+                            <p className="text-xs text-[#8D8980]">Please wait...</p>
                           </div>
                         ) : (
                           <div className="py-2 flex flex-col items-center gap-2">
@@ -1097,7 +1097,7 @@ export default function ProductsPage() {
                               <Upload className="w-6 h-6" />
                             </div>
                             <div>
-                              <span className="text-sm font-bold text-[#C9A45C] hover:underline">Click to upload studio photo</span>
+                              <span className="text-sm font-bold text-[#C9A45C] hover:underline">Click to upload photo</span>
                               <span className="text-sm text-[#8D8980]"> or drag and drop</span>
                             </div>
                             <p className="text-xs text-[#8D8980]/80">PNG, JPG, WEBP or AVIF up to 5MB</p>
@@ -1111,11 +1111,11 @@ export default function ProductsPage() {
 
               {/* Product Description */}
               <div>
-                <label className="block text-xs font-semibold text-[#F3EFE6] mb-1.5">Description & Horological Provenance</label>
+                <label className="block text-xs font-semibold text-[#F3EFE6] mb-1.5">Description</label>
                 <textarea 
                   {...register('description')} 
                   rows={4} 
-                  placeholder="Detail the watch craftsmanship, dial styling, movement complexity, and heritage storytelling..."
+                  placeholder="Enter watch description, materials, dial color, and features..."
                   className="w-full px-3.5 py-3 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6] resize-none"
                 />
               </div>
@@ -1128,8 +1128,8 @@ export default function ProductsPage() {
               {/* Public Website Visibility Settings */}
               <div className="p-4 bg-[#12110F] border border-[#2A261F] rounded-xl space-y-3">
                 <div>
-                  <p className="text-xs font-bold text-[#C9A45C] uppercase tracking-wider">Showcase Portal Badges</p>
-                  <p className="text-xs text-[#8D8980] mt-0.5">Control how this watch is featured on the Meghani public client portal.</p>
+                  <p className="text-xs font-bold text-[#C9A45C] uppercase tracking-wider">Website Display Badges</p>
+                  <p className="text-xs text-[#8D8980] mt-0.5">Control how this watch is featured on the public website.</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -1140,8 +1140,8 @@ export default function ProductsPage() {
                       className="w-4 h-4 mt-0.5 accent-[#C9A45C]" 
                     />
                     <div>
-                      <p className="text-xs font-bold text-[#F3EFE6]">Featured Hero</p>
-                      <p className="text-[11px] text-[#8D8980] mt-0.5">Feature in flagship carousel</p>
+                      <p className="text-xs font-bold text-[#F3EFE6]">Featured</p>
+                      <p className="text-[11px] text-[#8D8980] mt-0.5">Show on homepage carousel</p>
                     </div>
                   </label>
 
@@ -1153,7 +1153,7 @@ export default function ProductsPage() {
                     />
                     <div>
                       <p className="text-xs font-bold text-[#F3EFE6]">New Arrival</p>
-                      <p className="text-[11px] text-[#8D8980] mt-0.5">Highlight as latest accession</p>
+                      <p className="text-[11px] text-[#8D8980] mt-0.5">Show as new arrival</p>
                     </div>
                   </label>
 
@@ -1171,20 +1171,20 @@ export default function ProductsPage() {
                 </div>
               </div>
 
-              {/* Horological Specifications */}
+              {/* Technical Specifications */}
               <div className="p-4 bg-[#12110F] border border-[#2A261F] rounded-xl space-y-3">
                 <div>
-                  <p className="text-xs font-bold text-[#E8D5A7] uppercase tracking-wider">Technical Horological Specifications</p>
-                  <p className="text-xs text-[#8D8980] mt-0.5">Technical specifications displayed on client inspection certificates.</p>
+                  <p className="text-xs font-bold text-[#E8D5A7] uppercase tracking-wider">Technical Specifications</p>
+                  <p className="text-xs text-[#8D8980] mt-0.5">Specifications displayed on product details and receipts.</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <Input label="Movement / Calibre" placeholder="e.g. Automatic Calibre 8200 / Swiss Quartz" {...register('movement')} />
+                  <Input label="Movement" placeholder="e.g. Automatic / Quartz" {...register('movement')} />
                   <Input label="Case Diameter" placeholder="e.g. 40.5 mm" {...register('caseDiameter')} />
-                  <Input label="Case Material" placeholder="e.g. 316L Stainless Steel / Gold PVD" {...register('caseMaterial')} />
-                  <Input label="Dial Crystal / Glass" placeholder="e.g. Anti-Reflective Sapphire Crystal" {...register('glass')} />
+                  <Input label="Case Material" placeholder="e.g. Stainless Steel" {...register('caseMaterial')} />
+                  <Input label="Glass / Crystal" placeholder="e.g. Sapphire Crystal / Mineral Glass" {...register('glass')} />
                   <Input label="Water Resistance" placeholder="e.g. 100m / 10 ATM" {...register('waterResistance')} />
-                  <Input label="Strap / Bracelet" placeholder="e.g. Genuine Alligator Leather / Metal Link" {...register('strapMaterial')} />
+                  <Input label="Strap / Belt" placeholder="e.g. Stainless Steel / Leather" {...register('strapMaterial')} />
                 </div>
               </div>
             </div>
@@ -1195,7 +1195,7 @@ export default function ProductsPage() {
             <div className="text-xs text-[#8D8980]">
               <span>Section: </span>
               <strong className="text-[#C9A45C]">
-                {activeModalTab === 'general' ? '1. General & Pricing' : activeModalTab === 'media' ? '2. Media & Story' : '3. Specifications'}
+                {activeModalTab === 'general' ? '1. General & Pricing' : activeModalTab === 'media' ? '2. Product Photo' : '3. Technical Specifications'}
               </strong>
             </div>
 
@@ -1228,7 +1228,7 @@ export default function ProductsPage() {
                 loading={isSubmitting}
                 className="shadow-gold"
               >
-                {selectedProduct ? 'Update Timepiece' : 'Save Timepiece'}
+                {selectedProduct ? 'Update Watch' : 'Save Watch'}
               </Button>
             </div>
           </div>
@@ -1239,7 +1239,7 @@ export default function ProductsPage() {
       <Modal 
         isOpen={showViewModal} 
         onClose={() => setShowViewModal(false)} 
-        title="Timepiece Inspection Dossier" 
+        title="Watch Details" 
         size="md"
       >
         {selectedProduct && (
@@ -1254,14 +1254,14 @@ export default function ProductsPage() {
                 )}
               </div>
               <div className="min-w-0 flex-1">
-                <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider">{selectedProduct.brand || 'Luxury Horology'}</span>
+                <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider">{selectedProduct.brand || 'Watch'}</span>
                 <h3 className="text-lg font-serif font-bold text-[#F3EFE6] leading-tight truncate">{selectedProduct.name}</h3>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#E8D5A7] border border-[#2A261F] text-[11px]">
                     {categories.find(c => c.value === selectedProduct.category)?.label || selectedProduct.category}
                   </span>
                   {selectedProduct.barcode && (
-                    <span className="text-[11px] font-mono text-[#8D8980]">REF: {selectedProduct.barcode}</span>
+                    <span className="text-[11px] font-mono text-[#8D8980]">SKU: {selectedProduct.barcode}</span>
                   )}
                 </div>
               </div>
@@ -1270,7 +1270,7 @@ export default function ProductsPage() {
             {/* Financial & Stock Matrix */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-[#12110F] border border-[#2A261F] rounded-xl">
               <div>
-                <p className="text-[10px] text-[#8D8980] uppercase tracking-wider">Retail Price</p>
+                <p className="text-[10px] text-[#8D8980] uppercase tracking-wider">Selling Price</p>
                 <p className="font-mono font-bold text-[#C9A45C] text-base">{formatCurrency(selectedProduct.selling_price)}</p>
               </div>
 
@@ -1287,7 +1287,7 @@ export default function ProductsPage() {
               {isManagement ? (
                 <>
                   <div>
-                    <p className="text-[10px] text-[#8D8980] uppercase tracking-wider">Wholesale Cost</p>
+                    <p className="text-[10px] text-[#8D8980] uppercase tracking-wider">Cost Price</p>
                     <p className="font-mono text-sm text-[#8D8980]">{formatCurrency(selectedProduct.cost_price)}</p>
                   </div>
 
@@ -1299,14 +1299,14 @@ export default function ProductsPage() {
                   </div>
 
                   <div>
-                    <p className="text-[10px] text-[#8D8980] uppercase tracking-wider">Distributor</p>
-                    <p className="text-xs text-[#F3EFE6] truncate">{selectedProduct.supplier_name || 'Direct Import'}</p>
+                    <p className="text-[10px] text-[#8D8980] uppercase tracking-wider">Supplier</p>
+                    <p className="text-xs text-[#F3EFE6] truncate">{selectedProduct.supplier_name || 'Direct'}</p>
                   </div>
                 </>
               ) : (
                 <div className="col-span-3 p-2 bg-[#1F1E1A] rounded-lg border border-[#2A261F] flex items-center gap-2 text-xs text-[#8D8980]">
                   <Lock className="w-3.5 h-3.5 text-[#C9A45C]" />
-                  <span>Wholesale cost and margins are protected under Staff role restrictions.</span>
+                  <span>Cost price and profit are protected under Staff role permissions.</span>
                 </div>
               )}
             </div>
@@ -1314,7 +1314,7 @@ export default function ProductsPage() {
             {/* Specifications List */}
             {selectedProduct.specifications && Object.keys(selectedProduct.specifications).length > 0 && (
               <div className="p-4 bg-[#12110F] border border-[#2A261F] rounded-xl space-y-2">
-                <p className="text-xs font-semibold text-[#E8D5A7] uppercase tracking-wider">Horological Specifications</p>
+                <p className="text-xs font-semibold text-[#E8D5A7] uppercase tracking-wider">Technical Specifications</p>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   {Object.entries(selectedProduct.specifications).map(([key, value]) => (
                     value ? (
@@ -1331,7 +1331,7 @@ export default function ProductsPage() {
             {/* Description */}
             {selectedProduct.description && (
               <div className="p-3.5 bg-[#12110F] border border-[#2A261F] rounded-xl">
-                <p className="text-xs font-semibold text-[#8D8980] uppercase tracking-wider mb-1">Product Story & Details</p>
+                <p className="text-xs font-semibold text-[#8D8980] uppercase tracking-wider mb-1">Product Description</p>
                 <p className="text-xs text-[#F3EFE6]/80 leading-relaxed">{selectedProduct.description}</p>
               </div>
             )}
@@ -1347,7 +1347,7 @@ export default function ProductsPage() {
                 }}
               >
                 <Edit className="w-4 h-4 mr-1.5" />
-                Edit Record
+                Edit Watch
               </Button>
             </div>
           </div>
@@ -1359,9 +1359,9 @@ export default function ProductsPage() {
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
-        title="Delete Timepiece from Catalog"
-        message={`Are you certain you wish to delete "${selectedProduct?.name}"? All inventory history linked to this SKU will be permanently archived.`}
-        confirmText="Confirm Delete"
+        title="Delete Watch"
+        message={`Are you sure you want to delete "${selectedProduct?.name}"? This action cannot be undone.`}
+        confirmText="Delete Watch"
         variant="danger"
       />
 

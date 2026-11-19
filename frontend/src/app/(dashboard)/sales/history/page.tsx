@@ -49,7 +49,7 @@ export default function SalesHistoryPage() {
       setSales(response.data.results || response.data)
     } catch (error) {
       console.error('Failed to fetch sales:', error)
-      toast.error('Failed to load transaction records')
+      toast.error('Failed to load sales records')
     } finally {
       setLoading(false)
     }
@@ -62,7 +62,7 @@ export default function SalesHistoryPage() {
       setShowDetailModal(true)
     } catch (error) {
       console.error('Failed to fetch sale details:', error)
-      toast.error('Could not load invoice dossier')
+      toast.error('Could not load invoice details')
     }
   }
 
@@ -83,7 +83,7 @@ export default function SalesHistoryPage() {
       toast.success(`Invoice ${invoiceNumber} downloaded`)
     } catch (error) {
       console.error('Failed to download PDF:', error)
-      toast.error('Failed to generate PDF document')
+      toast.error('Failed to generate PDF')
     } finally {
       setDownloadingId(null)
     }
@@ -179,12 +179,12 @@ export default function SalesHistoryPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Sales & Invoice Archive</h1>
+              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Sales History & Invoices</h1>
               <span className="text-xs px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F] font-mono">
                 {filteredSales.length} records
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[#8D8980]">Historical transactions, tender distributions, and official VAT/GST invoices</p>
+            <p className="text-xs sm:text-sm text-[#8D8980]">View all completed sales, payment methods, and GST invoices</p>
           </div>
         </div>
 
@@ -196,7 +196,7 @@ export default function SalesHistoryPage() {
           />
           <Link href="/sales">
             <Button icon={<ShoppingCart className="w-4 h-4" />} className="shadow-gold">
-              Launch POS Terminal
+              Open POS
             </Button>
           </Link>
         </div>
@@ -205,7 +205,7 @@ export default function SalesHistoryPage() {
       {/* Summary KPI Strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-[#171613] border border-[#2A261F] rounded-xl p-4">
-          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Invoiced Volume</span>
+          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Total Sales</span>
           <p className="text-xl sm:text-2xl font-bold font-mono text-[#C9A45C] mt-1">
             {formatCurrency(summaryMetrics.totalVolume)}
           </p>
@@ -213,19 +213,19 @@ export default function SalesHistoryPage() {
         </div>
 
         <div className="bg-[#171613] border border-[#2A261F] rounded-xl p-4">
-          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Transactions</span>
+          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Total Orders</span>
           <p className="text-xl sm:text-2xl font-bold font-mono text-[#F3EFE6] mt-1">
             {summaryMetrics.count}
           </p>
-          <span className="text-[11px] text-[#8D8980] mt-0.5 block">Total orders closed</span>
+          <span className="text-[11px] text-[#8D8980] mt-0.5 block">Total orders completed</span>
         </div>
 
         <div className="bg-[#171613] border border-[#2A261F] rounded-xl p-4">
-          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Average Ticket</span>
+          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Average Sale</span>
           <p className="text-xl sm:text-2xl font-bold font-mono text-[#E8D5A7] mt-1">
             {formatCurrency(summaryMetrics.avgTicket)}
           </p>
-          <span className="text-[11px] text-[#8D8980] mt-0.5 block">Per transaction</span>
+          <span className="text-[11px] text-[#8D8980] mt-0.5 block">Per sale</span>
         </div>
 
         <div className="bg-[#171613] border border-[#2A261F] rounded-xl p-4">
@@ -240,7 +240,7 @@ export default function SalesHistoryPage() {
           ) : (
             <div className="flex items-center gap-1.5 mt-2 text-xs text-[#8D8980] font-mono">
               <Lock className="w-3.5 h-3.5 text-[#C9A45C]" />
-              <span>Restricted for Staff</span>
+              <span>Hidden for Staff</span>
             </div>
           )}
         </div>
@@ -265,7 +265,7 @@ export default function SalesHistoryPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
-            {/* Tender Filter */}
+            {/* Payment Filter */}
             <div className="w-40">
               <select
                 value={paymentFilter}
@@ -274,11 +274,11 @@ export default function SalesHistoryPage() {
                          text-[#F3EFE6] text-sm focus:border-[#C9A45C] focus:ring-1 focus:ring-[#C9A45C]
                          outline-none cursor-pointer"
               >
-                <option value="all">All Payment Types</option>
-                <option value="cash">Cash Tender</option>
-                <option value="upi">UPI Digital</option>
-                <option value="card">Card POS</option>
-                <option value="mixed">Split / Multi</option>
+                <option value="all">All Payment Methods</option>
+                <option value="cash">Cash</option>
+                <option value="upi">UPI</option>
+                <option value="card">Card</option>
+                <option value="mixed">Split Payment</option>
               </select>
             </div>
 
@@ -315,15 +315,15 @@ export default function SalesHistoryPage() {
       {loading ? (
         <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-12 text-center">
           <div className="w-8 h-8 border-2 border-[#C9A45C] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-          <p className="text-sm text-[#8D8980]">Loading sales ledger archives...</p>
+          <p className="text-sm text-[#8D8980]">Loading sales records...</p>
         </div>
       ) : filteredSales.length === 0 ? (
         <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-12 text-center">
           <div className="w-16 h-16 mx-auto bg-[#1F1E1A] border border-[#2A261F] rounded-2xl flex items-center justify-center mb-4">
             <Receipt className="w-8 h-8 text-[#8D8980]" />
           </div>
-          <h3 className="text-lg font-serif font-bold text-[#F3EFE6] mb-1">No Invoices Located</h3>
-          <p className="text-sm text-[#8D8980] mb-5">Try widening your date filters or search parameters.</p>
+          <h3 className="text-lg font-serif font-bold text-[#F3EFE6] mb-1">No Invoices Found</h3>
+          <p className="text-sm text-[#8D8980] mb-5">Try changing your search or date filters.</p>
           <Link href="/sales">
             <Button icon={<ShoppingCart className="w-4 h-4" />}>
               Process New Sale
@@ -337,12 +337,12 @@ export default function SalesHistoryPage() {
               <thead className="bg-[#12110F] border-b border-[#2A261F]">
                 <tr>
                   <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Invoice #</th>
-                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Client & Cashier</th>
-                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Timestamp</th>
-                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Tender</th>
-                  <th className="px-5 py-3.5 text-right text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Total Invoiced</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Customer & Staff</th>
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Date & Time</th>
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Payment Method</th>
+                  <th className="px-5 py-3.5 text-right text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Total Amount</th>
                   <th className="px-4 py-3.5 text-right text-xs font-semibold text-[#8D8980] uppercase tracking-wider">
-                    {isManagement ? 'Profit' : 'Margin Access'}
+                    {isManagement ? 'Profit' : 'Profit Access'}
                   </th>
                   <th className="px-5 py-3.5 text-right text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Actions</th>
                 </tr>
@@ -363,10 +363,10 @@ export default function SalesHistoryPage() {
 
                     <td className="px-5 py-4">
                       <p className="font-serif font-semibold text-sm text-[#F3EFE6] truncate">
-                        {sale.customer_name || 'Walk-in Clientele'}
+                        {sale.customer_name || 'Walk-in Customer'}
                       </p>
                       <p className="text-xs text-[#8D8980]">
-                        Staff: {sale.created_by_name || 'Counter Associate'}
+                        Staff: {sale.created_by_name || 'Staff Member'}
                       </p>
                     </td>
 
@@ -411,7 +411,7 @@ export default function SalesHistoryPage() {
                       ) : (
                         <div className="flex items-center justify-end gap-1 text-xs text-[#8D8980] font-mono">
                           <Lock className="w-3 h-3 text-[#C9A45C]" />
-                          <span>Masked</span>
+                          <span>Hidden</span>
                         </div>
                       )}
                     </td>
@@ -421,7 +421,7 @@ export default function SalesHistoryPage() {
                         <button 
                           onClick={() => viewSaleDetail(sale.id)}
                           className="p-2 hover:bg-[#2A261F] text-[#8D8980] hover:text-[#F3EFE6] rounded-lg transition-colors"
-                          title="Inspect Invoice Dossier"
+                          title="View Invoice Details"
                         >
                           <Eye className="w-4 h-4" />
                         </button>
@@ -429,7 +429,7 @@ export default function SalesHistoryPage() {
                           onClick={() => downloadPDF(sale.id, sale.invoice_number)}
                           disabled={downloadingId === sale.id}
                           className="p-2 hover:bg-[#C9A45C]/15 text-[#C9A45C] rounded-lg transition-colors disabled:opacity-50"
-                          title="Download Tax PDF"
+                          title="Download Invoice PDF"
                         >
                           <Download className="w-4 h-4" />
                         </button>
@@ -443,12 +443,12 @@ export default function SalesHistoryPage() {
         </div>
       )}
 
-      {/* Sale Detail Dossier Modal */}
+      {/* Sale Detail Modal */}
       <Modal
         isOpen={showDetailModal}
         onClose={() => setShowDetailModal(false)}
-        title={`Invoice Dossier: ${selectedSale?.invoice_number}`}
-        description="Official retail sales ledger record and itemized invoice details"
+        title={`Invoice Details: ${selectedSale?.invoice_number}`}
+        description="Sale details, purchased items, and payment summary"
         size="lg"
       >
         {selectedSale && (
@@ -456,9 +456,9 @@ export default function SalesHistoryPage() {
             {/* Header Matrix */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-[#12110F] border border-[#2A261F] rounded-xl">
               <div>
-                <p className="text-[10px] text-[#8D8980] uppercase tracking-wider">Clientele</p>
+                <p className="text-[10px] text-[#8D8980] uppercase tracking-wider">Customer</p>
                 <p className="font-serif font-bold text-[#F3EFE6] text-sm mt-0.5 truncate">
-                  {selectedSale.customer_name || 'Walk-in Clientele'}
+                  {selectedSale.customer_name || 'Walk-in Customer'}
                 </p>
               </div>
 
@@ -471,16 +471,16 @@ export default function SalesHistoryPage() {
               </div>
 
               <div>
-                <p className="text-[10px] text-[#8D8980] uppercase tracking-wider">Tender Mode</p>
+                <p className="text-[10px] text-[#8D8980] uppercase tracking-wider">Payment Method</p>
                 <div className="mt-1">
                   {renderPaymentBadge(selectedSale.payment_mode)}
                 </div>
               </div>
 
               <div>
-                <p className="text-[10px] text-[#8D8980] uppercase tracking-wider">Registrar Staff</p>
+                <p className="text-[10px] text-[#8D8980] uppercase tracking-wider">Staff Member</p>
                 <p className="text-xs font-medium text-[#F3EFE6] mt-0.5 truncate">
-                  {selectedSale.created_by_name || 'Boutique Staff'}
+                  {selectedSale.created_by_name || 'Staff Member'}
                 </p>
               </div>
             </div>
@@ -488,7 +488,7 @@ export default function SalesHistoryPage() {
             {/* Split Breakdown Card (If applicable) */}
             {selectedSale.payment_mode === 'mixed' && (selectedSale as any).payment_details && (
               <div className="p-3.5 bg-[#12110F] border border-[#2A261F] rounded-xl space-y-2">
-                <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider">Split Payment Tender Distribution</span>
+                <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider">Split Payment Breakdown</span>
                 <div className="grid grid-cols-3 gap-2">
                   {Object.entries((selectedSale as any).payment_details)
                     .filter(([_, amt]) => Number(amt) > 0)
@@ -506,7 +506,7 @@ export default function SalesHistoryPage() {
 
             {/* Itemized Line Items */}
             <div>
-              <p className="text-xs font-semibold text-[#8D8980] uppercase tracking-wider mb-2">Itemized Horological Articles</p>
+              <p className="text-xs font-semibold text-[#8D8980] uppercase tracking-wider mb-2">Purchased Watches & Items</p>
               <div className="border border-[#2A261F] rounded-xl overflow-hidden bg-[#12110F]">
                 <table className="w-full text-xs">
                   <thead className="bg-[#171613] border-b border-[#2A261F] text-[#8D8980]">
@@ -522,7 +522,7 @@ export default function SalesHistoryPage() {
                       <tr key={item.id} className="hover:bg-[#1F1E1A]/50">
                         <td className="px-4 py-3">
                           <p className="font-serif font-bold text-[#F3EFE6]">{item.product_name}</p>
-                          <p className="text-[11px] text-[#C9A45C] mt-0.5">{item.product_brand || 'Meghani Timepiece'}</p>
+                          <p className="text-[11px] text-[#C9A45C] mt-0.5">{item.product_brand || 'Meghani Watch'}</p>
                         </td>
                         <td className="px-3 py-3 text-center font-mono text-[#F3EFE6] font-semibold">{item.quantity}</td>
                         <td className="px-4 py-3 text-right font-mono text-[#8D8980]">{formatCurrency(item.unit_price)}</td>
@@ -538,25 +538,25 @@ export default function SalesHistoryPage() {
             <div className="p-4 bg-[#12110F] border border-[#2A261F] rounded-xl space-y-2.5">
               {Number(selectedSale.discount) > 0 && (
                 <div className="flex justify-between text-xs">
-                  <span className="text-[#8D8980]">Courtesy VIP Discount:</span>
+                  <span className="text-[#8D8980]">Discount:</span>
                   <span className="text-rose-400 font-mono font-medium">-{formatCurrency(selectedSale.discount)}</span>
                 </div>
               )}
               <div className="flex justify-between items-center pt-1 border-t border-[#2A261F]">
-                <span className="text-sm font-semibold text-[#F3EFE6]">Total Settled:</span>
+                <span className="text-sm font-semibold text-[#F3EFE6]">Total Paid:</span>
                 <span className="text-xl font-bold font-mono text-[#C9A45C]">{formatCurrency(selectedSale.total_amount)}</span>
               </div>
               
               {isManagement ? (
                 <div className="flex justify-between text-xs pt-1 border-t border-[#2A261F]/60">
-                  <span className="text-[#8D8980]">Realized Gross Profit:</span>
+                  <span className="text-[#8D8980]">Gross Profit:</span>
                   <span className="text-emerald-400 font-mono font-bold">+{formatCurrency(selectedSale.profit)}</span>
                 </div>
               ) : (
                 <div className="flex justify-between text-xs text-[#8D8980] pt-1 border-t border-[#2A261F]/60">
-                  <span>Gross Profit Margin:</span>
+                  <span>Gross Profit:</span>
                   <span className="font-mono flex items-center gap-1 text-[#8D8980]">
-                    <Lock className="w-3 h-3 text-[#C9A45C]" /> Masked for staff
+                    <Lock className="w-3 h-3 text-[#C9A45C]" /> Hidden for staff
                   </span>
                 </div>
               )}
@@ -564,7 +564,7 @@ export default function SalesHistoryPage() {
 
             {selectedSale.notes && (
               <div className="p-3 bg-[#12110F] border border-[#2A261F] rounded-xl">
-                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block mb-0.5">Special Transaction Notes</span>
+                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block mb-0.5">Notes</span>
                 <p className="text-xs text-[#F3EFE6]/80">{selectedSale.notes}</p>
               </div>
             )}
@@ -572,14 +572,14 @@ export default function SalesHistoryPage() {
             {/* Actions */}
             <div className="flex justify-end gap-2.5 pt-3 border-t border-[#2A261F]">
               <Button variant="secondary" onClick={() => setShowDetailModal(false)}>
-                Dismiss
+                Close
               </Button>
               <Button 
                 onClick={() => downloadPDF(selectedSale.id, selectedSale.invoice_number)}
                 icon={<Download className="w-4 h-4" />}
                 className="shadow-gold"
               >
-                Download VAT/GST PDF
+                Download Invoice PDF
               </Button>
             </div>
           </div>

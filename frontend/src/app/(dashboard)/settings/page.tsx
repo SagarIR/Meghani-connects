@@ -87,12 +87,12 @@ export default function SettingsPage() {
   const [backupLoading, setBackupLoading] = useState(false)
 
   const tabs = [
-    { id: 'profile', label: 'Staff Profile', icon: User },
-    { id: 'business', label: 'Boutique Storefront', icon: Store },
-    { id: 'preferences', label: 'Terminal Preferences', icon: Monitor },
-    { id: 'notifications', label: 'Client Dispatches', icon: Bell },
-    { id: 'security', label: 'Credentials & Security', icon: Shield },
-    { id: 'backup', label: 'Database Archiving', icon: Database },
+    { id: 'profile', label: 'User Profile', icon: User },
+    { id: 'business', label: 'Store Profile', icon: Store },
+    { id: 'preferences', label: 'App Preferences', icon: Monitor },
+    { id: 'notifications', label: 'Notification Channels', icon: Bell },
+    { id: 'security', label: 'Security & Password', icon: Shield },
+    { id: 'backup', label: 'Database Backups', icon: Database },
   ]
 
   useEffect(() => {
@@ -142,7 +142,7 @@ export default function SettingsPage() {
       })
       
       setBusinessSettings(response.data)
-      toast.success('Boutique settings saved!')
+      toast.success('Store settings saved successfully!')
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Failed to save settings')
     } finally {
@@ -157,7 +157,7 @@ export default function SettingsPage() {
     try {
       const response = await api.patch('/settings/preferences/', preferences)
       setPreferences(response.data)
-      toast.success('Terminal preferences committed!')
+      toast.success('Preferences saved successfully!')
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Failed to save preferences')
     } finally {
@@ -193,7 +193,7 @@ export default function SettingsPage() {
         current_password: passwordForm.current_password,
         new_password: passwordForm.new_password
       })
-      toast.success('Staff password updated securely')
+      toast.success('Password changed successfully')
       setPasswordForm({ current_password: '', new_password: '', confirm_password: '' })
     } catch (error: any) {
       toast.error(error.response?.data?.detail || 'Failed to change password')
@@ -215,7 +215,7 @@ export default function SettingsPage() {
     setBackupLoading(true)
     try {
       await api.post('/backups/')
-      toast.success('Database snapshot generated!')
+      toast.success('Database backup created successfully!')
       fetchBackups()
     } catch (error) {
       toast.error('Failed to create backup snapshot')
@@ -229,11 +229,11 @@ export default function SettingsPage() {
   }
 
   const handleDeleteBackup = async (filename: string) => {
-    if (!confirm('Are you certain you wish to delete this database archive?')) return
+    if (!confirm('Are you sure you want to delete this backup?')) return
     
     try {
       await api.delete(`/backups/${filename}/delete/`)
-      toast.success('Backup archive removed')
+      toast.success('Backup deleted successfully')
       fetchBackups()
     } catch (error) {
       toast.error('Failed to delete backup')
@@ -251,8 +251,8 @@ export default function SettingsPage() {
           <Store className="w-5 h-5 text-[#C9A45C]" />
         </div>
         <div>
-          <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">System & Boutique Settings</h1>
-          <p className="text-xs sm:text-sm text-[#8D8980]">Manage boutique profile, invoice prefixes, VAT/GST parameters, security, and database archiving</p>
+          <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Store & System Settings</h1>
+          <p className="text-xs sm:text-sm text-[#8D8980]">Manage store details, invoice settings, tax details, security, and backups</p>
         </div>
       </div>
 
@@ -334,8 +334,8 @@ export default function SettingsPage() {
               {activeTab === 'profile' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Staff Operator Profile</h2>
-                    <p className="text-xs text-[#8D8980] mt-0.5">Authenticated session credentials and administrative access level</p>
+                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">User Profile</h2>
+                    <p className="text-xs text-[#8D8980] mt-0.5">Your account information and role permissions</p>
                   </div>
                   
                   <div className="flex flex-col sm:flex-row items-center gap-5 p-6 bg-[#12110F] border border-[#2A261F] rounded-2xl">
@@ -349,16 +349,16 @@ export default function SettingsPage() {
                           {user?.role}
                         </span>
                       </div>
-                      <p className="text-xs text-[#8D8980] font-mono mt-1">{user?.email || 'operator@meghaniwatch.com'}</p>
-                      <p className="text-[11px] text-[#8D8980] mt-1">Meghani Watch Co. Vadodara • Authorized Staff Terminal</p>
+                      <p className="text-xs text-[#8D8980] font-mono mt-1">{user?.email || 'staff@meghaniwatch.com'}</p>
+                      <p className="text-[11px] text-[#8D8980] mt-1">Meghani Watch Co. Vadodara • Staff Account</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input label="Display Full Name" defaultValue={user?.name} icon={<User className="w-4 h-4 text-[#8D8980]" />} />
-                    <Input label="Login Username" defaultValue={user?.username} disabled icon={<Lock className="w-4 h-4 text-[#C9A45C]" />} />
-                    <Input label="Official Email" type="email" defaultValue={user?.email} />
-                    <Input label="Terminal Phone" defaultValue={user?.phone} />
+                    <Input label="Full Name" defaultValue={user?.name} icon={<User className="w-4 h-4 text-[#8D8980]" />} />
+                    <Input label="Username" defaultValue={user?.username} disabled icon={<Lock className="w-4 h-4 text-[#C9A45C]" />} />
+                    <Input label="Email" type="email" defaultValue={user?.email} />
+                    <Input label="Phone Number" defaultValue={user?.phone} />
                   </div>
 
                   <Button icon={<Save className="w-4 h-4" />} className="shadow-gold">
@@ -372,8 +372,8 @@ export default function SettingsPage() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Boutique Storefront & Identity</h2>
-                      <p className="text-xs text-[#8D8980] mt-0.5">Parameters printed on customer tax invoices and shown on the showcase portal</p>
+                      <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Store Details & Branding</h2>
+                      <p className="text-xs text-[#8D8980] mt-0.5">Information shown on invoices, receipts, and website</p>
                     </div>
                     <Button variant="secondary" size="sm" onClick={fetchBusinessSettings} icon={<RefreshCw className="w-3.5 h-3.5" />}>
                       Reload
@@ -396,8 +396,8 @@ export default function SettingsPage() {
                       </label>
                     </div>
                     <div className="text-center sm:text-left">
-                      <h3 className="font-serif font-bold text-[#F3EFE6] text-base">Boutique Crest / Logo</h3>
-                      <p className="text-xs text-[#8D8980] mt-1">Rendered on thermal slips, 80mm receipts, and PDF tax invoices</p>
+                      <h3 className="font-serif font-bold text-[#F3EFE6] text-base">Store Logo</h3>
+                      <p className="text-xs text-[#8D8980] mt-1">Displayed on printed receipts and PDF invoices</p>
                       <p className="text-[11px] text-[#8D8980] mt-2 font-mono">PNG / WEBP format recommended (transparent background)</p>
                     </div>
                   </div>
@@ -405,22 +405,22 @@ export default function SettingsPage() {
                   {/* Business Info */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Input 
-                      label="Boutique Enterprise Name" 
+                      label="Store / Business Name" 
                       value={businessSettings?.business_name || ''} 
                       onChange={(e) => setBusinessSettings(prev => prev ? {...prev, business_name: e.target.value} : null)}
                     />
                     <Input 
-                      label="Maison Tagline" 
+                      label="Store Tagline" 
                       value={businessSettings?.tagline || ''} 
                       onChange={(e) => setBusinessSettings(prev => prev ? {...prev, tagline: e.target.value} : null)}
                     />
                     <Input 
-                      label="Official Showroom Phone" 
+                      label="Store Phone Number" 
                       value={businessSettings?.phone || ''} 
                       onChange={(e) => setBusinessSettings(prev => prev ? {...prev, phone: e.target.value} : null)}
                     />
                     <Input 
-                      label="Official Email" 
+                      label="Store Email" 
                       type="email" 
                       value={businessSettings?.email || ''} 
                       onChange={(e) => setBusinessSettings(prev => prev ? {...prev, email: e.target.value} : null)}
@@ -429,7 +429,7 @@ export default function SettingsPage() {
 
                   {/* Address */}
                   <div className="space-y-3 pt-3 border-t border-[#2A261F]">
-                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Physical Showroom Address</span>
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Store Address</span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input 
                         label="Address Line 1" 
@@ -456,7 +456,7 @@ export default function SettingsPage() {
 
                   {/* Tax & Invoice Prefixes */}
                   <div className="space-y-3 pt-3 border-t border-[#2A261F]">
-                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Taxation & Document Numbering</span>
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Tax Details & Invoice Numbering</span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input 
                         label="GSTIN Number" 
@@ -485,7 +485,7 @@ export default function SettingsPage() {
 
                   {/* Hours & WhatsApp */}
                   <div className="space-y-3 pt-3 border-t border-[#2A261F]">
-                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Showroom Timings & Direct Line</span>
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Store Hours & Contact</span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input 
                         label="Weekday Opening Hours" 
@@ -500,7 +500,7 @@ export default function SettingsPage() {
                         placeholder="11:00 AM – 8:00 PM (Sun)"
                       />
                       <Input 
-                        label="WhatsApp Concierge Number" 
+                        label="WhatsApp Support Number" 
                         value={businessSettings?.whatsapp_number || ''} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, whatsapp_number: e.target.value} : null)}
                         placeholder="919106680191"
@@ -515,7 +515,7 @@ export default function SettingsPage() {
                   </div>
 
                   <Button onClick={handleBusinessSettingsSave} loading={saving} icon={<Save className="w-4 h-4" />} className="shadow-gold">
-                    Commit Boutique Settings
+                    Save Store Settings
                   </Button>
                 </div>
               )}
@@ -524,18 +524,18 @@ export default function SettingsPage() {
               {activeTab === 'preferences' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Terminal Configuration</h2>
-                    <p className="text-xs text-[#8D8980] mt-0.5">Adjust workspace theme, currency formatting, and automated thermal printing</p>
+                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">App Preferences</h2>
+                    <p className="text-xs text-[#8D8980] mt-0.5">Theme, language, and receipt printing settings</p>
                   </div>
                   
                   {/* Theme */}
                   <div className="space-y-3">
-                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Interface Palette</span>
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Theme</span>
                     <div className="grid grid-cols-3 gap-3">
                       {[
-                        { id: 'dark', label: 'Midnight Gold (Luxury)', icon: Moon },
-                        { id: 'system', label: 'Boutique Adaptive', icon: Monitor },
-                        { id: 'light', label: 'Showroom Daylight', icon: Sun },
+                        { id: 'dark', label: 'Dark Mode (Luxury)', icon: Moon },
+                        { id: 'system', label: 'System Default', icon: Monitor },
+                        { id: 'light', label: 'Light Mode', icon: Sun },
                       ].map((th) => (
                         <button
                           key={th.id}
@@ -556,7 +556,7 @@ export default function SettingsPage() {
 
                   {/* Language */}
                   <div className="space-y-3 pt-3 border-t border-[#2A261F]">
-                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Staff Language</span>
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Language</span>
                     <div className="grid grid-cols-3 gap-3">
                       {[
                         { id: 'en', label: 'English (UK / Global)' },
@@ -582,13 +582,13 @@ export default function SettingsPage() {
 
                   {/* POS Printing */}
                   <div className="space-y-3 pt-3 border-t border-[#2A261F]">
-                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Automated Receipt Generation</span>
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Receipt Printing</span>
                     <div className="flex items-center justify-between p-4 bg-[#12110F] border border-[#2A261F] rounded-xl">
                       <div className="flex items-center gap-3">
                         <Printer className="w-5 h-5 text-[#C9A45C]" />
                         <div>
-                          <p className="font-semibold text-sm text-[#F3EFE6]">Auto-Prompt Receipt Print On Checkout</p>
-                          <p className="text-xs text-[#8D8980]">Automatically trigger browser print dialog upon POS checkout confirmation</p>
+                          <p className="font-semibold text-sm text-[#F3EFE6]">Auto-Print Receipt on Checkout</p>
+                          <p className="text-xs text-[#8D8980]">Automatically open print dialog when a sale is completed</p>
                         </div>
                       </div>
                       <input 
@@ -601,7 +601,7 @@ export default function SettingsPage() {
                   </div>
 
                   <Button onClick={handlePreferencesSave} loading={saving} icon={<Save className="w-4 h-4" />} className="shadow-gold">
-                    Commit Terminal Preferences
+                    Save Preferences
                   </Button>
                 </div>
               )}
@@ -610,16 +610,16 @@ export default function SettingsPage() {
               {activeTab === 'notifications' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Dispatch & Alert Channels</h2>
-                    <p className="text-xs text-[#8D8980] mt-0.5">Configure client messaging gateways and low-stock warning triggers</p>
+                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Notification Channels & Alerts</h2>
+                    <p className="text-xs text-[#8D8980] mt-0.5">Configure customer messaging channels and store alert triggers</p>
                   </div>
                   
                   <div className="space-y-3">
-                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Active Outbound Gateways</span>
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Customer Message Channels</span>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       {[
                         { key: 'enable_whatsapp', label: 'WhatsApp API' },
-                        { key: 'enable_email', label: 'Boutique Email' },
+                        { key: 'enable_email', label: 'Email' },
                         { key: 'enable_sms', label: 'Transactional SMS' },
                       ].map((channel) => (
                         <div key={channel.key} className="p-4 bg-[#12110F] border border-[#2A261F] rounded-xl flex items-center justify-between">
@@ -636,12 +636,12 @@ export default function SettingsPage() {
                   </div>
                   
                   <div className="space-y-3 pt-3 border-t border-[#2A261F]">
-                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Operational In-App Triggers</span>
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">In-App Alert Triggers</span>
                     {[
-                      { key: 'notify_low_stock', label: 'Low Stock Level Warnings (Critical Threshold Alerts)' },
-                      { key: 'notify_new_repair', label: 'New Atelier Intake Registration' },
-                      { key: 'notify_repair_ready', label: 'Watch Ready for Client Collection' },
-                      { key: 'notify_daily_summary', label: 'End-of-Day Register Settlement Summary' },
+                      { key: 'notify_low_stock', label: 'Low Stock Alerts' },
+                      { key: 'notify_new_repair', label: 'New Watch Repair Ticket Logged' },
+                      { key: 'notify_repair_ready', label: 'Watch Ready for Customer Pickup' },
+                      { key: 'notify_daily_summary', label: 'End-of-Day Sales Summary' },
                     ].map((item) => (
                       <div key={item.key} className="flex items-center justify-between p-3.5 bg-[#12110F] border border-[#2A261F] rounded-xl">
                         <span className="text-xs text-[#F3EFE6] font-medium">{item.label}</span>
@@ -657,10 +657,10 @@ export default function SettingsPage() {
 
                   <div className="flex gap-3 pt-2">
                     <Button onClick={handleBusinessSettingsSave} loading={saving} icon={<Save className="w-4 h-4" />} className="shadow-gold">
-                      Save Gateway Channels
+                      Save Channels
                     </Button>
                     <Button variant="secondary" onClick={handlePreferencesSave} loading={saving}>
-                      Save Alert Triggers
+                      Save Triggers
                     </Button>
                   </div>
                 </div>
@@ -670,12 +670,12 @@ export default function SettingsPage() {
               {activeTab === 'security' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Credential & Security Management</h2>
-                    <p className="text-xs text-[#8D8980] mt-0.5">Update staff account authentication credentials</p>
+                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Security & Password</h2>
+                    <p className="text-xs text-[#8D8980] mt-0.5">Change your login password</p>
                   </div>
                   
                   <div className="p-4 bg-amber-950/20 border border-amber-800/40 rounded-xl text-xs text-amber-300">
-                    <p>Enter your active authentication key followed by the new credential set.</p>
+                    <p>Enter your current password followed by your new password.</p>
                   </div>
                   
                   <div className="space-y-4 max-w-md">
@@ -687,7 +687,7 @@ export default function SettingsPage() {
                       onChange={(e) => setPasswordForm(prev => ({...prev, current_password: e.target.value}))}
                     />
                     <Input 
-                      label="New Secure Password" 
+                      label="New Password" 
                       type="password"
                       placeholder="••••••••••••"
                       value={passwordForm.new_password}
@@ -710,7 +710,7 @@ export default function SettingsPage() {
                     icon={<Shield className="w-4 h-4" />}
                     className="shadow-gold"
                   >
-                    Commit Password Update
+                    Change Password
                   </Button>
                 </div>
               )}
@@ -719,21 +719,21 @@ export default function SettingsPage() {
               {activeTab === 'backup' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Database Snapshot & Archiving</h2>
-                    <p className="text-xs text-[#8D8980] mt-0.5">Generate standalone SQLite/Postgres data snapshots for disaster recovery</p>
+                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Database Backups</h2>
+                    <p className="text-xs text-[#8D8980] mt-0.5">Create database backups for safe data storage and recovery</p>
                   </div>
                   
                   <div className="p-4 bg-sky-950/20 border border-sky-800/40 rounded-xl flex items-start gap-3 text-xs text-sky-300">
                     <Clock className="w-4 h-4 text-sky-400 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="font-semibold text-sky-200">Scheduled Automated Archiving Active</p>
-                      <p className="text-[#8D8980] mt-0.5">Database dumps are compressed and saved to secure storage daily at 02:00 AM IST.</p>
+                      <p className="font-semibold text-sky-200">Automated Daily Backups Active</p>
+                      <p className="text-[#8D8980] mt-0.5">Database backups are created daily at 02:00 AM IST.</p>
                     </div>
                   </div>
 
                   <div className="flex gap-3">
                     <Button onClick={handleBackup} loading={backupLoading} icon={<Database className="w-4 h-4" />} className="shadow-gold">
-                      Generate Archive Snapshot Now
+                      Create Backup Now
                     </Button>
                     {backups.length > 0 && (
                       <Button variant="secondary" onClick={() => handleDownloadBackup(backups[0].filename)} icon={<Download className="w-4 h-4 text-[#C9A45C]" />}>
@@ -743,11 +743,11 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="pt-4 border-t border-[#2A261F]">
-                    <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-3">Stored Database Snapshots ({backups.length})</h3>
+                    <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-3">Stored Backups ({backups.length})</h3>
                     {backups.length === 0 ? (
                       <div className="text-center py-8 text-[#8D8980] bg-[#12110F] border border-[#2A261F] rounded-xl">
                         <Database className="w-8 h-8 mx-auto mb-2 opacity-30 text-[#C9A45C]" />
-                        <p className="text-xs">No manual snapshots generated yet.</p>
+                        <p className="text-xs">No backups created yet.</p>
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -773,7 +773,7 @@ export default function SettingsPage() {
                               <button 
                                 onClick={() => handleDeleteBackup(backup.filename)}
                                 className="p-2 text-rose-400 hover:bg-rose-950/40 rounded-lg transition"
-                                title="Purge Archive"
+                                title="Delete Backup"
                               >
                                 <X className="w-3.5 h-3.5" />
                               </button>

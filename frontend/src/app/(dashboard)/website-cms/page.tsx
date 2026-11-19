@@ -199,7 +199,7 @@ export default function WebsiteCMSPage() {
   const handleConvertToCustomer = async (item: Enquiry) => {
     try {
       const res = await api.post(`/enquiries/${item.id}/convert_to_customer/`)
-      toast.success(res.data?.message || 'Client created in CRM!')
+      toast.success(res.data?.message || 'Customer added to CRM!')
       setEnquiries(prev => prev.map(e => e.id === item.id ? { ...e, status: 'converted' } : e))
     } catch (err: any) {
       toast.error(err.response?.data?.error || 'Failed to convert enquiry to customer')
@@ -284,12 +284,12 @@ export default function WebsiteCMSPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Showcase CMS & Brand Management</h1>
+              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Website CMS & Content</h1>
               <span className="text-xs px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F] font-mono">
                 Storefront
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[#8D8980]">Manage luxury brands, watch collections, promotional vouchers, boutique gallery, and incoming leads</p>
+            <p className="text-xs sm:text-sm text-[#8D8980]">Manage brands, watch categories, offers, photo gallery, and website customer enquiries</p>
           </div>
         </div>
 
@@ -319,12 +319,12 @@ export default function WebsiteCMSPage() {
       {/* Tabs Navigation */}
       <div className="flex overflow-x-auto border-b border-[#2A261F] gap-2 pb-1 scrollbar-hide">
         {[
-          { id: 'enquiries', label: 'Client Enquiries', icon: MessageSquare, badge: newEnquiriesCount > 0 ? newEnquiriesCount : undefined },
-          { id: 'brands', label: 'Brand Portfolio', icon: Tag, count: brands.length },
-          { id: 'categories', label: 'Timepiece Classes', icon: FolderTree, count: categories.length },
-          { id: 'offers', label: 'Privileges & Offers', icon: Gift, count: offers.length },
-          { id: 'gallery', label: 'Showroom Gallery', icon: ImageIcon, count: gallery.length },
-          { id: 'milestones', label: 'Heritage Milestones', icon: Milestone, count: milestones.length },
+          { id: 'enquiries', label: 'Customer Enquiries', icon: MessageSquare, badge: newEnquiriesCount > 0 ? newEnquiriesCount : undefined },
+          { id: 'brands', label: 'Brands', icon: Tag, count: brands.length },
+          { id: 'categories', label: 'Watch Categories', icon: FolderTree, count: categories.length },
+          { id: 'offers', label: 'Special Offers', icon: Gift, count: offers.length },
+          { id: 'gallery', label: 'Store Gallery', icon: ImageIcon, count: gallery.length },
+          { id: 'milestones', label: 'Store Milestones', icon: Milestone, count: milestones.length },
         ].map((tab) => {
           const Icon = tab.icon
           const isActive = activeTab === tab.id
@@ -383,8 +383,8 @@ export default function WebsiteCMSPage() {
                 {enquiries.length === 0 ? (
                   <div className="py-16 text-center text-[#8D8980]">
                     <MessageSquare className="w-12 h-12 mx-auto mb-3 opacity-30 text-[#C9A45C]" />
-                    <p className="text-base font-serif font-bold text-[#F3EFE6]">No Client Enquiries Logged</p>
-                    <p className="text-xs text-[#8D8980] mt-1">Submissions from public watch viewings and concierge requests will appear here in real-time.</p>
+                    <p className="text-base font-serif font-bold text-[#F3EFE6]">No Customer Enquiries</p>
+                    <p className="text-xs text-[#8D8980] mt-1">Website enquiries and watch viewing requests will appear here in real-time.</p>
                   </div>
                 ) : (
                   enquiries
@@ -488,7 +488,7 @@ export default function WebsiteCMSPage() {
                                 title="Create CRM Customer record"
                               >
                                 <UserPlus className="w-3.5 h-3.5" />
-                                <span>Create Client</span>
+                                <span>Add Customer</span>
                               </button>
                             )}
 
@@ -498,7 +498,7 @@ export default function WebsiteCMSPage() {
                                 setDeleteConfirmOpen(true)
                               }}
                               className="p-1.5 text-rose-400 hover:bg-rose-950/40 border border-[#2A261F] rounded-lg transition"
-                              title="Delete Lead"
+                              title="Delete Enquiry"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
@@ -521,7 +521,7 @@ export default function WebsiteCMSPage() {
                         {brand.hero_image ? (
                           <img src={brand.hero_image} alt={brand.name} className="w-full h-full object-cover" />
                         ) : (
-                          <div className="text-[#8D8980] text-xs">No Brand Asset</div>
+                          <div className="text-[#8D8980] text-xs">No Brand Image</div>
                         )}
                         <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5">
                           {brand.is_featured && (
@@ -540,7 +540,7 @@ export default function WebsiteCMSPage() {
                             <h3 className="font-serif font-bold text-[#F3EFE6] text-base">{brand.name}</h3>
                             <span className="text-xs font-mono text-[#8D8980]">{brand.established ? `Est. ${brand.established}` : ''}</span>
                           </div>
-                          <p className="text-xs text-[#C9A45C] font-medium mt-0.5">{brand.country || 'Horological Maison'}</p>
+                          <p className="text-xs text-[#C9A45C] font-medium mt-0.5">{brand.country || 'Watch Brand'}</p>
                           {brand.tagline && <p className="text-xs text-[#8D8980] mt-1.5 italic">&ldquo;{brand.tagline}&rdquo;</p>}
                         </div>
                         <div className="mt-4 pt-3 border-t border-[#2A261F] flex items-center justify-between text-xs">
@@ -638,7 +638,7 @@ export default function WebsiteCMSPage() {
                           <div className="text-[#8D8980] text-xs">No Promo Banner</div>
                         )}
                         <span className="absolute top-2.5 left-2.5 bg-[#C9A45C] text-[#0B0B0A] text-[10px] font-bold px-2.5 py-0.5 rounded-full shadow">
-                          {offer.badge || 'Privilege'}
+                          {offer.badge || 'Special Offer'}
                         </span>
                       </div>
                       <div className="p-4 flex-1 flex flex-col justify-between">
@@ -763,7 +763,7 @@ export default function WebsiteCMSPage() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title={editingItem ? `Edit ${activeTab.slice(0, -1)}` : `Create ${activeTab.slice(0, -1)}`}
-        description={`Configure parameters for the public website ${activeTab}`}
+        description={`Manage ${activeTab} content for the website`}
         size="md"
       >
         <form onSubmit={handleSave} className="space-y-4">
@@ -775,7 +775,7 @@ export default function WebsiteCMSPage() {
               <Input label="Year Established" name="established" defaultValue={editingItem?.established || ''} placeholder="e.g. 1853" />
               <Input label="Brand Tagline" name="tagline" defaultValue={editingItem?.tagline || ''} placeholder="e.g. Innovators by Tradition" />
               <div>
-                <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Hero / Showcase Image URL</label>
+                <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Brand Showcase Image URL</label>
                 <div className="flex gap-2">
                   <Input name="hero_image" defaultValue={editingItem?.hero_image || ''} placeholder="https://..." className="flex-1" />
                   <label className="cursor-pointer inline-flex items-center gap-1 px-3 py-2 bg-[#1F1E1A] border border-[#2A261F] rounded-xl text-xs font-medium text-[#C9A45C] hover:border-[#C9A45C]">
@@ -786,13 +786,13 @@ export default function WebsiteCMSPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Maison Description</label>
+                <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Brand Description</label>
                 <textarea name="description" defaultValue={editingItem?.description || ''} rows={3} className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl text-xs text-[#F3EFE6] outline-none" />
               </div>
               <div className="flex items-center gap-4 pt-2">
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" name="is_featured" defaultChecked={editingItem ? editingItem.is_featured : true} className="accent-[#C9A45C]" />
-                  <span className="text-xs text-[#F3EFE6]">Featured in Showcase</span>
+                  <span className="text-xs text-[#F3EFE6]">Featured Brand</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" name="is_active" defaultChecked={editingItem ? editingItem.is_active : true} className="accent-[#C9A45C]" />
@@ -835,7 +835,7 @@ export default function WebsiteCMSPage() {
             <>
               <Input label="Offer Campaign Title *" name="title" defaultValue={editingItem?.title || ''} required />
               <div className="grid grid-cols-2 gap-3">
-                <Input label="Badge Text" name="badge" defaultValue={editingItem?.badge || 'FESTIVE PRIVILEGE'} />
+                <Input label="Badge Text" name="badge" defaultValue={editingItem?.badge || 'SPECIAL OFFER'} />
                 <Input label="Discount Headline" name="discount" defaultValue={editingItem?.discount || 'UP TO 20% OFF'} />
               </div>
               <Input label="Promo Voucher Code" name="code" defaultValue={editingItem?.code || 'MEGHANI1984'} />
@@ -861,8 +861,8 @@ export default function WebsiteCMSPage() {
           {/* Gallery Fields */}
           {activeTab === 'gallery' && (
             <>
-              <Input label="Showcase Photograph Title *" name="title" defaultValue={editingItem?.title || ''} required />
-              <Input label="Collection Category" name="category" defaultValue={editingItem?.category || 'Showroom'} placeholder="e.g. Showroom / Atelier / Vintage" />
+              <Input label="Photo Title *" name="title" defaultValue={editingItem?.title || ''} required />
+              <Input label="Category" name="category" defaultValue={editingItem?.category || 'Showroom'} placeholder="e.g. Store / Repair / Vintage" />
               <div>
                 <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Photo Image URL *</label>
                 <div className="flex gap-2">
@@ -874,17 +874,17 @@ export default function WebsiteCMSPage() {
                   </label>
                 </div>
               </div>
-              <Input label="Caption / Narrative" name="caption" defaultValue={editingItem?.caption || ''} />
+              <Input label="Caption" name="caption" defaultValue={editingItem?.caption || ''} />
             </>
           )}
 
           {/* Milestone Fields */}
           {activeTab === 'milestones' && (
             <>
-              <Input label="Heritage Year *" name="year" defaultValue={editingItem?.year || '1984'} required />
+              <Input label="Year *" name="year" defaultValue={editingItem?.year || '1984'} required />
               <Input label="Milestone Title *" name="title" defaultValue={editingItem?.title || ''} placeholder="e.g. Foundation of Meghani Watch Co." required />
               <div>
-                <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Historical Narrative</label>
+                <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Description</label>
                 <textarea name="description" defaultValue={editingItem?.description || ''} rows={3} className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl text-xs text-[#F3EFE6] outline-none" required />
               </div>
             </>
@@ -895,7 +895,7 @@ export default function WebsiteCMSPage() {
               Cancel
             </Button>
             <Button type="submit" loading={saving} className="shadow-gold">
-              {editingItem ? 'Commit Changes' : 'Publish to Storefront'}
+              {editingItem ? 'Save Changes' : 'Publish to Website'}
             </Button>
           </div>
         </form>
@@ -907,7 +907,7 @@ export default function WebsiteCMSPage() {
         onClose={() => setDeleteConfirmOpen(false)}
         onConfirm={confirmDelete}
         title="Delete Content Entry"
-        message="Are you certain you wish to purge this item from the public website storefront?"
+        message="Are you sure you want to delete this item from the website?"
         confirmText="Confirm Delete"
         variant="danger"
       />

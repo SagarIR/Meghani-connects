@@ -78,8 +78,8 @@ export default function AIInsights() {
             <Sparkles className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="font-serif font-bold text-sm sm:text-base text-[#F3EFE6]">Predictive Velocity</h3>
-            <p className="text-[11px] font-mono text-[#8D8980]">Stock turnover & trend analysis</p>
+            <h3 className="font-serif font-bold text-sm sm:text-base text-[#F3EFE6]">Stock & Sales Insights</h3>
+            <p className="text-[11px] font-mono text-[#8D8980]">Stock turnover and sales trends</p>
           </div>
         </div>
         <button
@@ -124,8 +124,8 @@ export default function AIInsights() {
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-center p-4 text-[#8D8980]">
             <TrendingUp className="w-8 h-8 text-[#2A261F] mb-2" />
-            <p className="text-xs font-semibold text-[#F3EFE6]">Velocity Forecasting Stable</p>
-            <p className="text-[11px] text-[#8D8980] mt-0.5">Timepiece turnover is tracking according to historical demand</p>
+            <p className="text-xs font-semibold text-[#F3EFE6]">Sales & Stock Stable</p>
+            <p className="text-[11px] text-[#8D8980] mt-0.5">Watch sales are tracking as expected</p>
           </div>
         )}
       </div>

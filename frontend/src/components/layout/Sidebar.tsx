@@ -25,28 +25,28 @@ interface NavSection {
 
 const navSections: NavSection[] = [
   {
-    title: 'Operations Desk',
+    title: 'Store Operations',
     items: [
       { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
       { name: 'POS Terminal', href: '/sales', icon: ShoppingCart },
-      { name: 'Sales Ledger', href: '/sales/history', icon: History },
-      { name: 'Inventory & Timepieces', href: '/products', icon: Package },
-      { name: 'Repair Atelier', href: '/repairs', icon: Wrench },
+      { name: 'Sales History', href: '/sales/history', icon: History },
+      { name: 'Products & Inventory', href: '/products', icon: Package },
+      { name: 'Watch Repairs', href: '/repairs', icon: Wrench },
     ]
   },
   {
-    title: 'Clientele & Finance',
+    title: 'Customers & Finance',
     items: [
-      { name: 'Customer CRM', href: '/customers', icon: Users },
+      { name: 'Customers & CRM', href: '/customers', icon: Users },
       { name: 'Store Expenses', href: '/expenses', icon: Wallet },
       { name: 'AI & Business Intelligence', href: '/analytics', icon: Sparkles, badge: 'AI 360' },
       { name: 'Reports & Analytics', href: '/reports', icon: BarChart3 },
     ]
   },
   {
-    title: 'Digital & Admin',
+    title: 'Website & Settings',
     items: [
-      { name: 'Boutique CMS', href: '/website-cms', icon: Globe },
+      { name: 'Website CMS', href: '/website-cms', icon: Globe },
       { name: 'Notifications', href: '/notifications', icon: Bell },
       { name: 'Store Settings', href: '/settings', icon: Settings },
     ]

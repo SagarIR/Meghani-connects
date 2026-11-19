@@ -85,7 +85,7 @@ export default function AlertsWidget() {
     },
     { 
       id: 'repairs', 
-      label: 'Servicing Overdue', 
+      label: 'Overdue Repairs', 
       icon: Clock, 
       count: alerts?.overdue_repairs?.length || 0,
       pill: 'bg-amber-950/60 text-amber-300 border-amber-800/50'
@@ -99,7 +99,7 @@ export default function AlertsWidget() {
     },
     { 
       id: 'birthdays', 
-      label: 'VIP Birthdays', 
+      label: 'Customer Birthdays', 
       icon: Cake, 
       count: alerts?.birthdays_today?.length || 0,
       pill: 'bg-purple-950/60 text-purple-300 border-purple-800/50'
@@ -134,9 +134,9 @@ export default function AlertsWidget() {
             <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <h3 className="font-serif font-bold text-sm sm:text-base text-[#F3EFE6]">Boutique Intelligence Alerts</h3>
+            <h3 className="font-serif font-bold text-sm sm:text-base text-[#F3EFE6]">Store Action Alerts</h3>
             <p className="text-[11px] font-mono text-[#8D8980]">
-              {totalAlerts > 0 ? `${totalAlerts} items requiring staff action` : 'Operational inventory & repairs in optimal status'}
+              {totalAlerts > 0 ? `${totalAlerts} items require attention` : 'All inventory and repairs are up to date'}
             </p>
           </div>
         </div>
@@ -194,7 +194,7 @@ export default function AlertsWidget() {
                       <div key={item.id} className="flex items-center justify-between py-2 text-xs">
                         <div>
                           <p className="font-semibold text-[#F3EFE6]">{item.name}</p>
-                          <p className="text-[11px] text-[#8D8980]">{item.brand || 'Boutique'}</p>
+                          <p className="text-[11px] text-[#8D8980]">{item.brand || 'Store'}</p>
                         </div>
                         <span className="font-mono text-red-400 bg-red-950/60 border border-red-800/40 px-2 py-0.5 rounded-full font-bold">
                           Stock: {item.stock} left
@@ -214,7 +214,7 @@ export default function AlertsWidget() {
                       <div key={r.id} className="flex items-center justify-between py-2 text-xs">
                         <div>
                           <p className="font-semibold text-[#F3EFE6]">{r.ticket_number} • {r.item_type}</p>
-                          <p className="text-[11px] text-[#8D8980]">Client: {r.customer__name || 'Walk-in'}</p>
+                          <p className="text-[11px] text-[#8D8980]">Customer: {r.customer__name || 'Walk-in'}</p>
                         </div>
                         <span className="font-mono text-amber-300 bg-amber-950/60 border border-amber-800/40 px-2 py-0.5 rounded-full">
                           Due: {r.expected_delivery || 'Immediate'}
@@ -234,7 +234,7 @@ export default function AlertsWidget() {
                       <div key={w.id} className="flex items-center justify-between py-2 text-xs">
                         <div>
                           <p className="font-semibold text-[#F3EFE6]">{w.product__name}</p>
-                          <p className="text-[11px] text-[#8D8980]">Client: {w.customer__name}</p>
+                          <p className="text-[11px] text-[#8D8980]">Customer: {w.customer__name}</p>
                         </div>
                         <span className="font-mono text-sky-300 bg-sky-950/60 border border-sky-800/40 px-2 py-0.5 rounded-full">
                           Expires: {w.expiry_date}
@@ -263,7 +263,7 @@ export default function AlertsWidget() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-center py-4 text-xs text-[#8D8980]">No VIP client birthdays today</p>
+                  <p className="text-center py-4 text-xs text-[#8D8980]">No customer birthdays today</p>
                 )
               )}
             </div>

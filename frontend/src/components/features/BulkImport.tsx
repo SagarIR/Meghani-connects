@@ -170,7 +170,7 @@ export default function BulkImport({ isOpen, onClose, onSuccess, type }: BulkImp
                 <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">
                   Bulk Import {type.charAt(0).toUpperCase() + type.slice(1)}
                 </h2>
-                <p className="text-xs text-[#8D8980]">Upload structured Excel (.xlsx) or CSV catalog</p>
+                <p className="text-xs text-[#8D8980]">Upload an Excel (.xlsx) or CSV file</p>
               </div>
             </div>
             <button
@@ -249,8 +249,8 @@ export default function BulkImport({ isOpen, onClose, onSuccess, type }: BulkImp
                   <div className="w-14 h-14 bg-[#1F1E1A] border border-[#2A261F] rounded-full flex items-center justify-center mx-auto">
                     <Upload className="w-6 h-6 text-[#C9A45C]" />
                   </div>
-                  <p className="font-medium text-[#F3EFE6] text-sm">Drop your catalog file here</p>
-                  <p className="text-xs text-[#8D8980]">or click to select from your workstation</p>
+                  <p className="font-medium text-[#F3EFE6] text-sm">Drop your file here</p>
+                  <p className="text-xs text-[#8D8980]">or click to select from your computer</p>
                   <p className="text-[11px] text-[#8D8980]/80">Excel (.xlsx) or CSV files up to 10MB</p>
                 </div>
               )}
@@ -266,7 +266,7 @@ export default function BulkImport({ isOpen, onClose, onSuccess, type }: BulkImp
                   className="w-4 h-4 text-[#C9A45C] bg-[#171613] rounded border-[#2A261F] focus:ring-[#C9A45C] accent-[#C9A45C]"
                 />
                 <span className="text-xs text-[#F3EFE6] font-medium">
-                  Update existing {type} (matches by unique barcode / identifier)
+                  Update existing {type} (matches by barcode or ID)
                 </span>
               </label>
             </div>
@@ -286,7 +286,7 @@ export default function BulkImport({ isOpen, onClose, onSuccess, type }: BulkImp
                   <div className="space-y-3">
                     <div className="flex items-center gap-2">
                       <CheckCircle className="w-4 h-4 text-emerald-400" />
-                      <span className="font-semibold text-emerald-300 text-sm">Batch Ingestion Completed</span>
+                      <span className="font-semibold text-emerald-300 text-sm">Import Completed Successfully</span>
                     </div>
                     <div className="grid grid-cols-3 gap-3 text-center">
                       <div className="p-2.5 bg-[#171613] border border-[#2A261F] rounded-lg">
@@ -360,7 +360,7 @@ export default function BulkImport({ isOpen, onClose, onSuccess, type }: BulkImp
                   loading={isUploading}
                   icon={<Upload className="w-3.5 h-3.5" />}
                 >
-                  {isUploading ? 'Ingesting Data...' : 'Start Ingestion'}
+                  {isUploading ? 'Importing...' : 'Start Import'}
                 </Button>
               )}
             </div>

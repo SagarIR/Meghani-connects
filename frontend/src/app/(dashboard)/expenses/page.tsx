@@ -22,14 +22,14 @@ import toast from 'react-hot-toast'
 import clsx from 'clsx'
 
 const categoryConfig: Record<string, { label: string; icon: any; color: string; bg: string; border: string }> = {
-  rent: { label: 'Showroom Lease / Rent', icon: Building, color: 'text-sky-400', bg: 'bg-sky-950/30', border: 'border-sky-800/40' },
-  salary: { label: 'Staff & Horologist Payroll', icon: Users, color: 'text-emerald-400', bg: 'bg-emerald-950/30', border: 'border-emerald-800/40' },
-  utilities: { label: 'Power & Boutique Utilities', icon: Zap, color: 'text-amber-400', bg: 'bg-amber-950/30', border: 'border-amber-800/40' },
-  maintenance: { label: 'Atelier Tooling & Upkeep', icon: Wrench, color: 'text-orange-400', bg: 'bg-orange-950/30', border: 'border-orange-800/40' },
-  purchase: { label: 'Wholesale Inventory / Parts', icon: ShoppingCart, color: 'text-[#C9A45C]', bg: 'bg-[#C9A45C]/15', border: 'border-[#C9A45C]/40' },
-  marketing: { label: 'Luxury Brand Marketing', icon: Megaphone, color: 'text-rose-400', bg: 'bg-rose-950/30', border: 'border-rose-800/40' },
-  transport: { label: 'Insured Logistics & Courier', icon: Truck, color: 'text-indigo-400', bg: 'bg-indigo-950/30', border: 'border-indigo-800/40' },
-  other: { label: 'General Boutique Operational', icon: Wallet, color: 'text-[#8D8980]', bg: 'bg-[#1F1E1A]', border: 'border-[#2A261F]' },
+  rent: { label: 'Store Rent', icon: Building, color: 'text-sky-400', bg: 'bg-sky-950/30', border: 'border-sky-800/40' },
+  salary: { label: 'Staff Salaries', icon: Users, color: 'text-emerald-400', bg: 'bg-emerald-950/30', border: 'border-emerald-800/40' },
+  utilities: { label: 'Electricity & Utilities', icon: Zap, color: 'text-amber-400', bg: 'bg-amber-950/30', border: 'border-amber-800/40' },
+  maintenance: { label: 'Repairs & Maintenance', icon: Wrench, color: 'text-orange-400', bg: 'bg-orange-950/30', border: 'border-orange-800/40' },
+  purchase: { label: 'Stock & Parts Purchases', icon: ShoppingCart, color: 'text-[#C9A45C]', bg: 'bg-[#C9A45C]/15', border: 'border-[#C9A45C]/40' },
+  marketing: { label: 'Marketing & Advertising', icon: Megaphone, color: 'text-rose-400', bg: 'bg-rose-950/30', border: 'border-rose-800/40' },
+  transport: { label: 'Courier & Shipping', icon: Truck, color: 'text-indigo-400', bg: 'bg-indigo-950/30', border: 'border-indigo-800/40' },
+  other: { label: 'Other Expenses', icon: Wallet, color: 'text-[#8D8980]', bg: 'bg-[#1F1E1A]', border: 'border-[#2A261F]' },
 }
 
 export default function ExpensesPage() {
@@ -100,7 +100,7 @@ export default function ExpensesPage() {
       }
     } catch (error) {
       console.error('Failed to fetch expenses:', error)
-      toast.error('Failed to load expenditure ledger')
+      toast.error('Failed to load expenses')
     } finally {
       setLoading(false)
     }
@@ -147,7 +147,7 @@ export default function ExpensesPage() {
 
   const openDeleteModal = (expense: Expense) => {
     if (!isManagement) {
-      toast.error('Expense cancellation requires Manager / Admin authorization')
+      toast.error('Deleting an expense requires Manager or Admin permission')
       return
     }
     setSelectedExpense(expense)
@@ -157,7 +157,7 @@ export default function ExpensesPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!formData.amount || Number(formData.amount) <= 0) {
-      toast.error('Please enter a valid disbursement amount')
+      toast.error('Please enter a valid expense amount')
       return
     }
 
@@ -170,15 +170,15 @@ export default function ExpensesPage() {
 
       if (selectedExpense) {
         await api.patch(`/expenses/${selectedExpense.id}/`, payload)
-        toast.success('Disbursement entry updated')
+        toast.success('Expense updated successfully')
       } else {
         await api.post('/expenses/', payload)
-        toast.success('Boutique expense booked successfully')
+        toast.success('Expense added successfully')
       }
       setShowModal(false)
       fetchExpenses()
     } catch (error) {
-      toast.error('Failed to record expenditure')
+      toast.error('Failed to save expense')
     } finally {
       setIsSubmitting(false)
     }
@@ -188,11 +188,11 @@ export default function ExpensesPage() {
     if (!selectedExpense) return
     try {
       await api.delete(`/expenses/${selectedExpense.id}/`)
-      toast.success('Expense record purged')
+      toast.success('Expense deleted successfully')
       setShowDeleteModal(false)
       fetchExpenses()
     } catch (error) {
-      toast.error('Failed to delete expense entry')
+      toast.error('Failed to delete expense')
     }
   }
 
@@ -213,15 +213,15 @@ export default function ExpensesPage() {
   }
 
   const categories = [
-    { value: '', label: 'All Cost Centers' },
-    { value: 'rent', label: 'Showroom Lease / Rent' },
-    { value: 'salary', label: 'Payroll & Compensation' },
-    { value: 'utilities', label: 'Utilities & Power' },
-    { value: 'maintenance', label: 'Atelier Upkeep & Tooling' },
-    { value: 'purchase', label: 'Wholesale Inventory / Parts' },
-    { value: 'marketing', label: 'Branding & Campaigns' },
-    { value: 'transport', label: 'Insured Logistics' },
-    { value: 'other', label: 'General Operational' },
+    { value: '', label: 'All Categories' },
+    { value: 'rent', label: 'Store Rent' },
+    { value: 'salary', label: 'Staff Salaries' },
+    { value: 'utilities', label: 'Electricity & Utilities' },
+    { value: 'maintenance', label: 'Repairs & Maintenance' },
+    { value: 'purchase', label: 'Stock & Parts Purchases' },
+    { value: 'marketing', label: 'Marketing & Advertising' },
+    { value: 'transport', label: 'Courier & Shipping' },
+    { value: 'other', label: 'Other Expenses' },
   ]
 
   // Calculate Metrics
@@ -255,12 +255,12 @@ export default function ExpensesPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Operating Expenses & Ledger</h1>
+              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Store Expenses</h1>
               <span className="text-xs px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F] font-mono">
                 {totalItems} entries
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[#8D8980]">Manage boutique overheads, showroom maintenance, payroll, and vendor disbursements</p>
+            <p className="text-xs sm:text-sm text-[#8D8980]">Track store expenses, rent, utilities, payroll, and supplies</p>
           </div>
         </div>
 
@@ -271,12 +271,12 @@ export default function ExpensesPage() {
             filename={`meghani_expenses_${new Date().toISOString().split('T')[0]}`} 
           />
           <Button onClick={openAddModal} icon={<Plus className="w-4 h-4" />} className="shadow-gold">
-            <span>Book Expense</span>
+            <span>Add Expense</span>
           </Button>
         </div>
       </div>
 
-      {/* Financial Health KPI Cards */}
+      {/* Expense KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
           <div className="flex items-center gap-3">
@@ -284,7 +284,7 @@ export default function ExpensesPage() {
               <Wallet className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Total Ledger</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Total Expenses</p>
               <p className="text-xl sm:text-2xl font-bold font-mono text-[#F3EFE6] mt-0.5">
                 {formatCurrency(totalExpenses)}
               </p>
@@ -298,7 +298,7 @@ export default function ExpensesPage() {
               <Calendar className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Current Month</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">This Month</p>
               <p className="text-xl sm:text-2xl font-bold font-mono text-[#C9A45C] mt-0.5">
                 {formatCurrency(thisMonthTotal)}
               </p>
@@ -312,7 +312,7 @@ export default function ExpensesPage() {
               <TrendingDown className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Average Ticket</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Average Expense</p>
               <p className="text-xl sm:text-2xl font-bold font-mono text-[#E8D5A7] mt-0.5">
                 {formatCurrency(avgExpense)}
               </p>
@@ -326,7 +326,7 @@ export default function ExpensesPage() {
               <PieChart className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Primary Head</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Top Category</p>
               <p className="text-base font-bold font-serif text-[#F3EFE6] truncate mt-0.5">
                 {topCategory ? (categoryConfig[topCategory[0]]?.label || topCategory[0]) : 'None'}
               </p>
@@ -340,7 +340,7 @@ export default function ExpensesPage() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Filter className="w-4 h-4 text-[#C9A45C]" />
-            <span className="text-xs font-semibold text-[#F3EFE6] uppercase tracking-wider">Cost Center Filter:</span>
+            <span className="text-xs font-semibold text-[#F3EFE6] uppercase tracking-wider">Filter by Category:</span>
           </div>
 
           <div className="flex items-center bg-[#12110F] border border-[#2A261F] rounded-xl p-1 flex-shrink-0">
@@ -352,7 +352,7 @@ export default function ExpensesPage() {
                   ? 'bg-[#C9A45C] text-[#0B0B0A] font-semibold shadow-sm' 
                   : 'text-[#8D8980] hover:text-[#F3EFE6]'
               )}
-              title="Ledger Table"
+              title="Table View"
             >
               <List className="w-4 h-4" />
             </button>
@@ -364,7 +364,7 @@ export default function ExpensesPage() {
                   ? 'bg-[#C9A45C] text-[#0B0B0A] font-semibold shadow-sm' 
                   : 'text-[#8D8980] hover:text-[#F3EFE6]'
               )}
-              title="Card Grid"
+              title="Card View"
             >
               <LayoutGrid className="w-4 h-4" />
             </button>
@@ -394,17 +394,17 @@ export default function ExpensesPage() {
       {loading ? (
         <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-12 text-center">
           <div className="w-8 h-8 border-2 border-[#C9A45C] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
-          <p className="text-sm text-[#8D8980]">Loading boutique expense records...</p>
+          <p className="text-sm text-[#8D8980]">Loading expenses...</p>
         </div>
       ) : expenses.length === 0 ? (
         <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-12 text-center shadow-xl">
           <div className="w-16 h-16 mx-auto bg-[#1F1E1A] border border-[#2A261F] rounded-2xl flex items-center justify-center mb-4">
             <Wallet className="w-8 h-8 text-[#8D8980]" />
           </div>
-          <h3 className="text-lg font-serif font-bold text-[#F3EFE6] mb-1">No Disbursements Recorded</h3>
+          <h3 className="text-lg font-serif font-bold text-[#F3EFE6] mb-1">No Expenses Found</h3>
           <p className="text-sm text-[#8D8980] mb-5">There are no expense records under the selected category.</p>
           <Button onClick={openAddModal} icon={<Plus className="w-4 h-4" />}>
-            Book New Expense
+            Add Expense
           </Button>
         </div>
       ) : viewMode === 'table' ? (
@@ -416,7 +416,7 @@ export default function ExpensesPage() {
                   <th className="px-5 py-3.5 text-left">
                     <SortableHeader label="Date" field="date" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
-                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Cost Center</th>
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Category</th>
                   <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Vendor / Payee</th>
                   <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Description</th>
                   <th className="px-5 py-3.5 text-right">
@@ -443,7 +443,7 @@ export default function ExpensesPage() {
                       </td>
 
                       <td className="px-4 py-4">
-                        <p className="font-medium text-sm text-[#F3EFE6]">{expense.vendor_name || 'Boutique Counter'}</p>
+                        <p className="font-medium text-sm text-[#F3EFE6]">{expense.vendor_name || 'Store Expense'}</p>
                       </td>
 
                       <td className="px-5 py-4">
@@ -459,7 +459,7 @@ export default function ExpensesPage() {
                           <button 
                             onClick={() => openEditModal(expense)}
                             className="p-1.5 hover:bg-[#C9A45C]/15 text-[#C9A45C] rounded-lg transition-colors"
-                            title="Edit Record"
+                            title="Edit Expense"
                           >
                             <Edit className="w-4 h-4" />
                           </button>
@@ -467,12 +467,12 @@ export default function ExpensesPage() {
                             <button 
                               onClick={() => openDeleteModal(expense)}
                               className="p-1.5 hover:bg-rose-950/40 text-rose-400 rounded-lg transition-colors"
-                              title="Delete Record"
+                              title="Delete Expense"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
                           ) : (
-                            <span title="Manager Authorization Required" className="p-1.5 text-[#8D8980]/50 cursor-not-allowed">
+                            <span title="Manager Permission Required" className="p-1.5 text-[#8D8980]/50 cursor-not-allowed">
                               <Lock className="w-3.5 h-3.5" />
                             </span>
                           )}
@@ -510,13 +510,13 @@ export default function ExpensesPage() {
                       <span className="text-xs font-mono text-[#8D8980]">{formatDate(expense.date)}</span>
                     </div>
 
-                    <p className="font-serif font-bold text-base text-[#F3EFE6] mt-1">{expense.vendor_name || 'Boutique Operations'}</p>
-                    <p className="text-xs text-[#8D8980] mt-1 line-clamp-2">{expense.description || 'Routine overhead disbursement'}</p>
+                    <p className="font-serif font-bold text-base text-[#F3EFE6] mt-1">{expense.vendor_name || 'Store Expense'}</p>
+                    <p className="text-xs text-[#8D8980] mt-1 line-clamp-2">{expense.description || 'General store expense'}</p>
                   </div>
 
                   <div className="mt-4 pt-3 border-t border-[#2A261F] flex items-center justify-between">
                     <div>
-                      <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Disbursed</span>
+                      <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Amount</span>
                       <p className="font-mono font-bold text-lg text-[#C9A45C]">{formatCurrency(expense.amount)}</p>
                     </div>
 
@@ -524,7 +524,7 @@ export default function ExpensesPage() {
                       <button 
                         onClick={() => openEditModal(expense)}
                         className="p-2 hover:bg-[#C9A45C]/15 text-[#C9A45C] rounded-lg transition-colors border border-[#2A261F]"
-                        title="Edit"
+                        title="Edit Expense"
                       >
                         <Edit className="w-3.5 h-3.5" />
                       </button>
@@ -532,7 +532,7 @@ export default function ExpensesPage() {
                         <button 
                           onClick={() => openDeleteModal(expense)}
                           className="p-2 hover:bg-rose-950/40 text-rose-400 rounded-lg transition-colors border border-[#2A261F]"
-                          title="Delete"
+                          title="Delete Expense"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -564,13 +564,13 @@ export default function ExpensesPage() {
       <Modal 
         isOpen={showModal} 
         onClose={() => setShowModal(false)} 
-        title={selectedExpense ? 'Update Expense Record' : 'Book Operating Expense'}
-        description="Record an operational disbursement into the boutique accounting ledger"
+        title={selectedExpense ? 'Edit Expense' : 'Add New Expense'}
+        description="Record and track store operational expenses"
         size="md"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Cost Center Category *</label>
+            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Expense Category *</label>
             <select
               value={formData.category}
               onChange={(e) => setFormData({ ...formData, category: e.target.value })}
@@ -584,7 +584,7 @@ export default function ExpensesPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <Input 
-              label="Disbursement Amount (₹) *" 
+              label="Amount (₹) *" 
               type="number" 
               step="any"
               placeholder="0.00"
@@ -592,7 +592,7 @@ export default function ExpensesPage() {
               onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
             />
             <Input 
-              label="Transaction Date *" 
+              label="Date *" 
               type="date"
               value={formData.date}
               onChange={(e) => setFormData({ ...formData, date: e.target.value })}
@@ -601,17 +601,17 @@ export default function ExpensesPage() {
 
           <Input 
             label="Vendor / Payee Name" 
-            placeholder="e.g. Torrent Power Ltd / Showroom Landlord"
+            placeholder="e.g. Torrent Power Ltd / Landlord / Packaging Supplier"
             value={formData.vendor_name}
             onChange={(e) => setFormData({ ...formData, vendor_name: e.target.value })}
           />
 
           <div>
-            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Disbursement Details / Invoice Ref</label>
+            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Description / Notes</label>
             <textarea
               rows={3}
               className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-xs text-[#F3EFE6] resize-none"
-              placeholder="Provide invoice number, cheque reference, or operational reason..."
+              placeholder="Enter invoice number, bill reference, or purpose..."
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             />
@@ -620,7 +620,7 @@ export default function ExpensesPage() {
           {!isManagement && (
             <div className="p-3 bg-amber-950/20 border border-amber-800/40 rounded-xl flex items-center gap-2 text-xs text-amber-300">
               <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0" />
-              <span>Staff disbursements are logged and flagged for Manager review.</span>
+              <span>Staff expenses are logged and flagged for Manager review.</span>
             </div>
           )}
 
@@ -629,7 +629,7 @@ export default function ExpensesPage() {
               Cancel
             </Button>
             <Button type="submit" loading={isSubmitting} className="shadow-gold">
-              {selectedExpense ? 'Update Entry' : 'Book Disbursement'}
+              {selectedExpense ? 'Update Expense' : 'Add Expense'}
             </Button>
           </div>
         </form>
@@ -640,9 +640,9 @@ export default function ExpensesPage() {
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
         onConfirm={handleDelete}
-        title="Purge Expenditure Record"
-        message={`Are you sure you wish to delete this ₹${selectedExpense?.amount?.toLocaleString('en-IN')} expense entry? This action is restricted to Store Managers.`}
-        confirmText="Confirm Purge"
+        title="Delete Expense"
+        message={`Are you sure you want to delete this ₹${selectedExpense?.amount?.toLocaleString('en-IN')} expense? This action cannot be undone.`}
+        confirmText="Delete Expense"
         variant="danger"
       />
     </div>
