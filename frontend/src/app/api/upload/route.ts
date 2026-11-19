@@ -72,7 +72,15 @@ export async function POST(request: NextRequest) {
     }
 
     // Fallback: Proxy to Django backend media upload endpoint
-    const backendApiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
+    const backendApiUrl = process.env.BACKEND_URL
+      ? (function() {
+          try {
+            return new URL('/api', process.env.BACKEND_URL).toString().replace(/\/+$/, '');
+          } catch {
+            return `${process.env.BACKEND_URL.replace(/\/+$/, '')}/api`;
+          }
+        })()
+      : (process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api');
     const backendFormData = new FormData();
     backendFormData.append('file', file);
     backendFormData.append('folder', folder);

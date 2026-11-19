@@ -3,7 +3,16 @@ import { EnquirySubmission } from '@/types/public';
 import { MEGHANI_STORE_INFO } from '@/services/publicCatalogue';
 import axios from 'axios';
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
+function getBackendUrl(): string {
+  if (process.env.BACKEND_URL) {
+    try {
+      return new URL('/api', process.env.BACKEND_URL).toString().replace(/\/+$/, '');
+    } catch {
+      return `${process.env.BACKEND_URL.replace(/\/+$/, '')}/api`;
+    }
+  }
+  return process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api';
+}
 
 // In-memory rate limiting and duplicate suppression tracker
 const recentSubmissions = new Map<string, number>();
@@ -93,7 +102,7 @@ export async function POST(request: NextRequest) {
         dbPayload.product = productId;
       }
       const dbRes = await axios.post(
-        `${BACKEND_URL}/enquiries/`,
+        `${getBackendUrl()}/enquiries/`,
         dbPayload,
         { timeout: 2000 }
       );
