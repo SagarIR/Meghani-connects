@@ -297,7 +297,7 @@ class SalesForecast:
                 logger.warning(f"Prophet fitting encountered: {e}. Executing statistical fallback.")
                 forecast_df = None
 
-        if forecast_df is None:
+        if forecast_df is None or (forecast_df['yhat'].sum() == 0 and has_sufficient_data):
             forecast_df = self._statistical_predict(df, periods=horizon)
             model_name = 'statistical_seasonal_moving_average'
 

@@ -2,6 +2,8 @@ import os
 import sys
 from pathlib import Path
 from datetime import timedelta
+import urllib.parse
+from django.core.exceptions import ImproperlyConfigured
 
 try:
     from dotenv import load_dotenv
@@ -74,20 +76,146 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'core.wsgi.application'
 
-# Database
-# Use PostgreSQL in production, SQLite for development
-if os.getenv('DATABASE_URL') or os.getenv('DATABASE_NAME'):
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': os.getenv('DATABASE_NAME', 'meghani_connect_360'),
-            'USER': os.getenv('DATABASE_USER', 'postgres'),
-            'PASSWORD': os.getenv('DATABASE_PASSWORD', 'Sagar@123'),
-            'HOST': os.getenv('DATABASE_HOST', 'localhost'),
-            'PORT': os.getenv('DATABASE_PORT', '5432'),
+# ============ DATABASE CONFIGURATION ============
+def parse_database_url(url_str: str) -> dict:
+    """
+    Parse a DATABASE_URL connection string into a Django DATABASES configuration dictionary.
+    Supports PostgreSQL (postgresql://, postgres://, pgsql://) with query parameters for SSL
+    (sslmode, channel_binding, etc.) and SQLite (sqlite://).
+    """
+    if not url_str or not url_str.strip():
+        return None
+
+    url = urllib.parse.urlparse(url_str.strip())
+    scheme = url.scheme.lower()
+
+    if scheme in ('sqlite', 'sqlite3'):
+        path = url.path
+        if url.netloc:
+            path = url.netloc + path
+        db_path = path.lstrip('/') if path and not path.startswith('/') else path
+        return {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': Path(db_path) if db_path and db_path != ':memory:' else (BASE_DIR / 'db.sqlite3' if not db_path else ':memory:'),
         }
+
+    if scheme not in ('postgres', 'postgresql', 'pgsql'):
+        raise ImproperlyConfigured(
+            f"Unsupported database scheme '{scheme}' in DATABASE_URL. "
+            f"Supported schemes: postgresql://, postgres://, sqlite://"
+        )
+
+    db_name = urllib.parse.unquote(url.path.lstrip('/'))
+    if not db_name:
+        raise ImproperlyConfigured("DATABASE_URL must specify a database name.")
+    if not url.hostname:
+        raise ImproperlyConfigured("DATABASE_URL must specify a host.")
+
+    db_user = urllib.parse.unquote(url.username) if url.username else ''
+    db_password = urllib.parse.unquote(url.password) if url.password else ''
+    db_host = url.hostname
+    db_port = str(url.port) if url.port else '5432'
+
+    options = {}
+    if url.query:
+        qs = urllib.parse.parse_qs(url.query)
+        libpq_params = {
+            'sslmode', 'sslcert', 'sslkey', 'sslrootcert', 'sslcrl',
+            'channel_binding', 'connect_timeout', 'application_name',
+            'keepalives', 'keepalives_idle', 'keepalives_interval', 'keepalives_count',
+            'target_session_attrs', 'gssencmode'
+        }
+        for k, v in qs.items():
+            k_lower = k.lower()
+            if k_lower in libpq_params:
+                options[k_lower] = v[0]
+            elif k_lower in ('currentschema', 'schema'):
+                options['options'] = f"-c search_path={v[0]}"
+            elif k_lower == 'options':
+                options['options'] = v[0]
+
+    # SSL configuration for PostgreSQL / Neon
+    ssl_env = os.getenv('DATABASE_SSL_MODE')
+    if ssl_env:
+        options['sslmode'] = ssl_env
+    elif 'sslmode' not in options:
+        if db_host not in ('localhost', '127.0.0.1') or os.getenv('DATABASE_SSL', '').lower() in ('true', '1'):
+            options['sslmode'] = 'require'
+
+    conn_max_age = int(os.getenv('CONN_MAX_AGE', '0'))
+
+    config = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': db_name,
+        'USER': db_user,
+        'PASSWORD': db_password,
+        'HOST': db_host,
+        'PORT': db_port,
+        'CONN_MAX_AGE': conn_max_age,
     }
+    if options:
+        config['OPTIONS'] = options
+    return config
+
+
+# Determine runtime environment
+IS_RUNNING_TESTS = 'test' in sys.argv
+IS_PRODUCTION = (
+    not DEBUG
+    or os.getenv('VERCEL') == '1'
+    or os.getenv('ENVIRONMENT') in ('production', 'prod', 'staging')
+    or os.getenv('DJANGO_ENV') in ('production', 'prod', 'staging')
+) and not IS_RUNNING_TESTS
+
+database_url = os.getenv('DATABASE_URL', '').strip()
+database_name = os.getenv('DATABASE_NAME', '').strip()
+
+if database_url:
+    db_config = parse_database_url(database_url)
+    if IS_PRODUCTION and db_config.get('ENGINE') == 'django.db.backends.sqlite3':
+        raise ImproperlyConfigured(
+            "SQLite cannot be used in production. A production PostgreSQL DATABASE_URL is required."
+        )
+    DATABASES = {'default': db_config}
+
+elif database_name:
+    # Discrete PostgreSQL environment variables fallback (preserving backward compatibility)
+    db_host = os.getenv('DATABASE_HOST', 'localhost').strip()
+    db_port = os.getenv('DATABASE_PORT', '5432').strip()
+    db_user = os.getenv('DATABASE_USER', '').strip()
+    db_password = os.getenv('DATABASE_PASSWORD', '').strip()
+
+    options = {}
+    ssl_mode = os.getenv('DATABASE_SSL_MODE')
+    if ssl_mode:
+        options['sslmode'] = ssl_mode
+    elif db_host not in ('localhost', '127.0.0.1') or os.getenv('DATABASE_SSL', '').lower() in ('true', '1'):
+        options['sslmode'] = 'require'
+
+    conn_max_age = int(os.getenv('CONN_MAX_AGE', '0'))
+
+    config = {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': database_name,
+        'USER': db_user,
+        'PASSWORD': db_password,
+        'HOST': db_host,
+        'PORT': db_port,
+        'CONN_MAX_AGE': conn_max_age,
+    }
+    if options:
+        config['OPTIONS'] = options
+    DATABASES = {'default': config}
+
 else:
+    # In production, fail clearly if no database is configured. Never silently use SQLite.
+    if IS_PRODUCTION:
+        raise ImproperlyConfigured(
+            "Database configuration is missing in production. "
+            "Please configure the DATABASE_URL environment variable with a PostgreSQL connection string. "
+            "Silently falling back to SQLite in production is disabled."
+        )
+    # Local development SQLite fallback
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.sqlite3',
