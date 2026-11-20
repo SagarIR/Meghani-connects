@@ -90,6 +90,8 @@ class PublicProductCatalogueTests(TestCase):
     def test_public_brands_and_categories_endpoints(self):
         """Verify dynamic brands and categories endpoints"""
         from apps.products.models import Brand, Category
+        Brand.objects.all().delete()
+        Category.objects.all().delete()
         Brand.objects.create(name='Rolex', slug='rolex', display_order=1, is_active=True)
         Brand.objects.create(name='Secret Brand', slug='secret', display_order=2, is_active=False)
         Category.objects.create(name='Chronograph', slug='chronograph', display_order=1, is_active=True)
@@ -190,6 +192,143 @@ class ProductManagementAndStockTests(TestCase):
         self.assertEqual(res_del.status_code, status.HTTP_204_NO_CONTENT)
         low_prod.refresh_from_db()
         self.assertFalse(low_prod.is_active)
+
+
+class CatalogNormalizationAndIntegrityTests(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        from apps.users.models import User
+        self.admin = User.objects.create_user(username='admin_cat', password='catpass123', role='admin', is_staff=True)
+        self.staff = User.objects.create_user(username='staff_cat', password='catpass123', role='staff')
+
+        from apps.products.models import Brand, Category, Subcategory
+        self.brand_titan = Brand.objects.get_or_create(name='Titan', defaults={'slug': 'titan'})[0]
+        self.cat_analog = Category.objects.get_or_create(slug='analog', defaults={'name': 'Analog Timepieces'})[0]
+        self.cat_smart = Category.objects.get_or_create(slug='smart', defaults={'name': 'Smart & Hybrid'})[0]
+
+        self.sub_mens = Subcategory.objects.get_or_create(
+            category=self.cat_analog, slug='mens-analog', defaults={'name': "Men's Analog"}
+        )[0]
+        self.sub_smart = Subcategory.objects.get_or_create(
+            category=self.cat_smart, slug='smartwatches', defaults={'name': "Smartwatches"}
+        )[0]
+
+    def test_relational_brand_and_category_fk(self):
+        """Product relations link directly to Brand and Category instances with PROTECT on delete"""
+        from django.db.models import ProtectedError
+        prod = Product.objects.create(
+            name='Titan Edge Ceramic',
+            brand=self.brand_titan,
+            category=self.cat_analog,
+            subcategory=self.sub_mens,
+            cost_price=10000.00,
+            selling_price=18000.00,
+            mrp=20000.00
+        )
+        self.assertEqual(prod.brand.id, self.brand_titan.id)
+        self.assertEqual(prod.category.id, self.cat_analog.id)
+        self.assertEqual(prod.subcategory.id, self.sub_mens.id)
+        self.assertTrue(prod.article_code.startswith('TIT-'))
+
+        # Deleting brand is protected
+        with self.assertRaises(ProtectedError):
+            self.brand_titan.delete()
+
+        # Deleting category is protected
+        with self.assertRaises(ProtectedError):
+            self.cat_analog.delete()
+
+    def test_subcategory_must_belong_to_category_validation(self):
+        """API rejects assigning a subcategory that does not belong to the selected category"""
+        self.client.force_authenticate(user=self.admin)
+        payload = {
+            'name': 'Mismatched Watch',
+            'brand': 'Titan',
+            'category': 'analog',
+            'subcategory': 'smartwatches',  # Belongs to smart, not analog!
+            'cost_price': '2000.00',
+            'selling_price': '4000.00',
+            'mrp': '5000.00',
+            'stock': 10
+        }
+        res = self.client.post('/api/products/', payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('subcategory', res.data)
+
+    def test_cost_price_permission_protection(self):
+        """Staff cannot create/edit products (403), and reading products omits confidential cost_price and profit"""
+        prod = Product.objects.create(
+            name='Permission Test Watch',
+            brand=self.brand_titan,
+            category=self.cat_analog,
+            cost_price=5000.00,
+            selling_price=9000.00,
+            mrp=10000.00,
+            stock=5
+        )
+        # 1. Staff write attempt is blocked with 403 Forbidden
+        self.client.force_authenticate(user=self.staff)
+        res_post = self.client.post('/api/products/', {'name': 'Unauthorized', 'brand': 'Titan', 'category': 'analog', 'cost_price': 1000, 'selling_price': 2000, 'stock': 1})
+        self.assertEqual(res_post.status_code, status.HTTP_403_FORBIDDEN)
+
+        # 2. Staff read has cost_price and profit stripped
+        res_get = self.client.get(f'/api/products/{prod.id}/')
+        self.assertEqual(res_get.status_code, status.HTTP_200_OK)
+        self.assertNotIn('cost_price', res_get.data)
+        self.assertNotIn('profit_margin', res_get.data)
+
+        # 3. Admin read includes cost_price and profit
+        self.client.force_authenticate(user=self.admin)
+        res_admin = self.client.get(f'/api/products/{prod.id}/')
+        self.assertEqual(res_admin.status_code, status.HTTP_200_OK)
+        self.assertIn('cost_price', res_admin.data)
+        self.assertEqual(float(res_admin.data['cost_price']), 5000.00)
+
+    def test_price_validation_selling_price_cannot_exceed_mrp(self):
+        """Selling price exceeding MRP is rejected with 400 Bad Request"""
+        self.client.force_authenticate(user=self.admin)
+        payload = {
+            'name': 'Overpriced Watch',
+            'brand': 'Titan',
+            'category': 'analog',
+            'cost_price': '2000.00',
+            'selling_price': '7000.00',
+            'mrp': '5000.00',  # Selling price > MRP!
+            'stock': 5
+        }
+        res = self.client.post('/api/products/', payload, format='json')
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('selling_price', res.data)
+
+    def test_product_deletion_historical_sales_protection(self):
+        """Hard delete is blocked by PROTECT when product has historical sales"""
+        from apps.sales.models import Sale, SaleItem
+        from django.db.models import ProtectedError
+
+        prod = Product.objects.create(
+            name='Historical Sale Watch',
+            brand=self.brand_titan,
+            category=self.cat_analog,
+            cost_price=3000.00,
+            selling_price=5000.00,
+            stock=10
+        )
+        sale = Sale.objects.create(
+            total_amount=5000.00,
+            payment_mode='cash'
+        )
+        SaleItem.objects.create(
+            sale=sale,
+            product=prod,
+            quantity=1,
+            unit_price=5000.00,
+            cost_price=3000.00,
+            subtotal=5000.00
+        )
+
+        with self.assertRaises(ProtectedError):
+            prod.delete()
+
 
 
 

@@ -5,7 +5,9 @@ from decimal import Decimal
 from unittest.mock import patch
 from apps.users.models import User
 from apps.crm.models import Customer
-from apps.repairs.models import Repair
+from apps.products.models import Product, Brand, Category
+from apps.purchasing.models import StockMovement
+from apps.repairs.models import Repair, RepairPart
 from apps.notifications.models import Notification
 from apps.core.settings_models import BusinessSettings
 from apps.notifications.tasks import send_repair_notification_task
@@ -185,3 +187,162 @@ class RepairAtelierIntegrationTests(TestCase):
         res = send_repair_notification_task(repair.id, 'delivered')
         self.assertEqual(res['status'], 'skipped')
         self.assertEqual(Notification.objects.filter(customer=self.customer).count(), 0)
+
+    def test_concurrency_safe_ticket_number_generation(self):
+        """Repair ticket number candidate generation is unique and handles collisions"""
+        num1 = Repair.generate_ticket_number()
+        repair1 = Repair.objects.create(
+            ticket_number=num1,
+            customer=self.customer,
+            item_type='Watch',
+            issue_description='Battery',
+            created_by=self.staff_user
+        )
+        num2 = Repair.generate_ticket_number()
+        self.assertNotEqual(num1, num2)
+        repair2 = Repair.objects.create(
+            customer=self.customer,
+            item_type='Watch',
+            issue_description='Crystal glass',
+            created_by=self.staff_user
+        )
+        self.assertTrue(repair2.ticket_number.startswith('REP-'))
+        self.assertNotEqual(repair1.ticket_number, repair2.ticket_number)
+
+    def test_technician_assignment_and_service_type(self):
+        """Technician assignment and service type updates reflect accurately on repair ticket"""
+        repair = Repair.objects.create(
+            customer=self.customer,
+            item_type='Automatic Watch',
+            brand='Tissot',
+            issue_description='Mainspring slipped',
+            service_type='movement_overhaul',
+            created_by=self.staff_user
+        )
+        self.client.force_authenticate(user=self.staff_user)
+
+        res = self.client.patch(f'/api/repairs/{repair.id}/update_status/', {
+            'status': 'in_repair',
+            'assigned_technician': self.staff_user.id,
+            'diagnosis_notes': 'Balance wheel amplitude 220 degrees, overhaul required'
+        })
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        repair.refresh_from_db()
+        self.assertEqual(repair.assigned_technician, self.staff_user)
+        self.assertEqual(repair.status, 'in_repair')
+        self.assertIn('amplitude 220', repair.diagnosis_notes)
+
+    def test_spare_part_consumption_and_inventory_ledger(self):
+        """Consuming spare parts deducts stock from inventory ledger, and removing restores stock"""
+        brand = Brand.objects.create(name='Renata Swiss')
+        category = Category.objects.create(name='Consumables & Spares', slug='spares')
+        battery = Product.objects.create(
+            name='Renata 377 Silver Oxide Battery',
+            brand=brand,
+            category=category,
+            cost_price=Decimal('120.00'),
+            selling_price=Decimal('350.00'),
+            stock=15
+        )
+
+        repair = Repair.objects.create(
+            customer=self.customer,
+            item_type='Quartz Chronograph',
+            brand='Seiko',
+            issue_description='Battery dead',
+            service_type='battery_replacement',
+            repair_charge=Decimal('100.00'),
+            status='in_repair',
+            created_by=self.staff_user
+        )
+
+        self.client.force_authenticate(user=self.staff_user)
+
+        # 1. Add spare part
+        add_res = self.client.post(f'/api/repairs/{repair.id}/add_part/', {
+            'product_id': battery.id,
+            'quantity': 2,
+            'charge_to_customer': '350.00',
+            'notes': 'High-drain silver oxide cell'
+        })
+        self.assertEqual(add_res.status_code, status.HTTP_201_CREATED)
+        part_id = add_res.data['id']
+
+        # Verify stock decreased by 2
+        battery.refresh_from_db()
+        self.assertEqual(battery.stock, 13)
+
+        # Verify StockMovement ledger
+        movement = StockMovement.objects.filter(
+            product=battery,
+            movement_type='repair_part_used',
+            reference_id=repair.ticket_number
+        ).first()
+        self.assertIsNotNone(movement)
+        self.assertEqual(movement.quantity_out, 2)
+        self.assertEqual(movement.resulting_balance, 13)
+
+        # Verify Repair updated
+        repair.refresh_from_db()
+        self.assertEqual(repair.parts_used.count(), 1)
+        # Charge was 100.00 + (350 * 2) = 800.00
+        self.assertEqual(repair.repair_charge, Decimal('800.00'))
+
+        # 2. Remove spare part
+        del_res = self.client.delete(f'/api/repairs/{repair.id}/remove_part/?part_id={part_id}')
+        self.assertEqual(del_res.status_code, status.HTTP_200_OK)
+
+        # Verify stock restored to 15
+        battery.refresh_from_db()
+        self.assertEqual(battery.stock, 15)
+
+        # Verify return movement in ledger
+        return_mv = StockMovement.objects.filter(
+            product=battery,
+            movement_type='repair_part_returned',
+            reference_id=repair.ticket_number
+        ).first()
+        self.assertIsNotNone(return_mv)
+        self.assertEqual(return_mv.quantity_in, 2)
+        self.assertEqual(return_mv.resulting_balance, 15)
+
+    def test_granular_workshop_lifecycle_stages(self):
+        """Repair progresses smoothly across full workshop lifecycle including QC and testing"""
+        repair = Repair.objects.create(
+            customer=self.customer,
+            item_type='Diver 300M',
+            brand='Omega',
+            issue_description='Gaskets dry rot and pressure leak',
+            status='received',
+            created_by=self.staff_user
+        )
+
+        self.client.force_authenticate(user=self.staff_user)
+
+        # diagnosing
+        r1 = self.client.patch(f'/api/repairs/{repair.id}/update_status/', {
+            'status': 'diagnosing',
+            'notes': 'Disassembled case and inspected movement'
+        })
+        self.assertEqual(r1.status_code, status.HTTP_200_OK)
+        repair.refresh_from_db()
+        self.assertEqual(repair.status, 'diagnosing')
+
+        # awaiting_approval
+        r2 = self.client.patch(f'/api/repairs/{repair.id}/update_status/', {
+            'status': 'awaiting_approval',
+            'repair_charge': '8500.00'
+        })
+        self.assertEqual(r2.status_code, status.HTTP_200_OK)
+        repair.refresh_from_db()
+        self.assertEqual(repair.status, 'awaiting_approval')
+
+        # testing with QC passed
+        r3 = self.client.patch(f'/api/repairs/{repair.id}/update_status/', {
+            'status': 'testing',
+            'qc_passed': True
+        })
+        self.assertEqual(r3.status_code, status.HTTP_200_OK)
+        repair.refresh_from_db()
+        self.assertEqual(repair.status, 'testing')
+        self.assertTrue(repair.qc_passed)

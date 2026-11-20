@@ -364,6 +364,29 @@ class SalesTransactionIntegrityTests(TestCase):
         self.assertEqual(admin_today.status_code, status.HTTP_200_OK)
         self.assertEqual(admin_today.data['total_profit'], Decimal('3500.00'))
 
+    def test_concurrency_safe_invoice_number_generation(self):
+        """Invoice generation creates unique sequential numbers and skips duplicates"""
+        inv1 = Sale.generate_invoice_number()
+        sale1 = Sale.objects.create(
+            invoice_number=inv1,
+            total_amount=Decimal('8500.00'),
+            profit=Decimal('3500.00'),
+            payment_mode='cash',
+            customer=self.customer,
+            created_by=self.admin
+        )
+        inv2 = Sale.generate_invoice_number()
+        self.assertNotEqual(inv1, inv2)
+        sale2 = Sale.objects.create(
+            total_amount=Decimal('8500.00'),
+            profit=Decimal('3500.00'),
+            payment_mode='cash',
+            customer=self.customer,
+            created_by=self.admin
+        )
+        self.assertTrue(sale2.invoice_number.startswith('INV-'))
+        self.assertNotEqual(sale1.invoice_number, sale2.invoice_number)
+
     def test_loyalty_point_redemption_in_pos_transaction(self):
         """Redeeming loyalty points applies atomic discount, updates customer points, and awards points on net paid amount"""
         self.client.force_authenticate(user=self.staff)
@@ -409,3 +432,179 @@ class SalesTransactionIntegrityTests(TestCase):
         # Stock must NOT be decremented again
         self.product.refresh_from_db()
         self.assertEqual(self.product.stock, initial_stock - 1)
+
+    def test_sale_search_filter_by_invoice_and_customer(self):
+        """Global Search filter on SaleViewSet accurately filters by invoice number and customer name"""
+        self.client.force_authenticate(user=self.staff)
+        sale1 = Sale.objects.create(
+            total_amount=Decimal('8500.00'),
+            profit=Decimal('3500.00'),
+            payment_mode='cash',
+            customer=self.customer,
+            created_by=self.admin
+        )
+        sale2 = Sale.objects.create(
+            total_amount=Decimal('12000.00'),
+            profit=Decimal('4000.00'),
+            payment_mode='upi',
+            customer=None,
+            created_by=self.admin
+        )
+
+        # Search by customer name
+        res = self.client.get(f'/api/sales/?search={self.customer.name}')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        results = res.data.get('results', res.data)
+        invoices = [s['invoice_number'] for s in results]
+        self.assertIn(sale1.invoice_number, invoices)
+        self.assertNotIn(sale2.invoice_number, invoices)
+
+        # Search by invoice number
+        res2 = self.client.get(f'/api/sales/?search={sale2.invoice_number}')
+        self.assertEqual(res2.status_code, status.HTTP_200_OK)
+        results2 = res2.data.get('results', res2.data)
+        invoices2 = [s['invoice_number'] for s in results2]
+        self.assertIn(sale2.invoice_number, invoices2)
+        self.assertNotIn(sale1.invoice_number, invoices2)
+
+    def test_sale_return_workflow_and_ledger(self):
+        """Customer return workflow accurately restocks inventory and writes to the immutable ledger"""
+        from apps.purchasing.models import StockMovement
+        self.client.force_authenticate(user=self.staff)
+
+        # Create a sale with 2 items
+        sale_res = self.client.post('/api/sales/', {
+            'customer_id': self.customer.id,
+            'payment_mode': 'cash',
+            'items': [{'product_id': self.product.id, 'quantity': 2, 'unit_price': '8500.00'}]
+        }, format='json')
+        self.assertEqual(sale_res.status_code, status.HTTP_201_CREATED)
+        sale_id = sale_res.data['id']
+        sale_item_id = sale_res.data['items'][0]['id']
+
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.stock, 3)  # 5 - 2 = 3
+
+        # Verify warranty was created with unique code
+        warranty = Warranty.objects.get(sale_id=sale_id, product=self.product)
+        self.assertTrue(warranty.warranty_code.startswith('WR-'))
+        self.assertEqual(warranty.status, 'active')
+
+        # Process partial return of 1 item (resellable)
+        return_payload = {
+            'refund_mode': 'cash',
+            'reason': 'Wrong color preference chosen by buyer',
+            'items': [
+                {
+                    'sale_item_id': sale_item_id,
+                    'quantity': 1,
+                    'condition': 'resellable'
+                }
+            ]
+        }
+        ret_res = self.client.post(f'/api/sales/{sale_id}/return/', return_payload, format='json')
+        self.assertEqual(ret_res.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(ret_res.data['return_number'].startswith('RET-'))
+        self.assertEqual(Decimal(str(ret_res.data['refund_amount'])), Decimal('8500.00'))
+
+        # Stock must increase to 4
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.stock, 4)
+
+        # Check immutable StockMovement record
+        movement = StockMovement.objects.filter(reference_id=ret_res.data['return_number'], movement_type='customer_return').first()
+        self.assertIsNotNone(movement)
+        self.assertEqual(movement.quantity_in, 1)
+        self.assertEqual(movement.previous_balance, 3)
+        self.assertEqual(movement.resulting_balance, 4)
+
+        # Warranty should still be active because 1 unit is still retained by customer
+        warranty.refresh_from_db()
+        self.assertEqual(warranty.status, 'active')
+
+        # Process return of the second item (damaged)
+        return_payload_2 = {
+            'refund_mode': 'cash',
+            'reason': 'Customer damaged bezel, returned for partial credit',
+            'items': [
+                {
+                    'sale_item_id': sale_item_id,
+                    'quantity': 1,
+                    'condition': 'damaged'
+                }
+            ]
+        }
+        ret_res_2 = self.client.post(f'/api/sales/{sale_id}/return/', return_payload_2, format='json')
+        self.assertEqual(ret_res_2.status_code, status.HTTP_201_CREATED)
+
+        # Stock for damaged return is inward then outward write-off, so physical sellable stock remains 4
+        self.product.refresh_from_db()
+        self.assertEqual(self.product.stock, 4)
+
+        # Warranty should now be voided because 100% of units were returned
+        warranty.refresh_from_db()
+        self.assertEqual(warranty.status, 'voided')
+
+    def test_over_return_prevention(self):
+        """Cannot return more than the purchased quantity"""
+        self.client.force_authenticate(user=self.staff)
+
+        sale_res = self.client.post('/api/sales/', {
+            'customer_id': self.customer.id,
+            'payment_mode': 'cash',
+            'items': [{'product_id': self.product.id, 'quantity': 1, 'unit_price': '8500.00'}]
+        }, format='json')
+        sale_id = sale_res.data['id']
+        sale_item_id = sale_res.data['items'][0]['id']
+
+        # Attempt to return 2 units when only 1 was purchased
+        invalid_return = {
+            'refund_mode': 'cash',
+            'reason': 'Excess return attempt',
+            'items': [{'sale_item_id': sale_item_id, 'quantity': 2, 'condition': 'resellable'}]
+        }
+        res = self.client.post(f'/api/sales/{sale_id}/return/', invalid_return, format='json')
+        self.assertEqual(res.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_warranty_claim_and_voiding_lifecycle(self):
+        """Warranty claims can be filed and linked to repairs, and administratively voided"""
+        self.client.force_authenticate(user=self.staff)
+
+        # Create sale with customer
+        sale_res = self.client.post('/api/sales/', {
+            'customer_id': self.customer.id,
+            'payment_mode': 'card',
+            'items': [{'product_id': self.product.id, 'quantity': 1, 'unit_price': '8500.00'}]
+        }, format='json')
+        sale_id = sale_res.data['id']
+
+        warranty = Warranty.objects.get(sale_id=sale_id, product=self.product)
+        self.assertEqual(warranty.status, 'active')
+
+        # Create a repair ticket for this customer
+        repair = Repair.objects.create(
+            customer=self.customer,
+            item_type='Watch',
+            brand='Casio',
+            issue_description='Second hand sticking at 12 oclock',
+            created_by=self.staff
+        )
+
+        # File a warranty claim linking the repair
+        claim_payload = {
+            'issue_description': 'Mechanical movement defect covered under warranty',
+            'repair_id': repair.id,
+            'covered_amount': '1500.00'
+        }
+        claim_res = self.client.post(f'/api/sales/warranties/{warranty.id}/claim/', claim_payload, format='json')
+        self.assertEqual(claim_res.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(claim_res.data['claim_number'].startswith('CLM-'))
+
+        warranty.refresh_from_db()
+        self.assertEqual(warranty.status, 'claimed')
+
+        repair.refresh_from_db()
+        self.assertEqual(repair.warranty, warranty)
+        self.assertTrue(repair.is_warranty_repair)
+
+

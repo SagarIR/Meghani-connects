@@ -167,10 +167,15 @@ export function formatDateForExport(date: string | Date): string {
  * Common export column definitions
  */
 export const productExportColumns: ExportColumn[] = [
+  { key: 'article_code', header: 'Article Code' },
   { key: 'name', header: 'Product Name' },
   { key: 'brand', header: 'Brand' },
   { key: 'category', header: 'Category' },
+  { key: 'subcategory', header: 'Subcategory' },
+  { key: 'model_number', header: 'Model Number' },
+  { key: 'size', header: 'Size' },
   { key: 'barcode', header: 'Barcode' },
+  { key: 'mrp', header: 'MRP', transform: (v) => formatCurrencyForExport(v) },
   { key: 'cost_price', header: 'Cost Price', transform: (v) => formatCurrencyForExport(v) },
   { key: 'selling_price', header: 'Selling Price', transform: (v) => formatCurrencyForExport(v) },
   { key: 'profit_margin', header: 'Profit Margin', transform: (v) => formatCurrencyForExport(v) },

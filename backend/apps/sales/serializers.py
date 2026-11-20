@@ -3,19 +3,27 @@ from django.db import transaction
 from django.utils import timezone
 from dateutil.relativedelta import relativedelta
 from decimal import Decimal
-from .models import Sale, SaleItem, Warranty
+from .models import Sale, SaleItem, SaleReturn, SaleReturnItem, Warranty, WarrantyClaim
 from apps.products.models import Product
 from apps.crm.models import Customer
 
 
 class SaleItemSerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
-    product_brand = serializers.CharField(source='product.brand', read_only=True)
+    product_brand = serializers.CharField(source='product.brand_name', read_only=True)
+    product_category = serializers.CharField(source='product.category_name', read_only=True)
+    product_article_code = serializers.CharField(source='product.article_code', read_only=True)
+    returned_quantity = serializers.IntegerField(read_only=True)
+    returnable_quantity = serializers.IntegerField(read_only=True)
     item_profit = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
 
     class Meta:
         model = SaleItem
-        fields = ['id', 'product', 'product_name', 'product_brand', 'quantity', 'unit_price', 'cost_price', 'subtotal', 'item_profit']
+        fields = [
+            'id', 'product', 'product_name', 'product_brand', 'product_category',
+            'product_article_code', 'quantity', 'returned_quantity', 'returnable_quantity',
+            'unit_price', 'cost_price', 'subtotal', 'item_profit'
+        ]
         read_only_fields = ['cost_price', 'subtotal']
 
     def to_representation(self, instance):
@@ -35,20 +43,99 @@ class SaleItemCreateSerializer(serializers.Serializer):
     unit_price = serializers.DecimalField(max_digits=10, decimal_places=2)
 
 
+class WarrantyClaimSerializer(serializers.ModelSerializer):
+    created_by_name = serializers.CharField(source='created_by.name', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    repair_ticket = serializers.CharField(source='repair.ticket_number', read_only=True)
+
+    class Meta:
+        model = WarrantyClaim
+        fields = [
+            'id', 'claim_number', 'warranty', 'repair', 'repair_ticket', 'issue_description',
+            'claim_date', 'status', 'status_display', 'resolution_notes', 'covered_amount',
+            'created_by_name', 'created_at'
+        ]
+        read_only_fields = ['id', 'claim_number', 'created_at']
+
+
 class WarrantySerializer(serializers.ModelSerializer):
     product_name = serializers.CharField(source='product.name', read_only=True)
+    product_brand = serializers.CharField(source='product.brand_name', read_only=True)
+    product_article_code = serializers.CharField(source='product.article_code', read_only=True)
     customer_name = serializers.CharField(source='customer.name', read_only=True)
+    customer_phone = serializers.CharField(source='customer.phone', read_only=True)
+    sale_invoice_number = serializers.CharField(source='sale.invoice_number', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
     is_expired = serializers.BooleanField(read_only=True)
     days_remaining = serializers.IntegerField(read_only=True)
+    claims = WarrantyClaimSerializer(many=True, read_only=True)
 
     class Meta:
         model = Warranty
-        fields = ['id', 'product', 'product_name', 'customer', 'customer_name', 'warranty_months', 
-                  'start_date', 'expiry_date', 'serial_number', 'is_expired', 'days_remaining']
+        fields = [
+            'id', 'warranty_code', 'sale', 'sale_invoice_number', 'product', 'product_name',
+            'product_brand', 'product_article_code', 'customer', 'customer_name', 'customer_phone',
+            'warranty_months', 'start_date', 'expiry_date', 'status', 'status_display',
+            'serial_number', 'terms', 'is_expired', 'days_remaining', 'claims', 'created_at'
+        ]
+        read_only_fields = ['id', 'warranty_code', 'created_at']
+
+
+class SaleReturnItemSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    product_brand = serializers.CharField(source='product.brand_name', read_only=True)
+    product_article_code = serializers.CharField(source='product.article_code', read_only=True)
+    condition_display = serializers.CharField(source='get_condition_display', read_only=True)
+
+    class Meta:
+        model = SaleReturnItem
+        fields = [
+            'id', 'sale_item', 'product', 'product_name', 'product_brand',
+            'product_article_code', 'quantity', 'refund_amount', 'condition',
+            'condition_display', 'notes'
+        ]
+        read_only_fields = ['id']
+
+
+class SaleReturnSerializer(serializers.ModelSerializer):
+    sale_invoice_number = serializers.CharField(source='sale.invoice_number', read_only=True)
+    customer_name = serializers.CharField(source='customer.name', read_only=True)
+    created_by_name = serializers.CharField(source='created_by.name', read_only=True)
+    items = SaleReturnItemSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = SaleReturn
+        fields = [
+            'id', 'return_number', 'sale', 'sale_invoice_number', 'customer',
+            'customer_name', 'refund_amount', 'refund_mode', 'reason', 'status',
+            'created_by_name', 'items', 'created_at'
+        ]
+        read_only_fields = ['id', 'return_number', 'created_at']
+
+
+class ReturnItemInputSerializer(serializers.Serializer):
+    sale_item_id = serializers.IntegerField()
+    quantity = serializers.IntegerField(min_value=1)
+    condition = serializers.ChoiceField(choices=SaleReturnItem.CONDITION_CHOICES, default='resellable')
+    refund_amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    notes = serializers.CharField(required=False, allow_blank=True, default='')
+
+
+class SaleReturnCreateSerializer(serializers.Serializer):
+    items = ReturnItemInputSerializer(many=True)
+    refund_mode = serializers.ChoiceField(choices=SaleReturn.REFUND_CHOICES, default='cash')
+    reason = serializers.CharField(required=True)
+
+
+class WarrantyClaimCreateSerializer(serializers.Serializer):
+    issue_description = serializers.CharField(required=True)
+    repair_id = serializers.IntegerField(required=False, allow_null=True)
+    covered_amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=False, default=Decimal('0.00'))
 
 
 class SaleSerializer(serializers.ModelSerializer):
     items = SaleItemSerializer(many=True, read_only=True)
+    returns = SaleReturnSerializer(many=True, read_only=True)
     customer_name = serializers.CharField(source='customer.name', read_only=True)
     customer_phone = serializers.CharField(source='customer.phone', read_only=True)
     created_by_name = serializers.CharField(source='created_by.name', read_only=True)
@@ -58,7 +145,7 @@ class SaleSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'invoice_number', 'customer', 'customer_name', 'customer_phone',
             'total_amount', 'discount', 'tax', 'payment_mode', 'payment_details', 'profit', 'notes',
-            'sale_date', 'created_by', 'created_by_name', 'items'
+            'sale_date', 'created_by', 'created_by_name', 'items', 'returns'
         ]
         read_only_fields = ['invoice_number', 'profit', 'created_by']
 
@@ -269,14 +356,22 @@ class SaleCreateSerializer(serializers.Serializer):
             created_by=user,
         )
         
-        # Create sale items and update stock
+        # Create sale items and update stock via immutable ledger
+        from apps.purchasing.services import InventoryService
         for item in sale_items:
             product = item.pop('product')
             SaleItem.objects.create(sale=sale, product=product, **item)
             
-            # Deduct stock
-            product.stock -= item['quantity']
-            product.save()
+            # Deduct stock and record movement
+            InventoryService.record_movement(
+                product_or_id=product,
+                movement_type='sale',
+                qty_in=0,
+                qty_out=item['quantity'],
+                reference_id=sale.invoice_number,
+                reason=f"Sale Invoice #{sale.invoice_number}",
+                user=user
+            )
             
             # Create warranty if product has warranty
             if product.warranty_months > 0 and customer:

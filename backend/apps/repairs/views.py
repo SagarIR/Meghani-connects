@@ -5,8 +5,14 @@ from apps.users.permissions import CanManageRepairs
 from django.db.models import Count
 from django.utils import timezone
 from django.http import HttpResponse
-from .models import Repair
-from .serializers import RepairSerializer, RepairListSerializer, RepairStatusSerializer, RepairCreateSerializer
+from django.core.exceptions import ValidationError
+from apps.users.models import User
+from .models import Repair, RepairPart
+from .serializers import (
+    RepairSerializer, RepairListSerializer, RepairStatusSerializer,
+    RepairCreateSerializer, RepairPartSerializer, RepairPartAddSerializer
+)
+from .services import RepairService
 from apps.sales.invoice import generate_repair_invoice_pdf
 
 
@@ -59,37 +65,96 @@ class RepairViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['patch'])
     def update_status(self, request, pk=None):
-        """Update repair status across the 5-stage repair lifecycle"""
+        """Update repair status across the workshop repair lifecycle stages"""
         repair = self.get_object()
         serializer = RepairStatusSerializer(data=request.data)
         
         if serializer.is_valid():
-            old_status = repair.status
-            new_status = serializer.data['status']
-            
-            repair.status = new_status
-            
-            # Update repair charge if provided
-            if 'repair_charge' in serializer.data:
-                repair.repair_charge = serializer.data['repair_charge']
-            
-            # Add notes if provided
-            if serializer.data.get('notes'):
-                repair.notes = f"{repair.notes}\n[{timezone.now().strftime('%Y-%m-%d %H:%M')}] {serializer.data['notes']}"
-            
-            # Set delivered date if status is delivered
-            if new_status == 'delivered':
-                repair.delivered_date = timezone.now()
-            
-            repair.save()
-            
-            # Dispatch asynchronous status update notification if status changed
-            if old_status != new_status:
-                self._dispatch_repair_notification(repair, new_status)
-            
-            return Response(RepairSerializer(repair).data)
+            new_status = serializer.validated_data['status']
+            notes = serializer.validated_data.get('notes', '')
+            repair_charge = serializer.validated_data.get('repair_charge')
+            qc_passed = serializer.validated_data.get('qc_passed')
+            service_type = serializer.validated_data.get('service_type')
+            diagnosis_notes = serializer.validated_data.get('diagnosis_notes')
+
+            tech_id = serializer.validated_data.get('assigned_technician')
+            assigned_tech = None
+            if tech_id is not None:
+                assigned_tech = User.objects.filter(id=tech_id).first()
+
+            try:
+                repair, old_status = RepairService.transition_status(
+                    repair=repair,
+                    new_status=new_status,
+                    notes=notes,
+                    repair_charge=repair_charge,
+                    assigned_technician=assigned_tech,
+                    qc_passed=qc_passed,
+                    service_type=service_type,
+                    diagnosis_notes=diagnosis_notes,
+                    user=request.user
+                )
+
+                # Dispatch asynchronous status update notification if status changed
+                if old_status != new_status:
+                    self._dispatch_repair_notification(repair, new_status)
+
+                return Response(RepairSerializer(repair, context={'request': request}).data)
+            except ValidationError as e:
+                return Response({'error': str(e.message if hasattr(e, 'message') else e)}, status=status.HTTP_400_BAD_REQUEST)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def add_part(self, request, pk=None):
+        """
+        Consumes spare parts from catalog for this repair, automatically deducting
+        stock and creating an immutable StockMovement entry.
+        """
+        repair = self.get_object()
+        serializer = RepairPartAddSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        product = serializer.validated_data['product_id']
+        quantity = serializer.validated_data['quantity']
+        charge = serializer.validated_data.get('charge_to_customer')
+        notes = serializer.validated_data.get('notes', '')
+
+        try:
+            part = RepairService.add_spare_part(
+                repair=repair,
+                product=product,
+                quantity=quantity,
+                charge_to_customer=charge,
+                user=request.user,
+                notes=notes
+            )
+            return Response(RepairPartSerializer(part).data, status=status.HTTP_201_CREATED)
+        except ValidationError as e:
+            return Response({'error': str(e.message if hasattr(e, 'message') else e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['delete', 'post'])
+    def remove_part(self, request, pk=None):
+        """
+        Removes a spare part from this repair and returns the items back to inventory stock.
+        """
+        repair = self.get_object()
+        part_id = request.data.get('part_id') or request.query_params.get('part_id')
+        if not part_id:
+            return Response({'error': 'part_id is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            part = repair.parts_used.get(id=part_id)
+        except RepairPart.DoesNotExist:
+            return Response({'error': 'Repair part not found on this ticket'}, status=status.HTTP_404_NOT_FOUND)
+
+        RepairService.remove_spare_part(part, user=request.user)
+        return Response({'message': 'Repair part removed and returned to stock', 'part_id': int(part_id)})
+
+    @action(detail=False, methods=['get'])
+    def technicians(self, request):
+        """List of active staff and technicians available for job assignment"""
+        techs = User.objects.filter(is_active=True).values('id', 'name', 'username', 'role')
+        return Response(list(techs))
 
     def _dispatch_repair_notification(self, repair, status_event):
         """

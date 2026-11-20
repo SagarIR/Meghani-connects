@@ -17,10 +17,12 @@ import Badge from '@/components/ui/Badge'
 import clsx from 'clsx'
 import toast from 'react-hot-toast'
 
-type ReportType = 'sales' | 'products' | 'repairs' | 'expenses' | 'customers' | 'inventory'
+type ReportType = 'sales' | 'financial-statement' | 'gst' | 'products' | 'repairs' | 'expenses' | 'customers' | 'inventory'
 
 const reportConfig = {
   sales: { title: 'Sales & Revenue', icon: TrendingUp },
+  'financial-statement': { title: 'P&L Statement', icon: DollarSign },
+  gst: { title: 'GST & HSN Tax', icon: ShieldCheck },
   products: { title: 'Product Sales', icon: Package },
   repairs: { title: 'Watch Repair Income', icon: Wrench },
   expenses: { title: 'Store Expenses', icon: Wallet },
@@ -295,6 +297,276 @@ export default function ReportsPage() {
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* TAB: Financial Statement (P&L) */}
+          {activeReport === 'financial-statement' && (
+            <>
+              {/* 4 Financial Statement Cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Total Operating Revenue</span>
+                  <p className="text-xl sm:text-2xl font-bold font-mono text-[#F3EFE6] mt-1">
+                    {formatCurrency(reportData.revenue?.total_revenue || 0)}
+                  </p>
+                  <span className="text-[10px] text-[#8D8980] block mt-1">
+                    Sales Net ({formatCurrency(reportData.revenue?.sales_net || 0)}) + Repairs ({formatCurrency(reportData.revenue?.repairs_revenue || 0)})
+                  </span>
+                </div>
+
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Cost of Goods Sold (COGS)</span>
+                  {isManagement ? (
+                    <p className="text-xl sm:text-2xl font-bold font-mono text-rose-400 mt-1">
+                      {formatCurrency(reportData.cogs?.total_cogs || 0)}
+                    </p>
+                  ) : (
+                    <div className="flex items-center gap-1.5 mt-2 text-xs text-[#8D8980] font-mono">
+                      <Lock className="w-3.5 h-3.5 text-[#C9A45C]" />
+                      <span>Hidden for Staff</span>
+                    </div>
+                  )}
+                  <span className="text-[10px] text-[#8D8980] block mt-1">Product purchase acquisition costs</span>
+                </div>
+
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Gross Profit & Margin</span>
+                  {isManagement ? (
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <p className="text-xl sm:text-2xl font-bold font-mono text-[#C9A45C]">
+                        {formatCurrency(reportData.gross_profit || 0)}
+                      </p>
+                      <span className="text-xs font-mono font-bold text-emerald-400">
+                        {reportData.gross_margin_percentage || 0}%
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 mt-2 text-xs text-[#8D8980] font-mono">
+                      <Lock className="w-3.5 h-3.5 text-[#C9A45C]" />
+                      <span>Hidden for Staff</span>
+                    </div>
+                  )}
+                  <span className="text-[10px] text-[#8D8980] block mt-1">Revenue minus direct watch costs</span>
+                </div>
+
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Net Operating Profit</span>
+                  {isManagement ? (
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <p className={clsx(
+                        'text-xl sm:text-2xl font-bold font-mono',
+                        (reportData.net_profit || 0) >= 0 ? 'text-emerald-400' : 'text-rose-400'
+                      )}>
+                        {formatCurrency(reportData.net_profit || 0)}
+                      </p>
+                      <span className="text-xs font-mono font-bold text-[#E8D5A7]">
+                        {reportData.net_margin_percentage || 0}%
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-1.5 mt-2 text-xs text-[#8D8980] font-mono">
+                      <Lock className="w-3.5 h-3.5 text-[#C9A45C]" />
+                      <span>Hidden for Staff</span>
+                    </div>
+                  )}
+                  <span className="text-[10px] text-[#8D8980] block mt-1">After all store OPEX expenses</span>
+                </div>
+              </div>
+
+              {/* Detailed P&L Statement Table & Operating Expenses Breakdown */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl space-y-4">
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] flex items-center justify-between">
+                    <span>Store Profit & Loss Statement (P&L)</span>
+                    <span className="text-xs font-mono text-[#8D8980] font-normal">
+                      Period: {reportData.period?.start_date} to {reportData.period?.end_date}
+                    </span>
+                  </h3>
+
+                  <div className="divide-y divide-[#2A261F] text-xs">
+                    <div className="py-2.5 flex justify-between font-semibold text-[#F3EFE6]">
+                      <span>1. Gross Sales Revenue</span>
+                      <span className="font-mono">{formatCurrency(reportData.revenue?.sales_gross || 0)}</span>
+                    </div>
+                    <div className="py-2 pl-4 flex justify-between text-[#8D8980]">
+                      <span>Less: Customer Discounts</span>
+                      <span className="font-mono text-rose-400">-{formatCurrency(reportData.revenue?.sales_discounts || 0)}</span>
+                    </div>
+                    <div className="py-2.5 flex justify-between font-semibold text-[#F3EFE6]">
+                      <span>Net Sales (Pre-Tax)</span>
+                      <span className="font-mono">{formatCurrency(reportData.revenue?.sales_net || 0)}</span>
+                    </div>
+                    <div className="py-2.5 flex justify-between font-semibold text-[#F3EFE6]">
+                      <span>2. Watch Repairs & Workshop Revenue</span>
+                      <span className="font-mono text-emerald-400">+{formatCurrency(reportData.revenue?.repairs_revenue || 0)}</span>
+                    </div>
+                    <div className="py-2.5 flex justify-between font-bold text-[#C9A45C] bg-[#1F1E1A]/40 px-2 rounded-lg">
+                      <span>Total Operating Revenue</span>
+                      <span className="font-mono">{formatCurrency(reportData.revenue?.total_revenue || 0)}</span>
+                    </div>
+                    <div className="py-2.5 flex justify-between text-[#8D8980]">
+                      <span>Less: Cost of Goods Sold (COGS)</span>
+                      <span className="font-mono text-rose-400">-{formatCurrency(reportData.cogs?.total_cogs || 0)}</span>
+                    </div>
+                    <div className="py-2.5 flex justify-between font-bold text-[#F3EFE6] bg-[#1F1E1A]/40 px-2 rounded-lg">
+                      <span>Gross Trading Profit</span>
+                      <span className="font-mono text-[#C9A45C]">{formatCurrency(reportData.gross_profit || 0)} ({reportData.gross_margin_percentage || 0}%)</span>
+                    </div>
+                    <div className="py-2.5 flex justify-between text-[#8D8980]">
+                      <span>Less: Total Operating Expenses (OPEX)</span>
+                      <span className="font-mono text-rose-400">-{formatCurrency(reportData.operating_expenses?.total || 0)}</span>
+                    </div>
+                    <div className="py-3 flex justify-between font-bold text-sm bg-gradient-to-r from-emerald-950/40 to-transparent px-3 rounded-xl border border-emerald-800/30">
+                      <span className="text-emerald-400">Net Operating Profit</span>
+                      <span className="font-mono text-emerald-400">
+                        {formatCurrency(reportData.net_profit || 0)} ({reportData.net_margin_percentage || 0}%)
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl space-y-4">
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6]">
+                    Operating Expense Breakdown (OPEX)
+                  </h3>
+
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart 
+                        data={Object.entries(reportData.operating_expenses?.breakdown || {}).map(([cat, amt]) => ({
+                          category: cat.replace('_', ' ').toUpperCase(),
+                          amount: amt,
+                        }))}
+                        layout="vertical"
+                      >
+                        <CartesianGrid stroke="#2A261F" strokeDasharray="3 3" />
+                        <XAxis type="number" stroke="#8D8980" tick={{ fontSize: 10 }} />
+                        <YAxis dataKey="category" type="category" width={90} stroke="#8D8980" tick={{ fontSize: 9 }} />
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: '#171613', borderColor: '#2A261F', borderRadius: '12px', color: '#F3EFE6' }}
+                          formatter={(v: number) => formatCurrency(v)}
+                        />
+                        <Bar dataKey="amount" fill="#f43f5e" name="Expense Amount" radius={[0, 6, 6, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+
+                  <div className="space-y-1.5 pt-2 max-h-48 overflow-y-auto">
+                    {Object.entries(reportData.operating_expenses?.breakdown || {}).map(([cat, amt]: [string, any]) => (
+                      <div key={cat} className="flex justify-between items-center text-xs p-2 rounded-lg bg-[#12110F] border border-[#2A261F]">
+                        <span className="text-[#8D8980] uppercase text-[11px]">{cat.replace('_', ' ')}</span>
+                        <span className="font-mono font-bold text-[#F3EFE6]">{formatCurrency(amt)}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* TAB: GST & HSN Tax Compliance */}
+          {activeReport === 'gst' && (
+            <>
+              {/* GST KPI Cards */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Total Taxable Value</span>
+                  <p className="text-xl sm:text-2xl font-bold font-mono text-[#F3EFE6] mt-1">
+                    {formatCurrency(reportData.summary?.total_taxable_value || 0)}
+                  </p>
+                  <span className="text-[10px] text-[#8D8980] block mt-1">
+                    Across {reportData.summary?.total_transactions || 0} retail transactions
+                  </span>
+                </div>
+
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Central GST (CGST - 9%)</span>
+                  <p className="text-xl sm:text-2xl font-bold font-mono text-sky-400 mt-1">
+                    {formatCurrency(reportData.summary?.cgst_amount || 0)}
+                  </p>
+                  <span className="text-[10px] text-[#8D8980] block mt-1">Standard intra-state levy</span>
+                </div>
+
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">State GST (SGST - 9%)</span>
+                  <p className="text-xl sm:text-2xl font-bold font-mono text-indigo-400 mt-1">
+                    {formatCurrency(reportData.summary?.sgst_amount || 0)}
+                  </p>
+                  <span className="text-[10px] text-[#8D8980] block mt-1">Gujarat SGST component</span>
+                </div>
+
+                <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                  <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Total GST Collected</span>
+                  <p className="text-xl sm:text-2xl font-bold font-mono text-[#C9A45C] mt-1">
+                    {formatCurrency(reportData.summary?.total_tax_amount || 0)}
+                  </p>
+                  <span className="text-[10px] text-[#8D8980] block mt-1">Invoice Value: {formatCurrency(reportData.summary?.total_invoice_value || 0)}</span>
+                </div>
+              </div>
+
+              {/* B2C Retail Summary & HSN Breakdown Table */}
+              <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#2A261F] pb-3">
+                  <div>
+                    <h3 className="font-serif font-bold text-base text-[#F3EFE6] flex items-center gap-2">
+                      <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                      GSTR-1 HSN-Wise Summary of Outward Supplies
+                    </h3>
+                    <p className="text-xs text-[#8D8980]">
+                      Categorized according to Indian GST Tariff Chapter 91 (Clocks, watches and parts)
+                    </p>
+                  </div>
+                  <Badge variant="success">B2C Retail Eligible</Badge>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-xs min-w-[700px]">
+                    <thead className="bg-[#12110F] text-[#8D8980] uppercase text-[10px] tracking-wider border-b border-[#2A261F]">
+                      <tr>
+                        <th className="px-4 py-3 text-left">HSN Code</th>
+                        <th className="px-4 py-3 text-left">Description</th>
+                        <th className="px-4 py-3 text-right">Units</th>
+                        <th className="px-4 py-3 text-right">Taxable Value</th>
+                        <th className="px-4 py-3 text-center">Rate</th>
+                        <th className="px-4 py-3 text-right">CGST (9%)</th>
+                        <th className="px-4 py-3 text-right">SGST (9%)</th>
+                        <th className="px-4 py-3 text-right">Total GST</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[#2A261F]">
+                      {(reportData.hsn_summary || []).map((hsn: any) => (
+                        <tr key={hsn.hsn_code} className="hover:bg-[#1F1E1A]/40 transition-colors">
+                          <td className="px-4 py-3.5 font-mono font-bold text-[#C9A45C]">
+                            {hsn.hsn_code}
+                          </td>
+                          <td className="px-4 py-3.5 text-[#F3EFE6] font-medium">
+                            {hsn.description}
+                          </td>
+                          <td className="px-4 py-3.5 text-right font-mono text-[#8D8980]">
+                            {hsn.quantity}
+                          </td>
+                          <td className="px-4 py-3.5 text-right font-mono font-bold text-[#F3EFE6]">
+                            {formatCurrency(hsn.taxable_value)}
+                          </td>
+                          <td className="px-4 py-3.5 text-center font-mono text-[#8D8980]">
+                            {hsn.tax_rate}%
+                          </td>
+                          <td className="px-4 py-3.5 text-right font-mono text-sky-400">
+                            {formatCurrency(hsn.cgst_amount)}
+                          </td>
+                          <td className="px-4 py-3.5 text-right font-mono text-indigo-400">
+                            {formatCurrency(hsn.sgst_amount)}
+                          </td>
+                          <td className="px-4 py-3.5 text-right font-mono font-bold text-[#C9A45C]">
+                            {formatCurrency(hsn.total_tax)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </>

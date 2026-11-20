@@ -16,7 +16,7 @@
 | In-Store ERP / POS Dashboard Pages | **COMPLETED** | Pages `/dashboard`, `/products`, `/sales`, `/sales/history`, `/repairs`, `/customers`, `/expenses`, `/reports`, `/analytics`, `/notifications`, `/settings`, `/website-cms`. | None. |
 | Reusable UI Component Library | **COMPLETED** | `Button.tsx`, `Modal.tsx`, `Badge.tsx`, `Input.tsx`, `SortableHeader.tsx`, `Pagination.tsx`, `ExportButton.tsx`. | None. |
 | Axios Client & JWT Interceptor | **COMPLETED** | `frontend/src/services/api.ts` handles Bearer token injection and automatic 401 refresh rotation. | None. |
-| Global Search & Keyboard Shortcuts | **PARTIALLY COMPLETED** | `GlobalSearch.tsx` (hotkey `/`) and `KeyboardShortcutsModal.tsx` (hotkey `?`) active. | Connect backend `filters.SearchFilter` to `SaleViewSet` in `apps/sales/views.py`. |
+| Global Search & Keyboard Shortcuts | **COMPLETED** | `GlobalSearch.tsx` (hotkey `/`) and `KeyboardShortcutsModal.tsx` (hotkey `?`) active. Backend `SaleViewSet` configured with `filters.SearchFilter` and `search_fields`. | None. |
 | Public Digital Boutique Route Cluster | **COMPLETED** | 11 public luxury pages (`/`, `/shop`, `/brands`, `/categories`, `/offers`, `/gallery`, `/about`, `/contact`, `/privacy-policy`, `/terms`). | None. |
 | Component Hygiene & Dead Code Cleanup | **PARTIALLY COMPLETED** | `Header.tsx` integrated into layout. 5 orphaned components remain (`InvoiceTemplate.tsx`, `BulkActionsBar.tsx`, `useBulkSelection.ts`, `FormField.tsx`, `LoadingSpinner.tsx`) and 6 empty route folders (`products/new`, `products/[id]`, etc.). | Delete or archive unreferenced components and empty stubs. |
 

@@ -34,20 +34,20 @@ The repository hosts three interconnected applications in a unified monorepo:
 All documentation is maintained under the [`docs/`](./docs/00-overview.md) directory.
 
 ### Core Tracking & Architecture
-- **[PROJECT_EXECUTION_TRACKER.md](./docs/PROJECT_EXECUTION_TRACKER.md)** — **The authoritative single source of truth** for all 8 development phases, 60 mapped tasks, progress metrics (81.67% verified complete: 49/60 tasks), blocker tracking, and upcoming milestones.
+- **[PROJECT_EXECUTION_TRACKER.md](./docs/PROJECT_EXECUTION_TRACKER.md)** — **The authoritative single source of truth** for all 8 development phases, 60 mapped tasks, progress metrics (90.00% verified complete: 54/60 tasks), blocker tracking, and upcoming milestones.
 - **[ARCHITECTURE_REPORT.md](./docs/architecture/ARCHITECTURE_REPORT.md)** — Comprehensive architectural breakdown of the Public Boutique, Saff Staff Portal, and Django ERP engine.
 - **[DEPLOY.md](./docs/deployment/DEPLOY.md)** — Step-by-step production deployment manual, environment configuration, systemd services, and offline-first synchronization setup.
 - **[00-overview.md](./docs/00-overview.md)** — High-level project index, core features, and module matrix.
 
 ### Phase Specifications (Phases 1 to 8)
 - **[Phase 1: Setup & Environment Architecture](./docs/01-phase-1-setup.md)** — Environment bootstrap, monorepo layout, Docker Compose, Next.js / Django initialisation. *(Status: PARTIALLY COMPLETED 85.7% - 6/7 tasks)*
-- **[Phase 2: Backend Core Architecture](./docs/02-phase-2-backend.md)** — Django REST Framework, JWT authentication, custom user models, core middleware. *(Status: PARTIALLY COMPLETED 50.0% - 3/6 tasks)*
-- **[Phase 3: Frontend Architecture](./docs/03-phase-3-frontend.md)** — Next.js 14 App Router layout, dual public/staff routes, UI component library, animations. *(Status: PARTIALLY COMPLETED 71.4% - 5/7 tasks)*
+- **[Phase 2: Backend Core Architecture](./docs/02-phase-2-backend.md)** — Django REST Framework, JWT authentication, custom user models, WhiteNoise, core middleware. *(Status: COMPLETED 83.3% - 5/6 tasks)*
+- **[Phase 3: Frontend Architecture](./docs/03-phase-3-frontend.md)** — Next.js 14 App Router layout, dual public/staff routes, UI component library, Global Search. *(Status: PARTIALLY COMPLETED 85.7% - 6/7 tasks)*
 - **[Phase 4: Database Schema & Relational Models](./docs/04-phase-4-database.md)** — PostgreSQL schemas, migrations, composite indices, foreign keys, constraints. *(Status: COMPLETED 100% - 9/9 tasks)*
 - **[Phase 5: Module Development & Business Logic](./docs/05-phase-5-modules.md)** — POS & Billing, Inventory & Serials, CRM & Loyalty, Repair Job Ticketing, RBAC. *(Status: COMPLETED 100% - 11/11 tasks)*
 - **[Phase 6: Reports, Financials & Analytics](./docs/06-phase-6-reports.md)** — GST ledgers, Profit & Loss reporting, Excel/PDF export engines, Chart dashboards. *(Status: COMPLETED 100% - 6/6 tasks)*
 - **[Phase 7: AI Automation & Notifications](./docs/07-phase-7-ai.md)** — WhatsApp/SMS gateways, Celery Beat tasks, Prophet predictive analytics, Smart ROP. *(Status: PARTIALLY COMPLETED 75.0% - 6/8 tasks)*
-- **[Phase 8: Deployment & Production Ops](./docs/08-phase-8-deployment.md)** — Docker Compose configuration, Cloudinary CDN, automated daily backups. *(Status: PARTIALLY COMPLETED 50.0% - 3/6 tasks)*
+- **[Phase 8: Deployment & Production Ops](./docs/08-phase-8-deployment.md)** — Multi-container Docker Compose, Next.js standalone runner, WhiteNoise static files, Cloudinary CDN. *(Status: COMPLETED 83.3% - 5/6 tasks)*
 
 ---
 
@@ -81,9 +81,12 @@ Meghani-Connects/
 │   │   ├── analytics/              # AI forecasting, reports, Celery tasks
 │   │   ├── core/                   # Base models, audit logging, health checks
 │   │   ├── crm/                    # Customers, loyalty points, communication logs
-│   │   ├── products/               # Watches, categories, brands, inventory
-│   │   ├── repairs/                # Repair job tickets, service status, warranty
-│   │   ├── sales/                  # Orders, invoices, payments, POS transactions
+│   │   ├── expenses/               # Expense vouchers, cash register till reconciliation
+│   │   ├── notifications/          # Twilio WhatsApp & SMS alerts, Celery tasks
+│   │   ├── products/               # Watches, normalized categories, brands, inventory
+│   │   ├── purchasing/             # Suppliers, POs, Goods Receipts, StockMovement ledger
+│   │   ├── repairs/                # 8-stage repair job tickets, horologist assignment, spare parts
+│   │   ├── sales/                  # Orders, invoices, sales returns, warranties & claims
 │   │   └── users/                  # Custom User model, staff profiles, RBAC
 │   ├── core/                       # Django root project configuration & settings
 │   ├── manage.py
@@ -172,23 +175,23 @@ node frontend/test-advanced-analytics.js    # 6 AI Forecasting & Anomaly tests
 ## Development Progress Dashboard
 
 ```
-Overall Verified Completion: 81.67% (49 of 60 Tasks Verified Complete)
-├── Completed:          49 Tasks (81.67%)
-├── Partially Complete:  8 Tasks (13.33%)
+Overall Verified Completion: 90.00% (54 of 60 Tasks Verified Complete)
+├── Completed:          54 Tasks (90.00%)
+├── Partially Complete:  3 Tasks ( 5.00%)
 └── Pending:             3 Tasks ( 5.00%)
 ```
 
 | Phase | Description | Total Tasks | Done | Partial | Pending | Blocked | Status |
 |:-----:|:------------|:-----------:|:----:|:-------:|:-------:|:-------:|:------:|
 | **1** | [Setup & Environment Architecture](./docs/01-phase-1-setup.md) | 7 | 6 | 1 | 0 | 0 | **PARTIALLY COMPLETED** (85.7%) |
-| **2** | [Backend Core Architecture](./docs/02-phase-2-backend.md) | 6 | 3 | 2 | 1 | 0 | **PARTIALLY COMPLETED** (50.0%) |
-| **3** | [Frontend Architecture](./docs/03-phase-3-frontend.md) | 7 | 5 | 2 | 0 | 0 | **PARTIALLY COMPLETED** (71.4%) |
+| **2** | [Backend Core Architecture](./docs/02-phase-2-backend.md) | 6 | 5 | 0 | 1 | 0 | **COMPLETED** (83.3%) |
+| **3** | [Frontend Architecture](./docs/03-phase-3-frontend.md) | 7 | 6 | 1 | 0 | 0 | **PARTIALLY COMPLETED** (85.7%) |
 | **4** | [Database Schema & Models](./docs/04-phase-4-database.md) | 9 | 9 | 0 | 0 | 0 | **COMPLETED** (100.0%) |
 | **5** | [Module Development & POS](./docs/05-phase-5-modules.md) | 11 | 11 | 0 | 0 | 0 | **COMPLETED** (100.0%) |
 | **6** | [Reports & Analytics](./docs/06-phase-6-reports.md) | 6 | 6 | 0 | 0 | 0 | **COMPLETED** (100.0%) |
 | **7** | [AI Automation & Notifications](./docs/07-phase-7-ai.md) | 8 | 6 | 1 | 1 | 0 | **PARTIALLY COMPLETED** (75.0%) |
-| **8** | [Deployment & Operations](./docs/08-phase-8-deployment.md) | 6 | 3 | 2 | 1 | 0 | **PARTIALLY COMPLETED** (50.0%) |
-| **TOTAL** | **8 Technical Phases** | **60** | **49** | **8** | **3** | **0** | **81.67% VERIFIED** |
+| **8** | [Deployment & Operations](./docs/08-phase-8-deployment.md) | 6 | 5 | 0 | 1 | 0 | **COMPLETED** (83.3%) |
+| **TOTAL** | **8 Technical Phases** | **60** | **54** | **3** | **3** | **0** | **90.00% VERIFIED** |
 
 For the complete task-by-task breakdown, evidence paths, and next implementation priorities, refer to [`docs/PROJECT_EXECUTION_TRACKER.md`](./docs/PROJECT_EXECUTION_TRACKER.md).
 

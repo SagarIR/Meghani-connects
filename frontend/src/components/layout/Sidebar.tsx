@@ -7,7 +7,7 @@ import clsx from 'clsx'
 import { 
   LayoutDashboard, ShoppingCart, Package, Wrench, 
   Users, Wallet, BarChart3, Settings, Watch, LogOut, 
-  History, Bell, ChevronRight, X, Globe, Shield, User as UserIcon, Sparkles
+  History, Bell, ChevronRight, X, Globe, Shield, ShieldCheck, User as UserIcon, Sparkles, Truck
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
 
@@ -31,6 +31,7 @@ const navSections: NavSection[] = [
       { name: 'POS Terminal', href: '/sales', icon: ShoppingCart },
       { name: 'Sales History', href: '/sales/history', icon: History },
       { name: 'Products & Inventory', href: '/products', icon: Package },
+      { name: 'Purchasing & Ledger', href: '/purchasing', icon: Truck },
       { name: 'Watch Repairs', href: '/repairs', icon: Wrench },
     ]
   },
@@ -38,6 +39,7 @@ const navSections: NavSection[] = [
     title: 'Customers & Finance',
     items: [
       { name: 'Customers & CRM', href: '/customers', icon: Users },
+      { name: 'Warranties & Claims', href: '/warranties', icon: ShieldCheck },
       { name: 'Store Expenses', href: '/expenses', icon: Wallet },
       { name: 'AI & Business Intelligence', href: '/analytics', icon: Sparkles, badge: 'AI 360' },
       { name: 'Reports & Analytics', href: '/reports', icon: BarChart3 },

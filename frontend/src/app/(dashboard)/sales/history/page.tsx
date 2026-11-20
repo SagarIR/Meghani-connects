@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { 
   Search, Calendar, Download, Eye, ShoppingCart, Receipt, 
   CreditCard, Smartphone, Banknote, Split, Lock, Filter,
-  ArrowUpRight, Clock, User, CheckCircle2, FileText
+  ArrowUpRight, Clock, User, CheckCircle2, FileText, RotateCcw
 } from 'lucide-react'
 import { api } from '@/services/api'
 import { Sale } from '@/types'
@@ -33,6 +33,12 @@ export default function SalesHistoryPage() {
   const [selectedSale, setSelectedSale] = useState<Sale | null>(null)
   const [showDetailModal, setShowDetailModal] = useState(false)
   const [downloadingId, setDownloadingId] = useState<number | null>(null)
+  const [showReturnModal, setShowReturnModal] = useState(false)
+  const [returnQuantities, setReturnQuantities] = useState<Record<number, number>>({})
+  const [returnConditions, setReturnConditions] = useState<Record<number, string>>({})
+  const [refundMode, setRefundMode] = useState<'cash' | 'upi' | 'card' | 'store_credit'>('cash')
+  const [returnReason, setReturnReason] = useState('')
+  const [processingReturn, setProcessingReturn] = useState(false)
 
   useEffect(() => {
     fetchSales()
@@ -86,6 +92,61 @@ export default function SalesHistoryPage() {
       toast.error('Failed to generate PDF')
     } finally {
       setDownloadingId(null)
+    }
+  }
+
+  const handleOpenReturnModal = (sale: Sale) => {
+    setSelectedSale(sale)
+    const initialQty: Record<number, number> = {}
+    const initialCond: Record<number, string> = {}
+    ;(sale.items || []).forEach(item => {
+      initialQty[item.id] = 0
+      initialCond[item.id] = 'resellable'
+    })
+    setReturnQuantities(initialQty)
+    setReturnConditions(initialCond)
+    setRefundMode('cash')
+    setReturnReason('')
+    setShowReturnModal(true)
+  }
+
+  const handleProcessReturn = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedSale) return
+
+    const itemsToReturn = Object.entries(returnQuantities)
+      .filter(([_, qty]) => Number(qty) > 0)
+      .map(([itemId, qty]) => ({
+        sale_item_id: Number(itemId),
+        quantity: Number(qty),
+        condition: returnConditions[Number(itemId)] || 'resellable'
+      }))
+
+    if (itemsToReturn.length === 0) {
+      toast.error('Please specify quantity to return for at least one item.')
+      return
+    }
+
+    if (!returnReason.trim()) {
+      toast.error('Documented return reason is required.')
+      return
+    }
+
+    setProcessingReturn(true)
+    try {
+      await api.post(`/sales/${selectedSale.id}/return/`, {
+        refund_mode: refundMode,
+        reason: returnReason.trim(),
+        items: itemsToReturn
+      })
+      toast.success('Return processed successfully! Inventory restocked into ledger.')
+      setShowReturnModal(false)
+      setShowDetailModal(false)
+      fetchSales()
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || JSON.stringify(err.response?.data || 'Failed to process return.'))
+    } finally {
+      setProcessingReturn(false)
     }
   }
 
@@ -569,20 +630,159 @@ export default function SalesHistoryPage() {
               </div>
             )}
 
+            {/* Returns Section if any */}
+            {selectedSale.returns && selectedSale.returns.length > 0 && (
+              <div className="p-3.5 bg-rose-950/20 border border-rose-900/40 rounded-xl space-y-2">
+                <span className="text-xs font-semibold text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <RotateCcw className="w-3.5 h-3.5" /> Returns & Refunds History
+                </span>
+                <div className="space-y-2 text-xs">
+                  {selectedSale.returns.map((ret: any) => (
+                    <div key={ret.id} className="p-2.5 bg-[#171613] rounded-lg border border-[#2A261F] flex justify-between items-center">
+                      <div>
+                        <p className="font-mono font-medium text-amber-500">{ret.return_number}</p>
+                        <p className="text-[11px] text-[#8D8980]">Reason: {ret.reason}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-mono font-bold text-rose-400">-₹{Number(ret.refund_amount).toLocaleString('en-IN')}</p>
+                        <p className="text-[10px] text-[#8D8980] uppercase">{ret.refund_mode}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Actions */}
-            <div className="flex justify-end gap-2.5 pt-3 border-t border-[#2A261F]">
-              <Button variant="secondary" onClick={() => setShowDetailModal(false)}>
-                Close
-              </Button>
+            <div className="flex flex-col sm:flex-row justify-between items-center gap-3 pt-3 border-t border-[#2A261F]">
               <Button 
-                onClick={() => downloadPDF(selectedSale.id, selectedSale.invoice_number)}
-                icon={<Download className="w-4 h-4" />}
-                className="shadow-gold"
+                variant="secondary" 
+                onClick={() => {
+                  setShowDetailModal(false)
+                  handleOpenReturnModal(selectedSale)
+                }}
+                className="text-amber-500 hover:text-amber-400 border-amber-900/40 w-full sm:w-auto"
               >
-                Download Invoice PDF
+                <RotateCcw className="w-4 h-4 mr-1.5" />
+                Process Return / Refund
               </Button>
+
+              <div className="flex gap-2 w-full sm:w-auto justify-end">
+                <Button variant="secondary" onClick={() => setShowDetailModal(false)}>
+                  Close
+                </Button>
+                <Button 
+                  onClick={() => downloadPDF(selectedSale.id, selectedSale.invoice_number)}
+                  icon={<Download className="w-4 h-4" />}
+                  className="shadow-gold"
+                >
+                  Download Invoice PDF
+                </Button>
+              </div>
             </div>
           </div>
+        )}
+      </Modal>
+
+      {/* Return Modal */}
+      <Modal
+        isOpen={showReturnModal}
+        onClose={() => setShowReturnModal(false)}
+        title={`Process Return: ${selectedSale?.invoice_number}`}
+        description="Select merchandise to return and choose restock condition"
+        size="lg"
+      >
+        {selectedSale && (
+          <form onSubmit={handleProcessReturn} className="space-y-4">
+            <div className="p-3 bg-amber-950/20 border border-amber-900/40 rounded-xl text-xs text-amber-400">
+              Resellable items are automatically restocked into inventory ledger. Defective/damaged items are booked and written off.
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-[#8D8980] uppercase tracking-wider block">
+                Select Items to Return
+              </label>
+              <div className="border border-[#2A261F] rounded-xl overflow-hidden divide-y divide-[#2A261F] bg-[#12110F]">
+                {(selectedSale.items || []).map((item: any) => (
+                  <div key={item.id} className="p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex-1">
+                      <p className="font-serif font-bold text-sm text-[#F3EFE6]">{item.product_name}</p>
+                      <p className="text-xs text-[#C9A45C]">{item.product_brand} • Unit: ₹{Number(item.unit_price).toLocaleString('en-IN')}</p>
+                      <p className="text-[11px] text-[#8D8980]">Purchased: {item.quantity} | Available to return: {item.returnable_quantity ?? item.quantity}</p>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div>
+                        <label className="text-[10px] text-[#8D8980] block mb-1">Condition</label>
+                        <select
+                          value={returnConditions[item.id] || 'resellable'}
+                          onChange={e => setReturnConditions({ ...returnConditions, [item.id]: e.target.value })}
+                          className="bg-[#171613] border border-[#2A261F] rounded-lg px-2 py-1.5 text-xs text-[#F3EFE6]"
+                        >
+                          <option value="resellable">Resellable (Restock)</option>
+                          <option value="defective">Defective (Warranty)</option>
+                          <option value="damaged">Damaged (Loss)</option>
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] text-[#8D8980] block mb-1">Return Qty</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max={item.returnable_quantity ?? item.quantity}
+                          value={returnQuantities[item.id] || 0}
+                          onChange={e => setReturnQuantities({ ...returnQuantities, [item.id]: Number(e.target.value) })}
+                          className="w-16 bg-[#171613] border border-[#2A261F] rounded-lg p-1.5 text-center text-xs font-bold text-[#F3EFE6]"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-semibold text-[#8D8980] uppercase tracking-wider block mb-1">
+                  Refund Method <span className="text-rose-500">*</span>
+                </label>
+                <select
+                  value={refundMode}
+                  onChange={e => setRefundMode(e.target.value as any)}
+                  className="w-full bg-[#12110F] border border-[#2A261F] rounded-lg p-2.5 text-sm text-[#F3EFE6]"
+                >
+                  <option value="cash">Cash Refund</option>
+                  <option value="upi">UPI / Bank Transfer</option>
+                  <option value="card">Original Card Reversal</option>
+                  <option value="store_credit">Store Credit</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs font-semibold text-[#8D8980] uppercase tracking-wider block mb-1">
+                  Reason for Return <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Size fit issue, customer requested exchange..."
+                  value={returnReason}
+                  onChange={e => setReturnReason(e.target.value)}
+                  className="w-full bg-[#12110F] border border-[#2A261F] rounded-lg p-2.5 text-sm text-[#F3EFE6]"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-2.5 pt-3 border-t border-[#2A261F]">
+              <Button variant="secondary" type="button" onClick={() => setShowReturnModal(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={processingReturn}>
+                {processingReturn ? 'Processing...' : 'Confirm Return & Refund'}
+              </Button>
+            </div>
+          </form>
         )}
       </Modal>
     </div>

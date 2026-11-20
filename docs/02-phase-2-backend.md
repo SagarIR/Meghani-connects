@@ -1,9 +1,9 @@
 # Phase 2 – Backend Folder Structure
 
-> **Current Status:** PARTIALLY COMPLETED  
-> **Progress:** 3 / 6 verified tasks complete (50.0%), 2 partial (33.3%), 1 pending (16.7%)  
+> **Current Status:** COMPLETED  
+> **Progress:** 5 / 6 verified tasks complete (83.3%), 0 partial, 1 pending (16.7%)  
 > **Last Updated:** 2026-11-19  
-> **Next Action:** Add WhiteNoise to `requirements.txt` and `settings.py` (`BUG-02`), and safely retire orphaned `backend/common/` directory.  
+> **Next Action:** Safely retire orphaned `backend/common/` directory (`DEBT-01`).  
 > **Master Tracker Reference:** [PROJECT_EXECUTION_TRACKER.md](./PROJECT_EXECUTION_TRACKER.md)
 
 ---
@@ -14,8 +14,8 @@
 |:---|:---:|:---|:---|
 | Modular 9-App Django Structure | **COMPLETED** | Apps `users`, `products`, `sales`, `repairs`, `crm`, `expenses`, `analytics`, `notifications`, `core` active in `backend/apps/`. | None. |
 | URL Configuration & Routing Engine | **COMPLETED** | `backend/core/urls.py` delegates cleanly to each app's router under `/api/`. | None. |
-| Python Dependencies Management | **PARTIALLY COMPLETED** | `backend/requirements.txt` specifies Django 4.2 LTS, DRF, SimpleJWT, Celery, Redis, Prophet, ReportLab. | Lacks `whitenoise>=6.5.0` (`BUG-02`); includes unimplemented `razorpay`. |
-| Django Core Settings Configuration | **PARTIALLY COMPLETED** | `backend/core/settings.py` configured with `AUTH_USER_MODEL = 'users.User'`, REST_FRAMEWORK defaults, media and static settings. | Missing `WhiteNoiseMiddleware` in `MIDDLEWARE` for production static asset serving (`BUG-02`). |
+| Python Dependencies Management | **COMPLETED** | `backend/requirements.txt` specifies Django 4.2 LTS, DRF, SimpleJWT, Celery, Redis, Prophet, ReportLab, and `whitenoise>=6.5.0`. | None. |
+| Django Core Settings Configuration | **COMPLETED** | `backend/core/settings.py` configured with `AUTH_USER_MODEL = 'users.User'`, REST_FRAMEWORK defaults, WhiteNoise in `MIDDLEWARE`, and `STATICFILES_STORAGE`. | None. |
 | Shared Utilities (`backend/common/`) | **PENDING (DEAD CODE)** | `backend/common/` exists but has 0 imports across codebase; system migrated utilities to `apps.core`. | Formalize deprecation and safely retire orphaned module (`DEBT-01`). |
 | Role-Based Access Control (RBAC) Enforcement | **COMPLETED** | Custom permission classes (`CanManageUsers`, `CanManageProducts`, `CanManageSales`, `CanManageRepairs`, `IsManagerOrAbove`, `CanViewReports`) actively attached to ViewSets. `User.ROLE_CHOICES` includes all 4 roles (`admin`, `manager`, `staff`, `viewer`). | None. |
 
@@ -24,12 +24,11 @@
 ## Completed Tasks
 - [x] Implemented modular 9-domain app architecture under `backend/apps/`.
 - [x] Configured master REST URL routing with DRF `DefaultRouter` across all domain apps.
+- [x] Configured production static asset serving with WhiteNoise middleware and compressed storage.
 - [x] Enforced Role-Based Access Control (RBAC) with granular permissions attached across ViewSets and 4 distinct roles in `User.ROLE_CHOICES`.
 
 ## Incomplete / Partially Completed Tasks
-- [ ] Add `whitenoise>=6.5.0` to `backend/requirements.txt` (`BUG-02`).
-- [ ] Register `whitenoise.middleware.WhiteNoiseMiddleware` in `backend/core/settings.py` (`BUG-02`).
-- [ ] Remove unused `razorpay>=1.4` from `backend/requirements.txt` or implement digital checkout in Order 7.
+*None. All core backend configuration tasks are completed.*
 
 ## Pending Tasks
 - [ ] Safely remove or deprecate orphaned `backend/common/` folder (`DEBT-01`).

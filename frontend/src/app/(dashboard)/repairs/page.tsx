@@ -9,10 +9,10 @@ import {
   Plus, Search, Wrench, Eye, CheckCircle, XCircle, Download, Clock, 
   Phone, User, Calendar, AlertTriangle, Package, IndianRupee, ArrowRight,
   Filter, MoreHorizontal, Timer, Truck, LayoutGrid, List, MessageSquare,
-  ShieldCheck, Check, Sparkles, Watch, Send
+  ShieldCheck, Check, Sparkles, Watch, Send, Trash2, Cpu, UserCheck, ChevronRight
 } from 'lucide-react'
 import { api } from '@/services/api'
-import { Repair, Customer } from '@/types'
+import { Repair, Customer, RepairPart } from '@/types'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import Input from '@/components/ui/Input'
@@ -33,7 +33,10 @@ const schema = yup.object({
   brand: yup.string().nullable(),
   model_number: yup.string().nullable(),
   serial_number: yup.string().nullable(),
+  service_type: yup.string().default('general'),
+  assigned_technician: yup.number().nullable(),
   issue_description: yup.string().required('Issue description is required'),
+  diagnosis_notes: yup.string().nullable(),
   estimated_cost: yup.number().nullable(),
   advance_paid: yup.number().default(0),
   expected_delivery: yup.string().nullable(),
@@ -46,24 +49,51 @@ const statusConfig: Record<string, { label: string; stageNumber: number; next: s
   received: { 
     label: 'Received', 
     stageNumber: 1, 
-    next: 'in_repair', 
+    next: 'diagnosing', 
     icon: Package, 
     color: 'text-[#8D8980]', 
     bg: 'bg-[#1F1E1A]', 
     border: 'border-[#2A261F]' 
   },
-  in_repair: { 
-    label: 'In Repair', 
+  diagnosing: { 
+    label: 'Diagnosing', 
     stageNumber: 2, 
-    next: 'ready', 
-    icon: Wrench, 
+    next: 'awaiting_approval', 
+    icon: Search, 
+    color: 'text-indigo-400', 
+    bg: 'bg-indigo-950/30', 
+    border: 'border-indigo-800/40' 
+  },
+  awaiting_approval: { 
+    label: 'Awaiting Approval', 
+    stageNumber: 3, 
+    next: 'in_repair', 
+    icon: AlertTriangle, 
     color: 'text-amber-400', 
     bg: 'bg-amber-950/30', 
     border: 'border-amber-800/40' 
   },
+  in_repair: { 
+    label: 'In Repair', 
+    stageNumber: 4, 
+    next: 'testing', 
+    icon: Wrench, 
+    color: 'text-yellow-400', 
+    bg: 'bg-yellow-950/30', 
+    border: 'border-yellow-800/40' 
+  },
+  testing: { 
+    label: 'Testing & QC', 
+    stageNumber: 5, 
+    next: 'ready', 
+    icon: ShieldCheck, 
+    color: 'text-cyan-400', 
+    bg: 'bg-cyan-950/30', 
+    border: 'border-cyan-800/40' 
+  },
   ready: { 
-    label: 'Ready for Pickup', 
-    stageNumber: 3, 
+    label: 'Ready for Collection', 
+    stageNumber: 6, 
     next: 'delivered', 
     icon: CheckCircle, 
     color: 'text-emerald-400', 
@@ -72,7 +102,7 @@ const statusConfig: Record<string, { label: string; stageNumber: number; next: s
   },
   delivered: { 
     label: 'Delivered', 
-    stageNumber: 4, 
+    stageNumber: 7, 
     next: null, 
     icon: Truck, 
     color: 'text-sky-400', 
@@ -90,6 +120,17 @@ const statusConfig: Record<string, { label: string; stageNumber: number; next: s
   },
 }
 
+const serviceTypes = [
+  { value: 'general', label: 'General Repair & Diagnostic' },
+  { value: 'battery', label: 'Battery Replacement' },
+  { value: 'overhaul', label: 'Complete Movement Overhaul / Service' },
+  { value: 'crystal', label: 'Crystal / Glass Replacement' },
+  { value: 'polishing', label: 'Case & Bracelet Refurbishing / Polishing' },
+  { value: 'strap', label: 'Strap / Bracelet Customization & Sizing' },
+  { value: 'water_resistance', label: 'Water Resistance Reseal & Gasket' },
+  { value: 'crown_stem', label: 'Crown / Stem Repair' },
+]
+
 const itemTypes = [
   'Automatic / Mechanical Watch',
   'Quartz Watch',
@@ -100,12 +141,32 @@ const itemTypes = [
   'Strap / Clasp Repair'
 ]
 
+interface Technician {
+  id: number
+  name: string
+  username: string
+  role: string
+}
+
+interface ProductItem {
+  id: number
+  name: string
+  brand: string
+  stock: number
+  selling_price: number
+  article_code?: string
+}
+
 export default function RepairsPage() {
   const [repairs, setRepairs] = useState<Repair[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   
+  // Master Lists
+  const [technicians, setTechnicians] = useState<Technician[]>([])
+  const [products, setProducts] = useState<ProductItem[]>([])
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -123,6 +184,7 @@ export default function RepairsPage() {
   const [showFormModal, setShowFormModal] = useState(false)
   const [showViewModal, setShowViewModal] = useState(false)
   const [showStatusModal, setShowStatusModal] = useState(false)
+  const [showAddPartModal, setShowAddPartModal] = useState(false)
   const [selectedRepair, setSelectedRepair] = useState<Repair | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [downloadingId, setDownloadingId] = useState<number | null>(null)
@@ -132,16 +194,49 @@ export default function RepairsPage() {
   const [searchResults, setSearchResults] = useState<Customer[]>([])
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   
-  // Status update
-  const [newStatus, setNewStatus] = useState('')
+  // Status update form state
+  const [newStatus, setNewStatus] = useState('received')
   const [repairCharge, setRepairCharge] = useState('')
   const [statusNote, setStatusNote] = useState('')
+  const [selectedTechId, setSelectedTechId] = useState<number | null>(null)
+  const [statusServiceType, setStatusServiceType] = useState('general')
+  const [statusQcPassed, setStatusQcPassed] = useState(false)
+  const [statusDiagnosisNotes, setStatusDiagnosisNotes] = useState('')
+
+  // Add Spare Part form state
+  const [partProductId, setPartProductId] = useState<number | null>(null)
+  const [partQuantity, setPartQuantity] = useState(1)
+  const [partCharge, setPartCharge] = useState('')
+  const [partNotes, setPartNotes] = useState('')
+  const [isAddingPart, setIsAddingPart] = useState(false)
+  const [removingPartId, setRemovingPartId] = useState<number | null>(null)
+
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
 
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<FormData>({
     resolver: yupResolver(schema),
-    defaultValues: { advance_paid: 0 }
+    defaultValues: { 
+      advance_paid: 0,
+      service_type: 'general',
+    }
   })
+
+  // Load Technicians & Products Catalog
+  useEffect(() => {
+    const loadMasterData = async () => {
+      try {
+        const [techsRes, productsRes] = await Promise.all([
+          api.get('/repairs/technicians/'),
+          api.get('/products/?page_size=100')
+        ])
+        setTechnicians(techsRes.data || [])
+        setProducts(productsRes.data?.results || productsRes.data || [])
+      } catch (err) {
+        console.error('Failed to load master workshop data:', err)
+      }
+    }
+    loadMasterData()
+  }, [])
 
   // Reset to page 1 when filters change
   useEffect(() => {
@@ -225,20 +320,46 @@ export default function RepairsPage() {
   const openAddModal = () => {
     setSelectedRepair(null)
     setSelectedCustomer(null)
-    reset({ advance_paid: 0, item_type: '', brand: '', model_number: '', serial_number: '', issue_description: '', estimated_cost: undefined, expected_delivery: '', notes: '', customer: undefined, customer_phone: '', customer_name: '' })
+    reset({ 
+      advance_paid: 0, 
+      service_type: 'general',
+      item_type: '', 
+      brand: '', 
+      model_number: '', 
+      serial_number: '', 
+      issue_description: '', 
+      diagnosis_notes: '',
+      estimated_cost: undefined, 
+      expected_delivery: '', 
+      notes: '', 
+      customer: undefined, 
+      customer_phone: '', 
+      customer_name: '' 
+    })
     setShowFormModal(true)
   }
 
-  const openViewModal = (repair: Repair) => {
+  const openViewModal = async (repair: Repair) => {
     setSelectedRepair(repair)
     setShowViewModal(true)
+    try {
+      // Fetch full detailed repair with spare parts
+      const res = await api.get(`/repairs/${repair.id}/`)
+      setSelectedRepair(res.data)
+    } catch (err) {
+      console.error('Failed to fetch full repair detail', err)
+    }
   }
 
   const openStatusModal = (repair: Repair, status: string) => {
     setSelectedRepair(repair)
     setNewStatus(status)
-    setRepairCharge(repair.repair_charge?.toString() || '')
-    setStatusNote('')
+    setRepairCharge(repair.repair_charge?.toString() || repair.estimated_cost?.toString() || '')
+    setStatusNote(repair.notes || '')
+    setSelectedTechId(repair.assigned_technician || null)
+    setStatusServiceType(repair.service_type || 'general')
+    setStatusQcPassed(repair.qc_passed || false)
+    setStatusDiagnosisNotes(repair.diagnosis_notes || '')
     setShowStatusModal(true)
   }
 
@@ -255,6 +376,7 @@ export default function RepairsPage() {
         customer: selectedCustomer?.id || undefined,
         customer_phone: !selectedCustomer ? data.customer_phone : undefined,
         customer_name: !selectedCustomer ? data.customer_name : undefined,
+        assigned_technician: data.assigned_technician || undefined,
       }
       
       await api.post('/repairs/', payload)
@@ -262,7 +384,7 @@ export default function RepairsPage() {
       setShowFormModal(false)
       fetchRepairs()
     } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Failed to create repair ticket')
+      toast.error(error.response?.data?.detail || error.response?.data?.error || 'Failed to create repair ticket')
     } finally {
       setIsSubmitting(false)
     }
@@ -294,19 +416,72 @@ export default function RepairsPage() {
     if (!selectedRepair) return
     setIsSubmitting(true)
     try {
-      await api.patch(`/repairs/${selectedRepair.id}/update_status/`, {
+      const payload: any = {
         status: newStatus,
         repair_charge: repairCharge ? parseFloat(repairCharge) : undefined,
         notes: statusNote,
-      })
-      toast.success('Repair status updated successfully')
+        assigned_technician: selectedTechId || null,
+        service_type: statusServiceType,
+        qc_passed: statusQcPassed,
+        diagnosis_notes: statusDiagnosisNotes,
+      }
+      const res = await api.patch(`/repairs/${selectedRepair.id}/update_status/`, payload)
+      toast.success(`Ticket ${selectedRepair.ticket_number} advanced to ${statusConfig[newStatus]?.label || newStatus}`)
       setShowStatusModal(false)
-      setShowViewModal(false)
+      setSelectedRepair(res.data)
       fetchRepairs()
-    } catch (error) {
-      toast.error('Failed to update repair status')
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || error.response?.data?.detail || 'Failed to update repair status')
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleAddSparePart = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!selectedRepair || !partProductId) {
+      toast.error('Please select a spare part / product')
+      return
+    }
+    setIsAddingPart(true)
+    try {
+      await api.post(`/repairs/${selectedRepair.id}/add_part/`, {
+        product_id: partProductId,
+        quantity: partQuantity || 1,
+        charge_to_customer: partCharge ? parseFloat(partCharge) : undefined,
+        notes: partNotes,
+      })
+      toast.success('Spare part consumed from inventory')
+      const res = await api.get(`/repairs/${selectedRepair.id}/`)
+      setSelectedRepair(res.data)
+      setShowAddPartModal(false)
+      setPartProductId(null)
+      setPartQuantity(1)
+      setPartCharge('')
+      setPartNotes('')
+      fetchRepairs()
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to add spare part')
+    } finally {
+      setIsAddingPart(false)
+    }
+  }
+
+  const handleRemoveSparePart = async (partId: number) => {
+    if (!selectedRepair) return
+    setRemovingPartId(partId)
+    try {
+      await api.post(`/repairs/${selectedRepair.id}/remove_part/`, {
+        part_id: partId
+      })
+      toast.success('Spare part returned to stock')
+      const res = await api.get(`/repairs/${selectedRepair.id}/`)
+      setSelectedRepair(res.data)
+      fetchRepairs()
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to return spare part')
+    } finally {
+      setRemovingPartId(null)
     }
   }
 
@@ -319,20 +494,22 @@ export default function RepairsPage() {
     const phoneWithCountry = cleanPhone.length === 10 ? `91${cleanPhone}` : cleanPhone
     const msg = encodeURIComponent(
       `Dear ${repair.customer_name || 'Customer'},\n\n` +
-      `Update from Meghani Watch Co. (Est. 1984):\n` +
-      `Your repair ticket *#${repair.ticket_number}* for *${repair.brand || 'Watch'} (${repair.item_type})* is now: *${statusConfig[repair.status]?.label?.toUpperCase()}*.\n\n` +
-      `Estimated/Charge: ₹${(repair.repair_charge || repair.estimated_cost || 0).toLocaleString('en-IN')}\n` +
-      `Thank you for trusting Meghani Watch Co. Vadodara.`
+      `Update from Meghani Watch Co. Atelier (Est. 1984):\n` +
+      `Your repair ticket *#${repair.ticket_number}* for *${repair.brand || 'Watch'} (${repair.item_type})* is now: *${statusConfig[repair.status]?.label?.toUpperCase()}*.\n` +
+      (repair.service_type_display ? `Service: *${repair.service_type_display}*\n` : '') +
+      (repair.assigned_technician_name ? `Horologist: *${repair.assigned_technician_name}*\n` : '') +
+      `Estimated/Charge: ₹${(repair.repair_charge || repair.estimated_cost || 0).toLocaleString('en-IN')}\n\n` +
+      `Thank you for entrusting your timepiece with Meghani Watch Co. Vadodara.`
     )
     window.open(`https://wa.me/${phoneWithCountry}?text=${msg}`, '_blank')
   }
 
-  const formatCurrency = (amount: number | null) => {
+  const formatCurrency = (amount: number | null | undefined) => {
     if (amount === null || amount === undefined) return '-'
     return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount)
   }
 
-  const formatDate = (dateString: string | null) => {
+  const formatDate = (dateString: string | null | undefined) => {
     if (!dateString) return '-'
     return new Date(dateString).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
   }
@@ -340,9 +517,9 @@ export default function RepairsPage() {
   // Summary Metrics
   const stats = useMemo(() => ({
     total: totalItems || repairs.length,
-    pending: repairs.filter(r => r.status === 'received' || r.status === 'in_repair').length,
+    inWorkshop: repairs.filter(r => ['received', 'diagnosing', 'awaiting_approval', 'in_repair', 'testing'].includes(r.status)).length,
     ready: repairs.filter(r => r.status === 'ready').length,
-    completed: repairs.filter(r => r.status === 'delivered').length,
+    delivered: repairs.filter(r => r.status === 'delivered').length,
   }), [repairs, totalItems])
 
   return (
@@ -355,12 +532,12 @@ export default function RepairsPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Watch Repairs & Service</h1>
+              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Watch Workshop & Repairs</h1>
               <span className="text-xs px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F] font-mono">
                 {stats.total} total tickets
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[#8D8980]">Watch servicing, repair tracking, and customer notifications</p>
+            <p className="text-xs sm:text-sm text-[#8D8980]">Atelier job tracking, horologist dispatch, spare parts consumption, and QC assurance</p>
           </div>
         </div>
 
@@ -384,7 +561,7 @@ export default function RepairsPage() {
               <Package className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Total Repairs</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Total Tickets</p>
               <p className="text-2xl font-bold font-mono text-[#F3EFE6]">{stats.total}</p>
             </div>
           </div>
@@ -393,11 +570,11 @@ export default function RepairsPage() {
         <div className="bg-[#171613] rounded-2xl p-4 border border-amber-900/40 shadow-lg">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-950/40 border border-amber-800/40 flex items-center justify-center text-amber-400">
-              <Timer className="w-5 h-5" />
+              <Wrench className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">In Repair</p>
-              <p className="text-2xl font-bold font-mono text-amber-400">{stats.pending}</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">In Atelier / Bench</p>
+              <p className="text-2xl font-bold font-mono text-amber-400">{stats.inWorkshop}</p>
             </div>
           </div>
         </div>
@@ -408,7 +585,7 @@ export default function RepairsPage() {
               <CheckCircle className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Ready for Pickup</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Ready for Collection</p>
               <p className="text-2xl font-bold font-mono text-emerald-400">{stats.ready}</p>
             </div>
           </div>
@@ -421,7 +598,7 @@ export default function RepairsPage() {
             </div>
             <div>
               <p className="text-xs text-[#8D8980] uppercase tracking-wider">Delivered</p>
-              <p className="text-2xl font-bold font-mono text-sky-400">{stats.completed}</p>
+              <p className="text-2xl font-bold font-mono text-sky-400">{stats.delivered}</p>
             </div>
           </div>
         </div>
@@ -434,7 +611,7 @@ export default function RepairsPage() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8D8980] group-focus-within:text-[#C9A45C] transition-colors" />
             <input
               type="text"
-              placeholder="Search by ticket # (e.g. REP-1002), customer name, watch brand or serial..."
+              placeholder="Search by ticket # (e.g. REP-1002), customer, watch brand, model or horologist..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl 
@@ -472,7 +649,7 @@ export default function RepairsPage() {
           </div>
         </div>
 
-        {/* Workflow Stage Filter Pills */}
+        {/* 8 Workflow Stage Filter Pills */}
         <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide pt-1">
           <button
             onClick={() => setStatusFilter('')}
@@ -483,7 +660,7 @@ export default function RepairsPage() {
                 : 'bg-[#12110F] border border-[#2A261F] text-[#8D8980] hover:text-[#F3EFE6]'
             )}
           >
-            All Tickets ({stats.total})
+            All Stages ({stats.total})
           </button>
           {Object.entries(statusConfig).map(([key, config]) => (
             <button
@@ -558,9 +735,17 @@ export default function RepairsPage() {
                           <span className="font-mono font-bold text-sm text-[#C9A45C] group-hover:underline truncate block">
                             {repair.ticket_number}
                           </span>
-                          <span className={clsx('text-[11px] font-medium px-2 py-0.5 rounded-full inline-block border mt-0.5', config.bg, config.color, config.border)}>
-                            {config.label}
-                          </span>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className={clsx('text-[11px] font-medium px-2 py-0.5 rounded-full inline-block border', config.bg, config.color, config.border)}>
+                              {config.label}
+                            </span>
+                            {repair.qc_passed && (
+                              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/40 inline-flex items-center gap-0.5">
+                                <ShieldCheck className="w-3 h-3" />
+                                QC
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
 
@@ -591,7 +776,7 @@ export default function RepairsPage() {
                     </div>
 
                     {/* Customer & Watch */}
-                    <div className="space-y-2 mb-3.5">
+                    <div className="space-y-2 mb-3">
                       <div className="flex items-center gap-2 text-xs">
                         <User className="w-3.5 h-3.5 text-[#C9A45C] flex-shrink-0" />
                         <span className="font-serif font-semibold text-[#F3EFE6] truncate">{repair.customer_name}</span>
@@ -604,6 +789,24 @@ export default function RepairsPage() {
                         <span className="text-[#E8D5A7] truncate font-medium">{repair.brand || 'Watch'}</span>
                         <span className="text-[#8D8980]">| {repair.item_type}</span>
                       </div>
+                    </div>
+
+                    {/* Service Type & Horologist Tags */}
+                    <div className="flex items-center gap-2 flex-wrap mb-3">
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-md bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F]">
+                        {repair.service_type_display || repair.service_type || 'General Service'}
+                      </span>
+                      {repair.assigned_technician_name && (
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded-md bg-[#1A1815] text-[#8D8980] border border-[#2A261F] flex items-center gap-1">
+                          <UserCheck className="w-3 h-3 text-[#C9A45C]" />
+                          {repair.assigned_technician_name}
+                        </span>
+                      )}
+                      {repair.days_in_repair > 0 && (
+                        <span className="text-[10px] font-mono text-[#8D8980] ml-auto">
+                          {repair.days_in_repair}d in atelier
+                        </span>
+                      )}
                     </div>
 
                     {/* Issue Description */}
@@ -628,13 +831,26 @@ export default function RepairsPage() {
                     </div>
                   </div>
 
-                  {/* 4-Stage Progress Track */}
+                  {/* 8-Stage Progress Track */}
                   <div>
                     <div className="h-1 bg-[#12110F] border-t border-[#2A261F] flex">
-                      <div className={clsx('h-full flex-1 transition-all', repair.status !== 'cancelled' ? 'bg-[#C9A45C]' : 'bg-rose-500')} />
-                      <div className={clsx('h-full flex-1 transition-all', ['in_repair', 'ready', 'delivered'].includes(repair.status) ? 'bg-[#C9A45C]' : 'bg-transparent')} />
-                      <div className={clsx('h-full flex-1 transition-all', ['ready', 'delivered'].includes(repair.status) ? 'bg-emerald-400' : 'bg-transparent')} />
-                      <div className={clsx('h-full flex-1 transition-all', repair.status === 'delivered' ? 'bg-sky-400' : 'bg-transparent')} />
+                      {[1, 2, 3, 4, 5, 6, 7].map((stageNum) => {
+                        const currentStage = config.stageNumber
+                        const isPastOrCurrent = currentStage >= stageNum && currentStage !== 0
+                        return (
+                          <div 
+                            key={stageNum}
+                            className={clsx(
+                              'h-full flex-1 transition-all',
+                              repair.status === 'cancelled'
+                                ? 'bg-rose-500/40'
+                                : isPastOrCurrent
+                                  ? stageNum >= 6 ? 'bg-emerald-400' : 'bg-[#C9A45C]'
+                                  : 'bg-transparent'
+                            )} 
+                          />
+                        )
+                      })}
                     </div>
                   </div>
                 </motion.div>
@@ -646,7 +862,7 @@ export default function RepairsPage() {
         /* Table View */
         <div className="bg-[#171613] rounded-2xl border border-[#2A261F] overflow-hidden shadow-xl">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[900px]">
+            <table className="w-full min-w-[960px]">
               <thead className="bg-[#12110F] border-b border-[#2A261F]">
                 <tr>
                   <th className="px-5 py-3.5 text-left">
@@ -654,22 +870,23 @@ export default function RepairsPage() {
                   </th>
                   <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Customer & Phone</th>
                   <th className="px-4 py-3.5 text-left">
-                    <SortableHeader label="Watch / Item" field="item_type" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                    <SortableHeader label="Watch & Service" field="item_type" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Horologist</th>
                   <th className="px-4 py-3.5 text-left">
-                    <SortableHeader label="Status" field="status" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                    <SortableHeader label="Stage" field="status" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
                   <th className="px-4 py-3.5 text-left">
                     <SortableHeader label="Due Date" field="expected_delivery" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
                   <th className="px-4 py-3.5 text-right">
-                    <SortableHeader label="Estimated / Final Cost" field="estimated_cost" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                    <SortableHeader label="Est / Final Cost" field="estimated_cost" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
                   <th className="px-5 py-3.5 text-right text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#2A261F]">
-                {repairs.map((repair, index) => {
+                {repairs.map((repair) => {
                   const config = statusConfig[repair.status] || statusConfig.received
                   const StatusIcon = config.icon
                   return (
@@ -691,14 +908,32 @@ export default function RepairsPage() {
 
                       <td className="px-4 py-4">
                         <p className="text-sm font-medium text-[#F3EFE6]">{repair.brand || 'Watch'}</p>
-                        <p className="text-xs text-[#8D8980] truncate max-w-[140px]">{repair.item_type}</p>
+                        <p className="text-xs text-[#C9A45C] truncate max-w-[150px]">{repair.service_type_display || repair.item_type}</p>
+                      </td>
+
+                      <td className="px-4 py-4 font-mono text-xs text-[#8D8980]">
+                        {repair.assigned_technician_name ? (
+                          <span className="flex items-center gap-1 text-[#E8D5A7]">
+                            <UserCheck className="w-3.5 h-3.5 text-[#C9A45C]" />
+                            {repair.assigned_technician_name}
+                          </span>
+                        ) : (
+                          <span className="text-[#8D8980]/60 italic">Unassigned</span>
+                        )}
                       </td>
 
                       <td className="px-4 py-4">
-                        <span className={clsx('text-xs font-medium px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 border', config.bg, config.color, config.border)}>
-                          <StatusIcon className="w-3 h-3" />
-                          <span>{config.label}</span>
-                        </span>
+                        <div className="flex items-center gap-1.5">
+                          <span className={clsx('text-xs font-medium px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 border', config.bg, config.color, config.border)}>
+                            <StatusIcon className="w-3 h-3" />
+                            <span>{config.label}</span>
+                          </span>
+                          {repair.qc_passed && (
+                            <span className="p-1 rounded-full bg-emerald-950/60 text-emerald-400 border border-emerald-800/40" title="QC Passed">
+                              <ShieldCheck className="w-3.5 h-3.5" />
+                            </span>
+                          )}
+                        </div>
                       </td>
 
                       <td className="px-4 py-4 font-mono text-xs text-[#8D8980]">
@@ -774,8 +1009,8 @@ export default function RepairsPage() {
       <Modal 
         isOpen={showFormModal} 
         onClose={() => setShowFormModal(false)} 
-        title="New Repair Ticket" 
-        description="Create an official repair ticket and record watch details"
+        title="New Atelier Repair Ticket" 
+        description="Book a timepiece into the workshop, assign a horologist, and record initial diagnosis"
         size="lg"
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
@@ -838,9 +1073,9 @@ export default function RepairsPage() {
             )}
           </div>
 
-          {/* Watch Details & Diagnostics */}
+          {/* Timepiece & Workshop Details */}
           <div className="space-y-2 pt-2 border-t border-[#2A261F]">
-            <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">2. Watch Details & Diagnostics</span>
+            <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">2. Timepiece & Workshop Assignment</span>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
               <div>
                 <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Watch / Item Type *</label>
@@ -856,26 +1091,61 @@ export default function RepairsPage() {
                 {errors.item_type && <p className="text-rose-400 text-xs mt-1">{errors.item_type.message}</p>}
               </div>
 
-              <Input label="Brand" {...register('brand')} placeholder="e.g. Omega, Seiko, Titan, Tissot" />
-              <Input label="Model Reference" {...register('model_number')} placeholder="e.g. Speedmaster 3861" />
-              <Input label="Serial Number" {...register('serial_number')} placeholder="e.g. SN-89240182" />
+              <div>
+                <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Service Category</label>
+                <select 
+                  {...register('service_type')} 
+                  className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6]"
+                >
+                  {serviceTypes.map((st) => (
+                    <option key={st.value} value={st.value} className="bg-[#171613]">{st.label}</option>
+                  ))}
+                </select>
+              </div>
+
+              <Input label="Brand" {...register('brand')} placeholder="e.g. Omega, Rolex, Seiko, Tissot, Titan" />
+              <Input label="Model Reference" {...register('model_number')} placeholder="e.g. Speedmaster 3861, PRX" />
+              <Input label="Serial Number / Caseback #" {...register('serial_number')} placeholder="e.g. SN-89240182" />
+
+              <div>
+                <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Assign Horologist / Technician</label>
+                <select 
+                  {...register('assigned_technician')} 
+                  className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6]"
+                >
+                  <option value="">Unassigned (Queue for bench)</option>
+                  {technicians.map((t) => (
+                    <option key={t.id} value={t.id} className="bg-[#171613]">{t.name} ({t.role})</option>
+                  ))}
+                </select>
+              </div>
 
               <div className="sm:col-span-2">
-                <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Problem / Issue Description *</label>
+                <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Reported Issue / Symptoms *</label>
                 <textarea 
                   {...register('issue_description')} 
-                  rows={3} 
+                  rows={2} 
                   className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6] resize-none" 
-                  placeholder="Describe the issue (e.g., losing time, battery replacement, glass replacement, water damage, full service)..." 
+                  placeholder="Customer statement: e.g. losing 2 mins/day, amplitude low, crystal scratched, water ingress..." 
                 />
                 {errors.issue_description && <p className="text-rose-400 text-xs mt-1">{errors.issue_description.message}</p>}
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Initial Diagnosis & Bench Notes</label>
+                <textarea 
+                  {...register('diagnosis_notes')} 
+                  rows={2} 
+                  className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6] resize-none" 
+                  placeholder="Intake inspection: case condition, escapement check, crown resistance..." 
+                />
               </div>
             </div>
           </div>
 
           {/* Charges & Target Delivery */}
           <div className="space-y-2 pt-2 border-t border-[#2A261F]">
-            <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">3. Cost Estimates & Expected Delivery</span>
+            <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">3. Estimates & Target Delivery</span>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <Input label="Estimated Cost (₹)" type="number" {...register('estimated_cost')} placeholder="0" />
               <Input label="Advance Paid (₹)" type="number" {...register('advance_paid')} placeholder="0" />
@@ -899,7 +1169,7 @@ export default function RepairsPage() {
         isOpen={showViewModal} 
         onClose={() => setShowViewModal(false)} 
         title={`Repair Ticket: ${selectedRepair?.ticket_number}`}
-        description="Repair ticket details, diagnostic notes, and customer updates"
+        description="Atelier service dossier, horologist assignment, spare parts consumed, and QC verification"
         size="lg"
       >
         {selectedRepair && (
@@ -915,15 +1185,30 @@ export default function RepairsPage() {
                     })()}
                   </div>
                   <div>
-                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Repair Status</span>
-                    <span className={clsx('text-base font-bold font-serif', statusConfig[selectedRepair.status]?.color)}>
-                      {statusConfig[selectedRepair.status]?.label}
-                    </span>
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Current Stage</span>
+                    <div className="flex items-center gap-2">
+                      <span className={clsx('text-base font-bold font-serif', statusConfig[selectedRepair.status]?.color)}>
+                        {statusConfig[selectedRepair.status]?.label}
+                      </span>
+                      {selectedRepair.qc_passed && (
+                        <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-950/80 text-emerald-400 border border-emerald-800/40 inline-flex items-center gap-1">
+                          <ShieldCheck className="w-3.5 h-3.5" />
+                          QC Passed
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
 
                 {selectedRepair.status !== 'delivered' && selectedRepair.status !== 'cancelled' && (
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => openStatusModal(selectedRepair, selectedRepair.status)}
+                    >
+                      Update Stage / Tech
+                    </Button>
                     {statusConfig[selectedRepair.status]?.next && (
                       <Button 
                         size="sm" 
@@ -931,22 +1216,15 @@ export default function RepairsPage() {
                         className="shadow-gold"
                       >
                         <ArrowRight className="w-3.5 h-3.5 mr-1" />
-                        <span>Advance to {statusConfig[statusConfig[selectedRepair.status].next!]?.label}</span>
+                        <span>Advance</span>
                       </Button>
                     )}
-                    <Button 
-                      variant="danger" 
-                      size="sm" 
-                      onClick={() => openStatusModal(selectedRepair, 'cancelled')}
-                    >
-                      Cancel Repair
-                    </Button>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* Customer & Watch Details Matrix */}
+            {/* Customer & Timepiece Matrix */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-[#12110F] border border-[#2A261F] rounded-xl">
               <div>
                 <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Customer</span>
@@ -955,44 +1233,132 @@ export default function RepairsPage() {
               </div>
 
               <div>
-                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Watch / Item</span>
+                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Timepiece</span>
                 <p className="text-sm font-semibold text-[#C9A45C] mt-0.5">{selectedRepair.brand || 'Watch'}</p>
-                <p className="text-xs text-[#8D8980] truncate">{selectedRepair.item_type}</p>
+                <p className="text-xs text-[#8D8980] truncate">{selectedRepair.model_number || selectedRepair.item_type}</p>
               </div>
 
               <div>
-                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Received Date</span>
-                <p className="text-xs font-mono text-[#F3EFE6] mt-0.5">{formatDate(selectedRepair.received_date)}</p>
+                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Service Type</span>
+                <p className="text-xs font-semibold text-[#E8D5A7] mt-0.5">{selectedRepair.service_type_display || selectedRepair.service_type}</p>
+                <p className="text-[11px] font-mono text-[#8D8980] mt-0.5">
+                  {selectedRepair.serial_number ? `SN: ${selectedRepair.serial_number}` : 'No serial logged'}
+                </p>
               </div>
 
               <div>
-                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Expected Delivery</span>
-                <p className="text-xs font-mono text-emerald-400 mt-0.5">{formatDate(selectedRepair.expected_delivery)}</p>
+                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Assigned Horologist</span>
+                <p className="text-xs font-medium text-[#F3EFE6] mt-0.5 flex items-center gap-1">
+                  <UserCheck className="w-3.5 h-3.5 text-[#C9A45C]" />
+                  {selectedRepair.assigned_technician_name || 'Unassigned'}
+                </p>
+                <p className="text-[11px] font-mono text-emerald-400 mt-0.5">
+                  Due: {formatDate(selectedRepair.expected_delivery)}
+                </p>
               </div>
             </div>
 
             {/* Diagnostic Box */}
-            <div className="p-3.5 bg-[#12110F] border border-[#2A261F] rounded-xl space-y-1">
-              <span className="text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Problem / Issue Description</span>
-              <p className="text-xs text-[#F3EFE6] leading-relaxed">{selectedRepair.issue_description}</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="p-3.5 bg-[#12110F] border border-[#2A261F] rounded-xl space-y-1">
+                <span className="text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Reported Issue</span>
+                <p className="text-xs text-[#F3EFE6] leading-relaxed">{selectedRepair.issue_description}</p>
+              </div>
+              <div className="p-3.5 bg-[#12110F] border border-[#2A261F] rounded-xl space-y-1">
+                <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider">Bench & Diagnosis Notes</span>
+                <p className="text-xs text-[#F3EFE6] leading-relaxed">{selectedRepair.diagnosis_notes || 'No bench inspection notes recorded yet.'}</p>
+              </div>
+            </div>
+
+            {/* Workshop Spare Parts & Consumables Section */}
+            <div className="p-4 bg-[#12110F] border border-[#2A261F] rounded-xl space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Cpu className="w-4 h-4 text-[#C9A45C]" />
+                  <span className="text-xs font-semibold text-[#F3EFE6] uppercase tracking-wider">Spare Parts & Consumables Used</span>
+                  {selectedRepair.parts_used && selectedRepair.parts_used.length > 0 && (
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F]">
+                      {selectedRepair.parts_used.length} parts
+                    </span>
+                  )}
+                </div>
+                {selectedRepair.status !== 'delivered' && selectedRepair.status !== 'cancelled' && (
+                  <Button 
+                    size="sm" 
+                    variant="secondary"
+                    icon={<Plus className="w-3.5 h-3.5" />}
+                    onClick={() => setShowAddPartModal(true)}
+                  >
+                    Add Spare Part
+                  </Button>
+                )}
+              </div>
+
+              {selectedRepair.parts_used && selectedRepair.parts_used.length > 0 ? (
+                <div className="divide-y divide-[#2A261F] border border-[#2A261F] rounded-xl overflow-hidden bg-[#171613]">
+                  {selectedRepair.parts_used.map((part) => (
+                    <div key={part.id} className="p-3 flex items-center justify-between text-xs">
+                      <div className="min-w-0 pr-3">
+                        <p className="font-semibold text-[#F3EFE6] truncate">{part.product_name}</p>
+                        <p className="text-[11px] text-[#8D8980] font-mono">
+                          {part.product_article_code ? `Code: ${part.product_article_code} | ` : ''}Qty: {part.quantity}
+                          {part.notes ? ` (${part.notes})` : ''}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        <span className="font-mono font-bold text-[#C9A45C]">
+                          {formatCurrency(part.total_charge)}
+                        </span>
+                        {selectedRepair.status !== 'delivered' && selectedRepair.status !== 'cancelled' && (
+                          <button
+                            onClick={() => handleRemoveSparePart(part.id)}
+                            disabled={removingPartId === part.id}
+                            className="p-1 text-rose-400 hover:bg-rose-950/40 rounded transition-colors"
+                            title="Return part to stock"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  <div className="p-3 bg-[#12110F] flex items-center justify-between text-xs">
+                    <span className="font-semibold text-[#8D8980] uppercase tracking-wider">Total Spare Parts Charge</span>
+                    <span className="font-mono font-bold text-sm text-[#C9A45C]">
+                      {formatCurrency(selectedRepair.total_parts_charge || 0)}
+                    </span>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 text-center border border-dashed border-[#2A261F] rounded-xl">
+                  <p className="text-xs text-[#8D8980]">No spare parts or consumables logged on this repair ticket.</p>
+                </div>
+              )}
             </div>
 
             {/* Cost Summary */}
-            <div className="grid grid-cols-3 gap-3 p-4 bg-[#12110F] border border-[#2A261F] rounded-xl text-center">
+            <div className="grid grid-cols-4 gap-3 p-4 bg-[#12110F] border border-[#2A261F] rounded-xl text-center">
               <div>
-                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Estimated Cost</span>
-                <p className="font-mono font-bold text-base text-[#8D8980] mt-1">{formatCurrency(selectedRepair.estimated_cost)}</p>
+                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Estimated</span>
+                <p className="font-mono font-bold text-sm text-[#8D8980] mt-1">{formatCurrency(selectedRepair.estimated_cost)}</p>
               </div>
 
               <div>
                 <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Advance Paid</span>
-                <p className="font-mono font-bold text-base text-emerald-400 mt-1">{formatCurrency(selectedRepair.advance_paid)}</p>
+                <p className="font-mono font-bold text-sm text-emerald-400 mt-1">{formatCurrency(selectedRepair.advance_paid)}</p>
               </div>
 
               <div>
-                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Final Cost</span>
-                <p className="font-mono font-bold text-lg text-[#C9A45C] mt-1">
+                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Final Charge</span>
+                <p className="font-mono font-bold text-sm text-[#C9A45C] mt-1">
                   {formatCurrency(selectedRepair.repair_charge || selectedRepair.estimated_cost)}
+                </p>
+              </div>
+
+              <div>
+                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Balance Due</span>
+                <p className="font-mono font-bold text-base text-amber-400 mt-1">
+                  {formatCurrency(selectedRepair.balance_due)}
                 </p>
               </div>
             </div>
@@ -1019,7 +1385,7 @@ export default function RepairsPage() {
                   loading={downloadingId === selectedRepair.id}
                   className="shadow-gold"
                 >
-                  Download Repair Ticket PDF
+                  Download Repair PDF
                 </Button>
               </div>
             </div>
@@ -1027,24 +1393,65 @@ export default function RepairsPage() {
         )}
       </Modal>
 
-      {/* Status Transition Modal */}
+      {/* Status Transition & Workshop Update Modal */}
       <Modal 
         isOpen={showStatusModal} 
         onClose={() => setShowStatusModal(false)} 
-        title="Update Repair Status"
-        description="Update the repair stage and record final charges or notes"
+        title="Update Repair Lifecycle & Workshop Status"
+        description="Advance the repair stage, assign horologists, record QC verification, and update charges"
       >
         <div className="space-y-4">
-          <div className={clsx('p-4 rounded-xl border', statusConfig[newStatus]?.bg, statusConfig[newStatus]?.border)}>
-            <span className="text-xs text-[#8D8980] uppercase tracking-wider block">New Status</span>
-            <p className={clsx('text-base font-bold font-serif mt-0.5', statusConfig[newStatus]?.color)}>
-              {statusConfig[newStatus]?.label}
-            </p>
+          <div>
+            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Workshop Stage</label>
+            <select
+              value={newStatus}
+              onChange={(e) => setNewStatus(e.target.value)}
+              className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6]"
+            >
+              {Object.entries(statusConfig).map(([key, config]) => (
+                <option key={key} value={key} className="bg-[#171613]">
+                  {config.label}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {(newStatus === 'ready' || newStatus === 'delivered') && (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Assigned Horologist</label>
+              <select
+                value={selectedTechId || ''}
+                onChange={(e) => setSelectedTechId(e.target.value ? parseInt(e.target.value) : null)}
+                className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6]"
+              >
+                <option value="">Unassigned</option>
+                {technicians.map((t) => (
+                  <option key={t.id} value={t.id} className="bg-[#171613]">
+                    {t.name} ({t.role})
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Service Category</label>
+              <select
+                value={statusServiceType}
+                onChange={(e) => setStatusServiceType(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6]"
+              >
+                {serviceTypes.map((st) => (
+                  <option key={st.value} value={st.value} className="bg-[#171613]">
+                    {st.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {(newStatus === 'ready' || newStatus === 'delivered' || newStatus === 'in_repair') && (
             <Input
-              label="Final Repair Cost (₹)"
+              label="Final Repair Charge (₹)"
               type="number"
               value={repairCharge}
               onChange={(e) => setRepairCharge(e.target.value)}
@@ -1052,14 +1459,42 @@ export default function RepairsPage() {
             />
           )}
 
+          {/* Quality Control (QC) Passed Checkbox */}
+          <div className="p-3 bg-[#12110F] border border-[#2A261F] rounded-xl flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <div>
+                <p className="text-xs font-semibold text-[#F3EFE6]">Quality Control (QC) Assurance</p>
+                <p className="text-[11px] text-[#8D8980]">Timekeeping, power reserve, and water resistance verified</p>
+              </div>
+            </div>
+            <input 
+              type="checkbox" 
+              checked={statusQcPassed}
+              onChange={(e) => setStatusQcPassed(e.target.checked)}
+              className="w-4 h-4 rounded border-[#2A261F] text-[#C9A45C] focus:ring-[#C9A45C] bg-[#171613] cursor-pointer"
+            />
+          </div>
+
           <div>
-            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Repair Notes / Parts Replaced</label>
+            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Technical & Bench Notes</label>
+            <textarea
+              value={statusDiagnosisNotes}
+              onChange={(e) => setStatusDiagnosisNotes(e.target.value)}
+              rows={2}
+              className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-xs text-[#F3EFE6] resize-none"
+              placeholder="e.g. Demagnetized balance spring, replaced battery 377, lubricated rotor bearing..."
+            />
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Status Update Comments (Customer & Staff)</label>
             <textarea
               value={statusNote}
               onChange={(e) => setStatusNote(e.target.value)}
-              rows={3}
+              rows={2}
               className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-xs text-[#F3EFE6] resize-none"
-              placeholder="e.g. Replaced battery, fitted new gasket, tested water resistance..."
+              placeholder="e.g. Awaiting client quote approval via WhatsApp..."
             />
           </div>
 
@@ -1072,6 +1507,87 @@ export default function RepairsPage() {
             </Button>
           </div>
         </div>
+      </Modal>
+
+      {/* Add Spare Part Modal */}
+      <Modal
+        isOpen={showAddPartModal}
+        onClose={() => setShowAddPartModal(false)}
+        title="Consume Spare Part from Catalog"
+        description="Select inventory product or watchmaker spare to consume for this repair"
+      >
+        <form onSubmit={handleAddSparePart} className="space-y-4">
+          <div>
+            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Select Catalog Product / Spare Part *</label>
+            <select
+              value={partProductId || ''}
+              onChange={(e) => {
+                const id = e.target.value ? parseInt(e.target.value) : null
+                setPartProductId(id)
+                if (id) {
+                  const p = products.find(prod => prod.id === id)
+                  if (p) {
+                    setPartCharge(p.selling_price?.toString() || '0')
+                  }
+                }
+              }}
+              className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6]"
+              required
+            >
+              <option value="">Select a part / consumable...</option>
+              {products.map((p) => (
+                <option key={p.id} value={p.id} className="bg-[#171613]">
+                  {p.name} {p.brand ? `(${p.brand})` : ''} - Stock: {p.stock} | ₹{p.selling_price}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Quantity</label>
+              <input
+                type="number"
+                min={1}
+                value={partQuantity}
+                onChange={(e) => setPartQuantity(parseInt(e.target.value) || 1)}
+                className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6]"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Charge to Customer (₹)</label>
+              <input
+                type="number"
+                step="any"
+                value={partCharge}
+                onChange={(e) => setPartCharge(e.target.value)}
+                placeholder="Defaults to product price"
+                className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6]"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Notes (Optional)</label>
+            <input
+              type="text"
+              value={partNotes}
+              onChange={(e) => setPartNotes(e.target.value)}
+              placeholder="e.g. Sapphire glass crystal replacement"
+              className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6]"
+            />
+          </div>
+
+          <div className="flex gap-2.5 pt-3 border-t border-[#2A261F]">
+            <Button type="button" variant="secondary" onClick={() => setShowAddPartModal(false)} className="flex-1">
+              Cancel
+            </Button>
+            <Button type="submit" loading={isAddingPart} className="flex-1 shadow-gold">
+              Consume Part
+            </Button>
+          </div>
+        </form>
       </Modal>
     </div>
   )

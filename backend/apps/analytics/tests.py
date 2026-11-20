@@ -368,3 +368,29 @@ class AdvancedIntelligenceAndAITests(TestCase):
         self.assertTrue(res.data['lifetime_spend'] > 500000)
         self.assertEqual(res.data['preferred_brand'], 'Tissot')
         self.assertIn('High-Value VIP', res.data['segments'])
+
+    def test_financial_statement_and_gst_reports(self):
+        """Financial statement and GST compliance reports compute accurate figures and HSN breakdown"""
+        from apps.analytics.reports import FinancialStatementReport, GSTReport
+
+        self.client.force_authenticate(user=self.manager)
+
+        # Financial Statement (P&L) endpoint
+        fs_res = self.client.get('/api/analytics/reports/financial-statement/')
+        self.assertEqual(fs_res.status_code, status.HTTP_200_OK)
+        self.assertIn('revenue', fs_res.data)
+        self.assertIn('gross_profit', fs_res.data)
+        self.assertIn('operating_expenses', fs_res.data)
+        self.assertIn('net_profit', fs_res.data)
+
+        # GST Report endpoint
+        gst_res = self.client.get('/api/analytics/reports/gst/')
+        self.assertEqual(gst_res.status_code, status.HTTP_200_OK)
+        self.assertIn('total_taxable_value', gst_res.data['summary'])
+        self.assertIn('cgst_amount', gst_res.data['summary'])
+        self.assertIn('sgst_amount', gst_res.data['summary'])
+        self.assertTrue(len(gst_res.data['hsn_summary']) >= 4)
+        hsn_codes = [h['hsn_code'] for h in gst_res.data['hsn_summary']]
+        self.assertIn('9101', hsn_codes)
+        self.assertIn('9102', hsn_codes)
+

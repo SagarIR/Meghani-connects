@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, ProductImage, Brand, Category
+from .models import Product, ProductImage, Brand, Category, Subcategory
 
 
 class ProductImageSerializer(serializers.ModelSerializer):
@@ -15,6 +15,26 @@ class ProductImageSerializer(serializers.ModelSerializer):
         return obj.image_url
 
 
+class SubcategorySerializer(serializers.ModelSerializer):
+    category_slug = serializers.CharField(source='category.slug', read_only=True)
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    slug = serializers.SlugField(required=False, allow_blank=True)
+
+    class Meta:
+        model = Subcategory
+        fields = [
+            'id', 'category', 'category_slug', 'category_name', 'name', 'slug',
+            'description', 'display_order', 'is_active', 'created_at'
+        ]
+        read_only_fields = ['id', 'created_at']
+
+    def create(self, validated_data):
+        from django.utils.text import slugify
+        if not validated_data.get('slug'):
+            validated_data['slug'] = slugify(validated_data.get('name', 'subcat'))
+        return super().create(validated_data)
+
+
 class BrandSerializer(serializers.ModelSerializer):
     count = serializers.SerializerMethodField()
     slug = serializers.SlugField(required=False, allow_blank=True)
@@ -27,7 +47,7 @@ class BrandSerializer(serializers.ModelSerializer):
         ]
 
     def get_count(self, obj):
-        return Product.objects.filter(brand__iexact=obj.name, is_active=True).count()
+        return Product.objects.filter(brand=obj, is_active=True).count()
 
     def create(self, validated_data):
         from django.utils.text import slugify
@@ -39,16 +59,17 @@ class BrandSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     count = serializers.SerializerMethodField()
     slug = serializers.SlugField(required=False, allow_blank=True)
+    subcategories = SubcategorySerializer(many=True, read_only=True)
 
     class Meta:
         model = Category
         fields = [
             'id', 'name', 'slug', 'tagline', 'description', 'image_url',
-            'features', 'is_active', 'count', 'display_order'
+            'features', 'is_active', 'count', 'display_order', 'subcategories'
         ]
 
     def get_count(self, obj):
-        return Product.objects.filter(category=obj.slug, is_active=True).count()
+        return Product.objects.filter(category=obj, is_active=True).count()
 
     def create(self, validated_data):
         from django.utils.text import slugify
@@ -87,6 +108,25 @@ class FlexibleImageField(serializers.Field):
 
 class ProductSerializer(serializers.ModelSerializer):
     image = FlexibleImageField(required=False, allow_null=True)
+    brand_id = serializers.PrimaryKeyRelatedField(
+        queryset=Brand.objects.all(), source='brand', required=False, allow_null=True
+    )
+    brand = serializers.SlugRelatedField(
+        slug_field='name', queryset=Brand.objects.all(), required=False, allow_null=True
+    )
+    category_id = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all(), source='category', required=False, allow_null=True
+    )
+    category = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Category.objects.all(), required=False, allow_null=True
+    )
+    subcategory_id = serializers.PrimaryKeyRelatedField(
+        queryset=Subcategory.objects.all(), source='subcategory', required=False, allow_null=True
+    )
+    subcategory = serializers.SlugRelatedField(
+        slug_field='slug', queryset=Subcategory.objects.all(), required=False, allow_null=True
+    )
+    subcategory_name = serializers.CharField(source='subcategory.name', read_only=True, default='')
     profit_margin = serializers.DecimalField(max_digits=10, decimal_places=2, read_only=True)
     profit_percentage = serializers.FloatField(read_only=True)
     is_low_stock = serializers.BooleanField(read_only=True)
@@ -95,7 +135,10 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'brand', 'category', 'cost_price', 'selling_price',
+            'id', 'article_code', 'model_number', 'size',
+            'name', 'brand', 'brand_id', 'category', 'category_id',
+            'subcategory', 'subcategory_id', 'subcategory_name',
+            'mrp', 'cost_price', 'selling_price',
             'price_visible', 'availability',
             'stock', 'barcode', 'supplier_name', 'image', 'gallery_images',
             'description', 'specifications', 'warranty_months',
@@ -104,6 +147,37 @@ class ProductSerializer(serializers.ModelSerializer):
             'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate(self, attrs):
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            is_admin = request.user.is_superuser or getattr(request.user, 'role', '') in ['admin', 'manager']
+            if not is_admin and 'cost_price' in attrs:
+                if self.instance:
+                    attrs['cost_price'] = self.instance.cost_price
+                else:
+                    raise serializers.ValidationError({'cost_price': 'Permission denied: only managers can set cost price.'})
+
+        selling_price = attrs.get('selling_price', getattr(self.instance, 'selling_price', None))
+        cost_price = attrs.get('cost_price', getattr(self.instance, 'cost_price', None))
+        mrp = attrs.get('mrp', getattr(self.instance, 'mrp', None))
+
+        if cost_price is not None and cost_price < 0:
+            raise serializers.ValidationError({'cost_price': 'Cost price cannot be negative.'})
+        if selling_price is not None and selling_price < 0:
+            raise serializers.ValidationError({'selling_price': 'Selling price cannot be negative.'})
+        if mrp is not None and mrp < 0:
+            raise serializers.ValidationError({'mrp': 'MRP cannot be negative.'})
+        if selling_price is not None and mrp is not None and selling_price > mrp:
+            raise serializers.ValidationError({'selling_price': 'Selling price cannot exceed MRP.'})
+
+        # Validate subcategory matches category
+        category = attrs.get('category', getattr(self.instance, 'category', None))
+        subcategory = attrs.get('subcategory', getattr(self.instance, 'subcategory', None))
+        if subcategory and category and subcategory.category_id != category.id:
+            raise serializers.ValidationError({'subcategory': f'Subcategory {subcategory.name} does not belong to {category.name}.'})
+
+        return attrs
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
@@ -121,10 +195,17 @@ class ProductSerializer(serializers.ModelSerializer):
 class ProductListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for listing products"""
     image = FlexibleImageField(required=False, allow_null=True)
+    brand = serializers.CharField(source='brand_name', read_only=True)
+    category = serializers.CharField(source='category_slug_val', read_only=True)
+    subcategory = serializers.CharField(source='subcategory_name', read_only=True)
 
     class Meta:
         model = Product
-        fields = ['id', 'name', 'brand', 'category', 'selling_price', 'price_visible', 'availability', 'stock', 'barcode', 'image', 'is_featured', 'is_new_arrival', 'is_low_stock']
+        fields = [
+            'id', 'article_code', 'name', 'brand', 'category', 'subcategory',
+            'mrp', 'selling_price', 'price_visible', 'availability',
+            'stock', 'barcode', 'image', 'is_featured', 'is_new_arrival', 'is_low_stock'
+        ]
 
 
 class PublicProductSerializer(serializers.ModelSerializer):
@@ -134,13 +215,17 @@ class PublicProductSerializer(serializers.ModelSerializer):
     - Confidential fields (cost_price, supplier_name, profit_margin) are excluded.
     - If price_visible is False, price is never exposed.
     """
+    brand = serializers.CharField(source='brand_name', read_only=True)
+    category = serializers.CharField(source='category_slug_val', read_only=True)
+    subcategory = serializers.CharField(source='subcategory_name', read_only=True)
     price = serializers.SerializerMethodField()
     gallery_images = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = [
-            'id', 'name', 'brand', 'category', 'price', 'price_visible',
+            'id', 'article_code', 'model_number', 'size', 'name', 'brand',
+            'category', 'subcategory', 'mrp', 'price', 'price_visible',
             'availability', 'barcode', 'image', 'gallery_images',
             'description', 'specifications', 'warranty_months',
             'is_featured', 'is_new_arrival', 'created_at'

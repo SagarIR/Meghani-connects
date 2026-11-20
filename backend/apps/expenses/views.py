@@ -1,13 +1,17 @@
+from decimal import Decimal
 from rest_framework import viewsets, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from apps.users.permissions import IsManagerOrAbove, IsAdmin
+from apps.users.permissions import IsManagerOrAbove, IsStaffOrAbove, IsAdmin
 from django.db.models import Sum
 from django.db.models.functions import TruncMonth
 from django.utils import timezone
 from datetime import timedelta
-from .models import Expense
-from .serializers import ExpenseSerializer, ExpenseListSerializer
+from .models import Expense, CashRegister
+from .serializers import (
+    ExpenseSerializer, ExpenseListSerializer,
+    CashRegisterSerializer, CloseRegisterSerializer
+)
 
 
 class ExpenseViewSet(viewsets.ModelViewSet):
@@ -15,7 +19,7 @@ class ExpenseViewSet(viewsets.ModelViewSet):
     serializer_class = ExpenseSerializer
     permission_classes = [IsManagerOrAbove]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['description', 'vendor_name']
+    search_fields = ['voucher_number', 'description', 'vendor_name', 'gstin']
     ordering_fields = ['date', 'amount', 'category']
     ordering = ['-date', '-created_at']
 
@@ -40,6 +44,11 @@ class ExpenseViewSet(viewsets.ModelViewSet):
         category = self.request.query_params.get('category')
         if category:
             queryset = queryset.filter(category=category)
+
+        # Filter by payment mode
+        payment_mode = self.request.query_params.get('payment_mode')
+        if payment_mode:
+            queryset = queryset.filter(payment_mode=payment_mode)
         
         # Filter by date range
         start_date = self.request.query_params.get('start_date')
@@ -100,3 +109,47 @@ class ExpenseViewSet(viewsets.ModelViewSet):
         ).order_by('-total')
         
         return Response(list(categories))
+
+
+class CashRegisterViewSet(viewsets.ModelViewSet):
+    """
+    Daily POS physical cash drawer & till reconciliation.
+    """
+    queryset = CashRegister.objects.select_related('closed_by').all().order_by('-register_date')
+    serializer_class = CashRegisterSerializer
+    permission_classes = [IsManagerOrAbove]
+    filter_backends = [filters.OrderingFilter]
+    ordering_fields = ['register_date', 'variance']
+
+    @action(detail=False, methods=['get'])
+    def today(self, request):
+        """Get or initialize today's till register with live recalculated cash totals"""
+        today_date = timezone.now().date()
+        register, created = CashRegister.objects.get_or_create(
+            register_date=today_date,
+            defaults={'opening_cash': Decimal('2000.00')}  # standard float for watch boutique till
+        )
+        register.recalculate()
+        return Response(CashRegisterSerializer(register).data)
+
+    @action(detail=True, methods=['post'], url_path='close')
+    def close_till(self, request, pk=None):
+        """Close and lock the cash drawer with actual physical cash count"""
+        register = self.get_object()
+        serializer = CloseRegisterSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        actual_cash = serializer.validated_data['actual_closing_cash']
+        notes = serializer.validated_data.get('notes', '')
+
+        register.recalculate()
+        register.actual_closing_cash = actual_cash
+        register.variance = actual_cash - register.expected_closing_cash
+        register.is_closed = True
+        register.closed_by = request.user
+        register.closed_at = timezone.now()
+        if notes:
+            register.notes = f"{register.notes}\nClosing Note: {notes}".strip()
+        register.save()
+
+        return Response(CashRegisterSerializer(register).data)

@@ -175,3 +175,109 @@ class CustomerBulkImportTests(TestCase):
         self.assertEqual(res.status_code, status.HTTP_200_OK)
         self.assertIn('application/vnd.openxmlformats', res['Content-Type'])
         self.assertIn('customer_import_template.xlsx', res['Content-Disposition'])
+
+    def test_phone_normalization_and_uniqueness(self):
+        """Phone numbers are standardized to +91XXXXXXXXXX and reject duplicates"""
+        from apps.crm.models import Customer
+        self.client.force_authenticate(user=self.staff_user)
+
+        # Create with raw 10 digits
+        c1 = Customer.objects.create(name='Priya Shah', phone='9876543210')
+        self.assertEqual(c1.phone, '+919876543210')
+
+        # Create with spaces and +91
+        c2 = Customer.objects.create(name='Rajiv Mehta', phone='+91 98765 00000')
+        self.assertEqual(c2.phone, '+919876500000')
+
+    def test_loyalty_ledger_immutability(self):
+        """Loyalty point operations append audit entries into LoyaltyTransaction ledger"""
+        from apps.crm.models import Customer, LoyaltyTransaction
+        self.client.force_authenticate(user=self.staff_user)
+
+        cust = Customer.objects.create(name='Vikram Seth', phone='9876511111', loyalty_points=0)
+
+        # Earn points on purchase
+        earned = cust.add_loyalty_points(sale_amount=15000, reference_id='INV-TEST-001', user=self.staff_user)
+        self.assertEqual(earned, 150)
+        self.assertEqual(cust.loyalty_points, 150)
+
+        ledger_entry = LoyaltyTransaction.objects.filter(customer=cust, transaction_type='earned').first()
+        self.assertIsNotNone(ledger_entry)
+        self.assertEqual(ledger_entry.points, 150)
+        self.assertEqual(ledger_entry.balance_after, 150)
+
+        # Redeem points
+        discount = cust.redeem_points(points_to_redeem=50, reference_id='INV-TEST-002', user=self.staff_user)
+        self.assertEqual(discount, 25.0)  # 50 * 0.5 = 25
+        self.assertEqual(cust.loyalty_points, 100)
+
+        redeem_entry = LoyaltyTransaction.objects.filter(customer=cust, transaction_type='redeemed').first()
+        self.assertIsNotNone(redeem_entry)
+        self.assertEqual(redeem_entry.points, -50)
+        self.assertEqual(redeem_entry.balance_after, 100)
+
+    def test_customer_merge_workflow(self):
+        """Merging duplicate customer consolidates sales, repairs, loyalty, and audit history"""
+        from apps.crm.models import Customer, LoyaltyTransaction
+        from apps.crm.services.customer_merge import CustomerMergeService
+        from apps.sales.models import Sale
+        from apps.repairs.models import Repair
+        from decimal import Decimal
+
+        self.client.force_authenticate(user=self.staff_user)
+
+        primary = Customer.objects.create(
+            name='Amitabh Bachchan', phone='9876522222', email='amitabh@bachchan.com', loyalty_points=100
+        )
+        duplicate = Customer.objects.create(
+            name='Amitabh B.', phone='9876533333', address='Jalsa, Mumbai', loyalty_points=50
+        )
+
+        # Create transactions for duplicate
+        sale = Sale.objects.create(
+            customer=duplicate,
+            total_amount=Decimal('50000.00'),
+            payment_mode='card',
+            created_by=self.staff_user
+        )
+        repair = Repair.objects.create(
+            customer=duplicate,
+            item_type='Watch',
+            brand='Rolex',
+            issue_description='Bezel replacement',
+            created_by=self.staff_user
+        )
+
+        # Perform merge
+        merged = CustomerMergeService.merge_customers(
+            primary_customer_id=primary.id,
+            duplicate_customer_id=duplicate.id,
+            user=self.staff_user
+        )
+
+        self.assertEqual(merged.id, primary.id)
+        self.assertEqual(merged.loyalty_points, 150)  # 100 + 50
+        self.assertEqual(merged.address, 'Jalsa, Mumbai')
+
+        # Verify relations reassigned
+        sale.refresh_from_db()
+        repair.refresh_from_db()
+        self.assertEqual(sale.customer, primary)
+        self.assertEqual(repair.customer, primary)
+
+        # Verify duplicate deleted
+        self.assertFalse(Customer.objects.filter(id=duplicate.id).exists())
+
+    def test_customer_deletion_protection(self):
+        """Customers with active sales cannot be deleted"""
+        from apps.crm.models import Customer
+        from apps.sales.models import Sale
+        from django.core.exceptions import ValidationError
+        from decimal import Decimal
+
+        cust = Customer.objects.create(name='Protected Customer', phone='9876544444')
+        Sale.objects.create(customer=cust, total_amount=Decimal('1000.00'), payment_mode='cash')
+
+        with self.assertRaises(ValidationError):
+            cust.delete()
+

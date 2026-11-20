@@ -9,10 +9,10 @@ import {
   Plus, Search, Users, Phone, Gift, Edit, Trash2, Eye, ShoppingCart, 
   Wrench, Mail, MapPin, Calendar, Award, Star, TrendingUp, History,
   LayoutGrid, List, MessageSquare, Send, Crown, Sparkles, Receipt,
-  Clock, ShieldCheck
+  Clock, ShieldCheck, GitMerge, Coins, Building, CheckCircle2, AlertCircle
 } from 'lucide-react'
 import { api } from '@/services/api'
-import { Customer, Sale, Repair } from '@/types'
+import { Customer, Sale, Repair, LoyaltyTransaction, CustomerDossier } from '@/types'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import Input from '@/components/ui/Input'
@@ -29,8 +29,11 @@ const schema = yup.object({
   name: yup.string().required('Customer name is required'),
   phone: yup.string().required('Phone number is required').min(10, 'Valid 10-digit phone required'),
   email: yup.string().email('Invalid email address').nullable(),
+  city: yup.string().nullable(),
+  gstin: yup.string().nullable(),
   address: yup.string().nullable(),
   date_of_birth: yup.string().nullable(),
+  anniversary_date: yup.string().nullable(),
   language_preference: yup.string().default('en'),
   notes: yup.string().nullable(),
 })
@@ -99,12 +102,23 @@ export default function CustomersPage() {
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   
-  // Customer details
+  // Customer details & 360 Dossier
   const [purchases, setPurchases] = useState<Sale[]>([])
   const [repairs, setRepairs] = useState<Repair[]>([])
-  const [detailTab, setDetailTab] = useState<'info' | 'purchases' | 'repairs'>('info')
+  const [warranties, setWarranties] = useState<any[]>([])
+  const [loyaltyLedger, setLoyaltyLedger] = useState<LoyaltyTransaction[]>([])
+  const [dossierMetrics, setDossierMetrics] = useState<any>(null)
+  const [detailTab, setDetailTab] = useState<'info' | 'purchases' | 'repairs' | 'warranties' | 'loyalty'>('info')
   const [loadingDetails, setLoadingDetails] = useState(false)
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid')
+
+  // Deduplication & Consolidation state
+  const [showDuplicateModal, setShowDuplicateModal] = useState(false)
+  const [duplicateClusters, setDuplicateClusters] = useState<any[]>([])
+  const [loadingDuplicates, setLoadingDuplicates] = useState(false)
+  const [selectedPrimaryId, setSelectedPrimaryId] = useState<number | null>(null)
+  const [selectedDuplicateId, setSelectedDuplicateId] = useState<number | null>(null)
+  const [mergingCustomer, setMergingCustomer] = useState(false)
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<FormData>({
     resolver: yupResolver(schema),
@@ -170,7 +184,18 @@ export default function CustomersPage() {
 
   const openAddModal = () => {
     setSelectedCustomer(null)
-    reset({ language_preference: 'en', name: '', phone: '', email: '', address: '', date_of_birth: '', notes: '' })
+    reset({ 
+      language_preference: 'en', 
+      name: '', 
+      phone: '', 
+      email: '', 
+      city: '', 
+      gstin: '', 
+      address: '', 
+      date_of_birth: '', 
+      anniversary_date: '', 
+      notes: '' 
+    })
     setShowFormModal(true)
   }
 
@@ -180,8 +205,11 @@ export default function CustomersPage() {
       name: customer.name,
       phone: customer.phone,
       email: customer.email || '',
+      city: customer.city || '',
+      gstin: customer.gstin || '',
       address: customer.address || '',
       date_of_birth: customer.date_of_birth || '',
+      anniversary_date: customer.anniversary_date || '',
       language_preference: customer.language_preference || 'en',
       notes: customer.notes || ''
     })
@@ -195,12 +223,25 @@ export default function CustomersPage() {
     setLoadingDetails(true)
     
     try {
-      const [purchasesRes, repairsRes] = await Promise.all([
-        api.get(`/customers/${customer.id}/purchases/`).catch(() => ({ data: [] })),
-        api.get(`/customers/${customer.id}/repairs/`).catch(() => ({ data: [] })),
-      ])
-      setPurchases(purchasesRes.data || [])
-      setRepairs(repairsRes.data || [])
+      const dossierRes = await api.get(`/customers/${customer.id}/dossier/`).catch(() => null)
+      if (dossierRes?.data) {
+        const d = dossierRes.data
+        setDossierMetrics(d.metrics)
+        setPurchases(d.sales || [])
+        setRepairs(d.repairs || [])
+        setWarranties(d.warranties || [])
+        setLoyaltyLedger(d.loyalty_ledger || [])
+      } else {
+        const [purchasesRes, repairsRes] = await Promise.all([
+          api.get(`/customers/${customer.id}/purchases/`).catch(() => ({ data: [] })),
+          api.get(`/customers/${customer.id}/repairs/`).catch(() => ({ data: [] })),
+        ])
+        setPurchases(purchasesRes.data || [])
+        setRepairs(repairsRes.data || [])
+        setWarranties([])
+        setLoyaltyLedger([])
+        setDossierMetrics(null)
+      }
     } catch (error) {
       console.error('Failed to load customer details:', error)
     } finally {
@@ -211,6 +252,54 @@ export default function CustomersPage() {
   const openDeleteModal = (customer: Customer) => {
     setSelectedCustomer(customer)
     setShowDeleteModal(true)
+  }
+
+  const checkDuplicates = async () => {
+    setLoadingDuplicates(true)
+    try {
+      const res = await api.get('/customers/potential_duplicates/')
+      const clusters = res.data?.potential_duplicates_by_phone || []
+      setDuplicateClusters(clusters)
+      if (clusters.length === 0) {
+        toast.success('No duplicate customer records detected. CRM database is clean!', {
+          icon: '✨'
+        })
+      } else {
+        setShowDuplicateModal(true)
+      }
+    } catch (error) {
+      toast.error('Failed to scan for duplicate profiles')
+    } finally {
+      setLoadingDuplicates(false)
+    }
+  }
+
+  const handleMergeProfiles = async () => {
+    if (!selectedPrimaryId || !selectedDuplicateId) {
+      toast.error('Please select both the Primary (surviving) and Duplicate (absorbed) customer profiles')
+      return
+    }
+    if (selectedPrimaryId === selectedDuplicateId) {
+      toast.error('Primary and duplicate cannot be the same customer profile')
+      return
+    }
+
+    setMergingCustomer(true)
+    try {
+      const res = await api.post('/customers/merge/', {
+        primary_customer_id: selectedPrimaryId,
+        duplicate_customer_id: selectedDuplicateId
+      })
+      toast.success(res.data?.message || 'Customer profiles consolidated successfully!')
+      setShowDuplicateModal(false)
+      setSelectedPrimaryId(null)
+      setSelectedDuplicateId(null)
+      fetchCustomers()
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to merge customer profiles')
+    } finally {
+      setMergingCustomer(false)
+    }
   }
 
   const onSubmit = async (data: FormData) => {
@@ -305,6 +394,14 @@ export default function CustomersPage() {
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+          <Button 
+            variant="secondary" 
+            onClick={checkDuplicates} 
+            loading={loadingDuplicates}
+            icon={<GitMerge className="w-4 h-4 text-[#C9A45C]" />}
+          >
+            <span>Scan Duplicates</span>
+          </Button>
           <ExportButton 
             data={customers} 
             columns={customerExportColumns} 
@@ -699,9 +796,27 @@ export default function CustomersPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
             <Input 
+              label="City / Region" 
+              placeholder="e.g. Vadodara" 
+              {...register('city')} 
+            />
+            <Input 
+              label="GSTIN (Optional)" 
+              placeholder="e.g. 24AAACH7409R1ZZ" 
+              {...register('gstin')} 
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+            <Input 
               label="Date of Birth" 
               type="date"
               {...register('date_of_birth')} 
+            />
+            <Input 
+              label="Anniversary Date" 
+              type="date"
+              {...register('anniversary_date')} 
             />
             <div>
               <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Language Preference</label>
@@ -793,22 +908,22 @@ export default function CustomersPage() {
             </div>
 
             {/* Tabs Selector */}
-            <div className="flex items-center gap-1.5 p-1 bg-[#12110F] border border-[#2A261F] rounded-xl text-xs font-semibold">
+            <div className="flex items-center gap-1.5 p-1 bg-[#12110F] border border-[#2A261F] rounded-xl text-xs font-semibold overflow-x-auto">
               <button
                 onClick={() => setDetailTab('info')}
                 className={clsx(
-                  'flex-1 py-2 px-3 rounded-lg transition-all',
+                  'flex-1 min-w-[90px] py-2 px-2.5 rounded-lg transition-all',
                   detailTab === 'info'
                     ? 'bg-[#C9A45C] text-[#0B0B0A] shadow-md font-bold'
                     : 'text-[#8D8980] hover:text-[#F3EFE6]'
                 )}
               >
-                1. Details
+                1. 360 Profile
               </button>
               <button
                 onClick={() => setDetailTab('purchases')}
                 className={clsx(
-                  'flex-1 py-2 px-3 rounded-lg transition-all',
+                  'flex-1 min-w-[100px] py-2 px-2.5 rounded-lg transition-all',
                   detailTab === 'purchases'
                     ? 'bg-[#C9A45C] text-[#0B0B0A] shadow-md font-bold'
                     : 'text-[#8D8980] hover:text-[#F3EFE6]'
@@ -819,24 +934,46 @@ export default function CustomersPage() {
               <button
                 onClick={() => setDetailTab('repairs')}
                 className={clsx(
-                  'flex-1 py-2 px-3 rounded-lg transition-all',
+                  'flex-1 min-w-[95px] py-2 px-2.5 rounded-lg transition-all',
                   detailTab === 'repairs'
                     ? 'bg-[#C9A45C] text-[#0B0B0A] shadow-md font-bold'
                     : 'text-[#8D8980] hover:text-[#F3EFE6]'
                 )}
               >
-                3. Watch Repairs ({repairs.length})
+                3. Repairs ({repairs.length})
+              </button>
+              <button
+                onClick={() => setDetailTab('warranties')}
+                className={clsx(
+                  'flex-1 min-w-[105px] py-2 px-2.5 rounded-lg transition-all',
+                  detailTab === 'warranties'
+                    ? 'bg-[#C9A45C] text-[#0B0B0A] shadow-md font-bold'
+                    : 'text-[#8D8980] hover:text-[#F3EFE6]'
+                )}
+              >
+                4. Warranties ({warranties.length})
+              </button>
+              <button
+                onClick={() => setDetailTab('loyalty')}
+                className={clsx(
+                  'flex-1 min-w-[100px] py-2 px-2.5 rounded-lg transition-all',
+                  detailTab === 'loyalty'
+                    ? 'bg-[#C9A45C] text-[#0B0B0A] shadow-md font-bold'
+                    : 'text-[#8D8980] hover:text-[#F3EFE6]'
+                )}
+              >
+                5. Loyalty ({loyaltyLedger.length})
               </button>
             </div>
 
-            {/* TAB 1: Info */}
+            {/* TAB 1: 360 Dossier & Info */}
             {detailTab === 'info' && (
               <div className="space-y-4">
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-[#12110F] border border-[#2A261F] rounded-xl text-center">
                   <div>
-                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Total Purchases</span>
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Total Spend</span>
                     <p className="font-mono font-bold text-base text-[#F3EFE6] mt-0.5">
-                      {formatCurrency(selectedCustomer.total_purchases || 0)}
+                      {formatCurrency(dossierMetrics?.total_spend || selectedCustomer.total_purchases || 0)}
                     </p>
                   </div>
                   <div>
@@ -846,29 +983,47 @@ export default function CustomersPage() {
                     </p>
                   </div>
                   <div>
-                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Customer Since</span>
-                    <p className="font-mono text-xs text-[#F3EFE6] mt-1">
-                      {formatDate(selectedCustomer.created_at)}
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Watch Repairs</span>
+                    <p className="font-mono font-bold text-base text-[#F3EFE6] mt-0.5">
+                      {dossierMetrics?.repairs_count ?? selectedCustomer.repair_count ?? repairs.length} jobs
                     </p>
                   </div>
                   <div>
-                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Date of Birth</span>
-                    <p className="font-mono text-xs text-[#F3EFE6] mt-1">
-                      {selectedCustomer.date_of_birth ? formatDate(selectedCustomer.date_of_birth) : 'Not specified'}
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Active Warranties</span>
+                    <p className="font-mono font-bold text-base text-emerald-400 mt-0.5">
+                      {dossierMetrics?.active_warranties_count ?? selectedCustomer.active_warranties_count ?? warranties.filter(w => !w.is_expired).length} valid
                     </p>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="p-3 bg-[#12110F] border border-[#2A261F] rounded-xl">
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block mb-1">City / Region</span>
+                    <p className="text-xs text-[#F3EFE6] font-medium">{selectedCustomer.city || 'Vadodara'}</p>
+                  </div>
+                  <div className="p-3 bg-[#12110F] border border-[#2A261F] rounded-xl">
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block mb-1">Birth & Anniversary</span>
+                    <p className="text-xs text-[#F3EFE6]">
+                      DOB: {selectedCustomer.date_of_birth ? formatDate(selectedCustomer.date_of_birth) : 'N/A'}<br/>
+                      Anniv: {selectedCustomer.anniversary_date ? formatDate(selectedCustomer.anniversary_date) : 'N/A'}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-[#12110F] border border-[#2A261F] rounded-xl">
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block mb-1">Customer GSTIN</span>
+                    <p className="text-xs font-mono text-[#C9A45C]">{selectedCustomer.gstin || 'B2C Retail Buyer'}</p>
                   </div>
                 </div>
 
                 {selectedCustomer.address && (
                   <div className="p-3 bg-[#12110F] border border-[#2A261F] rounded-xl">
-                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block mb-1">Address</span>
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block mb-1">Billing & Delivery Address</span>
                     <p className="text-xs text-[#F3EFE6]">{selectedCustomer.address}</p>
                   </div>
                 )}
 
                 {selectedCustomer.notes && (
                   <div className="p-3 bg-[#12110F] border border-[#2A261F] rounded-xl">
-                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block mb-1">Customer Notes</span>
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block mb-1">VIP & Preference Notes</span>
                     <p className="text-xs text-[#F3EFE6] leading-relaxed">{selectedCustomer.notes}</p>
                   </div>
                 )}
@@ -933,10 +1088,107 @@ export default function CustomersPage() {
                         {repairs.map((rep: any) => (
                           <tr key={rep.id} className="hover:bg-[#1F1E1A]/40">
                             <td className="px-4 py-2.5 font-mono font-bold text-[#C9A45C]">{rep.ticket_number}</td>
-                            <td className="px-4 py-2.5 text-[#F3EFE6]">{rep.brand || ''} {rep.item_type}</td>
-                            <td className="px-4 py-2.5 uppercase text-[10px] text-[#E8D5A7] font-semibold">{rep.status}</td>
+                            <td className="px-4 py-2.5 text-[#F3EFE6]">{rep.brand || ''} {rep.item_type || rep.model_number || 'Watch'}</td>
+                            <td className="px-4 py-2.5 uppercase text-[10px] text-[#E8D5A7] font-semibold">{rep.status_display || rep.status}</td>
                             <td className="px-4 py-2.5 text-right font-mono font-bold text-[#F3EFE6]">
-                              {formatCurrency(rep.repair_charge || rep.estimated_cost)}
+                              {formatCurrency(rep.repair_charge || rep.estimated_cost || 0)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 4: Warranties */}
+            {detailTab === 'warranties' && (
+              <div className="space-y-3">
+                {warranties.length === 0 ? (
+                  <div className="p-8 text-center bg-[#12110F] border border-[#2A261F] rounded-xl">
+                    <ShieldCheck className="w-8 h-8 text-[#8D8980] mx-auto mb-2" />
+                    <p className="text-xs text-[#8D8980]">No warranty certificates registered for this customer.</p>
+                  </div>
+                ) : (
+                  <div className="border border-[#2A261F] rounded-xl overflow-hidden bg-[#12110F]">
+                    <table className="w-full text-xs">
+                      <thead className="bg-[#171613] border-b border-[#2A261F] text-[#8D8980]">
+                        <tr>
+                          <th className="px-4 py-2.5 text-left font-medium">Warranty Code</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Product</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Status</th>
+                          <th className="px-4 py-2.5 text-right font-medium">Expiry Date</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#2A261F]">
+                        {warranties.map((w: any) => (
+                          <tr key={w.id} className="hover:bg-[#1F1E1A]/40">
+                            <td className="px-4 py-2.5 font-mono font-bold text-[#C9A45C]">{w.warranty_code}</td>
+                            <td className="px-4 py-2.5 text-[#F3EFE6]">{w.product_name || 'Horological Timepiece'}</td>
+                            <td className="px-4 py-2.5">
+                              <span className={clsx(
+                                'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
+                                w.status === 'active' && !w.is_expired ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/40' :
+                                w.status === 'claimed' ? 'bg-amber-950/40 text-amber-400 border-amber-800/40' :
+                                'bg-rose-950/40 text-rose-400 border-rose-800/40'
+                              )}>
+                                {w.status_display || (w.is_expired ? 'Expired' : w.status)}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2.5 text-right font-mono text-[#8D8980]">
+                              {formatDate(w.expiry_date)}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* TAB 5: Loyalty Ledger */}
+            {detailTab === 'loyalty' && (
+              <div className="space-y-3">
+                {loyaltyLedger.length === 0 ? (
+                  <div className="p-8 text-center bg-[#12110F] border border-[#2A261F] rounded-xl">
+                    <Coins className="w-8 h-8 text-[#8D8980] mx-auto mb-2" />
+                    <p className="text-xs text-[#8D8980]">No loyalty transactions recorded in ledger.</p>
+                  </div>
+                ) : (
+                  <div className="border border-[#2A261F] rounded-xl overflow-hidden bg-[#12110F]">
+                    <table className="w-full text-xs">
+                      <thead className="bg-[#171613] border-b border-[#2A261F] text-[#8D8980]">
+                        <tr>
+                          <th className="px-4 py-2.5 text-left font-medium">Date</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Type</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Reference</th>
+                          <th className="px-4 py-2.5 text-left font-medium">Description</th>
+                          <th className="px-4 py-2.5 text-right font-medium">Points</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-[#2A261F]">
+                        {loyaltyLedger.map((tx: LoyaltyTransaction) => (
+                          <tr key={tx.id} className="hover:bg-[#1F1E1A]/40">
+                            <td className="px-4 py-2.5 text-[#8D8980] font-mono">{formatDate(tx.created_at)}</td>
+                            <td className="px-4 py-2.5">
+                              <span className={clsx(
+                                'text-[10px] font-semibold px-2 py-0.5 rounded-full border',
+                                tx.transaction_type === 'earned' ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/40' :
+                                tx.transaction_type === 'redeemed' ? 'bg-amber-950/40 text-amber-400 border-amber-800/40' :
+                                'bg-[#1F1E1A] text-[#8D8980] border-[#2A261F]'
+                              )}>
+                                {tx.transaction_type_display || tx.transaction_type}
+                              </span>
+                            </td>
+                            <td className="px-4 py-2.5 font-mono text-[#C9A45C]">{tx.reference_id || '—'}</td>
+                            <td className="px-4 py-2.5 text-[#F3EFE6]">{tx.description || 'Loyalty reward update'}</td>
+                            <td className={clsx(
+                              'px-4 py-2.5 text-right font-mono font-bold',
+                              tx.points > 0 ? 'text-emerald-400' : 'text-rose-400'
+                            )}>
+                              {tx.points > 0 ? `+${tx.points}` : tx.points}
                             </td>
                           </tr>
                         ))}
@@ -970,6 +1222,120 @@ export default function CustomersPage() {
         confirmText="Delete Customer"
         variant="danger"
       />
+
+      {/* Duplicate Customer Profiles Consolidation Modal */}
+      <Modal
+        isOpen={showDuplicateModal}
+        onClose={() => setShowDuplicateModal(false)}
+        title="Duplicate Customer Profiles & Consolidation"
+        description="Consolidate duplicate customer accounts. Historical sales, repair tickets, warranties, and loyalty points will be unified under the primary customer."
+        size="lg"
+      >
+        <div className="space-y-4">
+          <div className="p-3 bg-amber-950/20 border border-amber-800/30 rounded-xl flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-200/90 leading-relaxed">
+              Merging accounts reassigns all past sales, repairs, warranty records, and loyalty points from the duplicate profile into the primary profile, then securely archives the duplicate.
+            </p>
+          </div>
+
+          <div className="space-y-4 max-h-[450px] overflow-y-auto pr-1">
+            {duplicateClusters.map((cluster, idx) => (
+              <div key={idx} className="p-4 bg-[#12110F] border border-[#2A261F] rounded-xl space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Phone className="w-4 h-4 text-[#C9A45C]" />
+                    <span className="font-mono text-xs font-bold text-[#F3EFE6]">{cluster.phone}</span>
+                    <Badge variant="warning">{cluster.count} Profiles</Badge>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
+                  {cluster.customers.map((c: Customer) => (
+                    <div 
+                      key={c.id} 
+                      className={clsx(
+                        'p-3 rounded-xl border text-xs transition-all space-y-2',
+                        selectedPrimaryId === c.id 
+                          ? 'border-emerald-500 bg-emerald-950/20' 
+                          : selectedDuplicateId === c.id 
+                            ? 'border-rose-500 bg-rose-950/20'
+                            : 'border-[#2A261F] bg-[#171613]'
+                      )}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-serif font-bold text-sm text-[#F3EFE6]">{c.name}</span>
+                        <span className="font-mono text-[10px] text-[#8D8980]">ID #{c.id}</span>
+                      </div>
+                      <div className="text-[11px] text-[#8D8980] space-y-0.5">
+                        <p>Purchases: <span className="font-mono text-[#F3EFE6]">{formatCurrency(c.total_purchases || 0)}</span> ({c.purchase_count || 0} orders)</p>
+                        <p>Points: <span className="font-mono text-[#C9A45C]">{c.loyalty_points || 0}</span></p>
+                        <p>City: {c.city || 'Vadodara'}</p>
+                      </div>
+                      <div className="flex items-center gap-2 pt-2 border-t border-[#2A261F]">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedPrimaryId(c.id)
+                            if (selectedDuplicateId === c.id) setSelectedDuplicateId(null)
+                          }}
+                          className={clsx(
+                            'flex-1 py-1 px-2 rounded-lg text-[10px] font-bold border transition-all',
+                            selectedPrimaryId === c.id 
+                              ? 'bg-emerald-500 text-black border-emerald-400' 
+                              : 'bg-[#1F1E1A] text-emerald-400 border-emerald-800/40 hover:bg-emerald-950/30'
+                          )}
+                        >
+                          {selectedPrimaryId === c.id ? '✓ Keep as Primary' : 'Set as Primary'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedDuplicateId(c.id)
+                            if (selectedPrimaryId === c.id) setSelectedPrimaryId(null)
+                          }}
+                          className={clsx(
+                            'flex-1 py-1 px-2 rounded-lg text-[10px] font-bold border transition-all',
+                            selectedDuplicateId === c.id 
+                              ? 'bg-rose-500 text-black border-rose-400' 
+                              : 'bg-[#1F1E1A] text-rose-400 border-rose-800/40 hover:bg-rose-950/30'
+                          )}
+                        >
+                          {selectedDuplicateId === c.id ? '✕ To be Absorbed' : 'Set as Duplicate'}
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="flex items-center justify-between pt-3 border-t border-[#2A261F]">
+            <div className="text-xs text-[#8D8980]">
+              {selectedPrimaryId && selectedDuplicateId ? (
+                <span className="text-emerald-400 font-medium">Ready to merge ID #{selectedDuplicateId} into ID #{selectedPrimaryId}</span>
+              ) : (
+                <span>Select 1 Primary (target) and 1 Duplicate (source)</span>
+              )}
+            </div>
+            <div className="flex gap-2">
+              <Button variant="secondary" onClick={() => setShowDuplicateModal(false)}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleMergeProfiles} 
+                loading={mergingCustomer}
+                disabled={!selectedPrimaryId || !selectedDuplicateId || selectedPrimaryId === selectedDuplicateId}
+                className="bg-emerald-600 hover:bg-emerald-500 text-black font-bold"
+              >
+                <GitMerge className="w-4 h-4 mr-1.5" />
+                Merge Profiles
+              </Button>
+            </div>
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

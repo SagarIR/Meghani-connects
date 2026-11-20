@@ -129,6 +129,7 @@ class SalesForecast:
                 y_pred = fc.iloc[-holdout_days:]['yhat'].clip(lower=0).values
             except Exception as e:
                 logger.warning(f"Prophet holdout backtest failed: {e}; falling back to statistical.")
+                self.use_prophet = False
                 y_pred = self._statistical_predict(train_df, holdout_days)['yhat'].values
         else:
             y_pred = self._statistical_predict(train_df, holdout_days)['yhat'].values
@@ -295,6 +296,7 @@ class SalesForecast:
                 model_name = 'facebook_prophet_v1.3'
             except Exception as e:
                 logger.warning(f"Prophet fitting encountered: {e}. Executing statistical fallback.")
+                self.use_prophet = False
                 forecast_df = None
 
         if forecast_df is None or (forecast_df['yhat'].sum() == 0 and has_sufficient_data):

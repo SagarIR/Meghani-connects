@@ -96,3 +96,39 @@ class ExpenseRbacSecurityTests(TestCase):
         del_res = self.client.delete(f'/api/expenses/{self.expense.id}/')
         self.assertEqual(del_res.status_code, status.HTTP_204_NO_CONTENT)
         self.assertFalse(Expense.objects.filter(id=self.expense.id).exists())
+
+    def test_expense_voucher_generation_and_payment_modes(self):
+        """Expenses generate sequential audit voucher numbers and validate payment mode"""
+        self.client.force_authenticate(user=self.manager)
+        res = self.client.post('/api/expenses/', {
+            'category': 'transport',
+            'amount': '850.00',
+            'payment_mode': 'upi',
+            'vendor_name': 'Blue Dart Express',
+            'description': 'Swiss watch courier shipping'
+        })
+        self.assertEqual(res.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(res.data['voucher_number'].startswith('EXP-'))
+        self.assertEqual(res.data['payment_mode'], 'upi')
+
+    def test_daily_till_reconciliation_workflow(self):
+        """Cash register calculates expected drawer cash and records physical variance upon close"""
+        from apps.expenses.models import CashRegister
+        self.client.force_authenticate(user=self.manager)
+
+        # Get or open today's till
+        res = self.client.get('/api/expenses/registers/today/')
+        self.assertEqual(res.status_code, status.HTTP_200_OK)
+        reg_id = res.data['id']
+        self.assertFalse(res.data['is_closed'])
+        expected_cash = Decimal(str(res.data['expected_closing_cash']))
+
+        # Close the till with exact cash
+        close_res = self.client.post(f'/api/expenses/registers/{reg_id}/close/', {
+            'actual_closing_cash': str(expected_cash + Decimal('50.00')),  # ₹50 excess
+            'notes': 'Over by ₹50 due to round-off'
+        })
+        self.assertEqual(close_res.status_code, status.HTTP_200_OK)
+        self.assertTrue(close_res.data['is_closed'])
+        self.assertEqual(Decimal(str(close_res.data['variance'])), Decimal('50.00'))
+

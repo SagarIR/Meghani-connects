@@ -31,6 +31,11 @@ const schema = yup.object({
   name: yup.string().required('Product name is required'),
   brand: yup.string(),
   category: yup.string().required('Category is required'),
+  subcategory: yup.string().nullable(),
+  article_code: yup.string().nullable(),
+  model_number: yup.string().nullable(),
+  size: yup.string().nullable(),
+  mrp: yup.number().min(0, 'MRP cannot be negative').nullable().transform((v, o) => (o === '' || o === null || isNaN(v) ? null : v)),
   cost_price: yup.number().required('Cost price is required').min(0),
   selling_price: yup.number().required('Selling price is required').min(0),
   stock: yup.number().required('Stock is required').min(0),
@@ -95,6 +100,7 @@ export default function ProductsPage() {
   type FormTab = 'general' | 'media' | 'specs'
   const [activeModalTab, setActiveModalTab] = useState<FormTab>('general')
   const [availableBrands, setAvailableBrands] = useState<{ id: number; name: string }[]>([])
+  const [subcategories, setSubcategories] = useState<{ id: number; name: string; slug: string; category: number; category_slug?: string }[]>([])
   const [isCustomBrand, setIsCustomBrand] = useState(false)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [showUrlInput, setShowUrlInput] = useState(false)
@@ -108,11 +114,13 @@ export default function ProductsPage() {
   const watchedCost = watch('cost_price') || 0
   const watchedSelling = watch('selling_price') || 0
   const watchedImage = watch('image') || ''
+  const watchedCategory = watch('category') || 'analog'
   const liveProfit = Number(watchedSelling) - Number(watchedCost)
   const liveMargin = Number(watchedCost) > 0 ? ((liveProfit / Number(watchedCost)) * 100).toFixed(1) : '0'
 
   useEffect(() => {
     fetchBrands()
+    fetchSubcategories()
   }, [])
 
   const fetchBrands = async () => {
@@ -122,6 +130,16 @@ export default function ProductsPage() {
       setAvailableBrands(items)
     } catch (e) {
       console.error('Failed to fetch brands:', e)
+    }
+  }
+
+  const fetchSubcategories = async () => {
+    try {
+      const res = await api.get('/subcategories/')
+      const items = Array.isArray(res.data) ? res.data : (res.data?.results || [])
+      setSubcategories(items)
+    } catch (e) {
+      console.error('Failed to fetch subcategories:', e)
     }
   }
 
@@ -189,6 +207,11 @@ export default function ProductsPage() {
     setShowUrlInput(false)
     reset({
       category: 'analog',
+      subcategory: '',
+      article_code: '',
+      model_number: '',
+      size: '',
+      mrp: null,
       stock: 0,
       warranty_months: 24,
       name: '',
@@ -220,6 +243,11 @@ export default function ProductsPage() {
     setShowUrlInput(Boolean(product.image?.startsWith('http')))
     reset({
       ...product,
+      subcategory: product.subcategory || '',
+      article_code: product.article_code || '',
+      model_number: product.model_number || '',
+      size: product.size || '',
+      mrp: product.mrp ?? product.selling_price,
       is_featured: product.is_featured ?? false,
       is_new_arrival: product.is_new_arrival ?? false,
       price_visible: product.price_visible ?? true,
@@ -298,9 +326,14 @@ export default function ProductsPage() {
         name: data.name,
         brand: data.brand || '',
         category: data.category,
-        cost_price: data.cost_price,
-        selling_price: data.selling_price,
-        stock: data.stock,
+        subcategory: data.subcategory || null,
+        article_code: data.article_code || null,
+        model_number: data.model_number || '',
+        size: data.size || '',
+        mrp: data.mrp != null ? Number(data.mrp) : Number(data.selling_price),
+        cost_price: Number(data.cost_price),
+        selling_price: Number(data.selling_price),
+        stock: Number(data.stock),
         barcode: data.barcode || null,
         supplier_name: data.supplier_name || '',
         description: data.description || '',
@@ -566,15 +599,27 @@ export default function ProductsPage() {
                     <h3 className="font-serif font-bold text-[#F3EFE6] text-base line-clamp-1 group-hover:text-[#E8D5A7] transition-colors">
                       {product.name}
                     </h3>
-                    {product.barcode && (
-                      <p className="text-[11px] font-mono text-[#8D8980] mt-0.5 truncate">
-                        SKU: {product.barcode}
-                      </p>
-                    )}
+                    <div className="flex items-center gap-2 mt-0.5">
+                      {product.article_code && (
+                        <span className="text-[10px] font-mono px-1.5 py-0.5 bg-[#C9A45C]/15 border border-[#C9A45C]/30 text-[#C9A45C] rounded">
+                          {product.article_code}
+                        </span>
+                      )}
+                      {product.barcode && (
+                        <p className="text-[11px] font-mono text-[#8D8980] truncate">
+                          SKU: {product.barcode}
+                        </p>
+                      )}
+                    </div>
                     
                     {/* Pricing Grid */}
                     <div className="mt-4 pt-3 border-t border-[#2A261F] flex items-end justify-between">
                       <div>
+                        {product.mrp && product.mrp > product.selling_price && (
+                          <span className="text-[11px] font-mono text-[#8D8980] line-through block">
+                            MRP: {formatCurrency(product.mrp)}
+                          </span>
+                        )}
                         <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Selling Price</span>
                         <p className="text-xl font-bold font-mono text-[#C9A45C]">{formatCurrency(product.selling_price)}</p>
                       </div>
@@ -686,6 +731,11 @@ export default function ProductsPage() {
                         <div className="min-w-0">
                           <p className="font-serif font-bold text-[#F3EFE6] text-sm truncate">{product.name}</p>
                           <div className="flex items-center gap-2 mt-0.5">
+                            {product.article_code && (
+                              <span className="text-[10px] font-mono px-1.5 py-0.2 bg-[#C9A45C]/15 border border-[#C9A45C]/30 text-[#C9A45C] rounded">
+                                {product.article_code}
+                              </span>
+                            )}
                             <span className="text-xs font-medium text-[#C9A45C]">{product.brand || 'Unbranded'}</span>
                             {product.barcode && (
                               <span className="text-[11px] font-mono text-[#8D8980]">| {product.barcode}</span>
@@ -695,11 +745,21 @@ export default function ProductsPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3.5">
-                      <span className="px-2.5 py-1 bg-[#1F1E1A] border border-[#2A261F] text-[#E8D5A7] rounded-full text-xs">
-                        {categories.find(c => c.value === product.category)?.label || product.category}
-                      </span>
+                      <div className="flex flex-col gap-1 items-start">
+                        <span className="px-2.5 py-1 bg-[#1F1E1A] border border-[#2A261F] text-[#E8D5A7] rounded-full text-xs">
+                          {categories.find(c => c.value === product.category)?.label || product.category}
+                        </span>
+                        {product.subcategory && (
+                          <span className="text-[10px] text-[#8D8980]">
+                            {product.subcategory}
+                          </span>
+                        )}
+                      </div>
                     </td>
                     <td className="px-4 py-3.5 text-right">
+                      {product.mrp && product.mrp > product.selling_price && (
+                        <p className="text-[10px] font-mono text-[#8D8980] line-through">MRP: {formatCurrency(product.mrp)}</p>
+                      )}
                       <p className="font-mono font-bold text-[#C9A45C] text-sm">{formatCurrency(product.selling_price)}</p>
                       {product.warranty_months ? (
                         <p className="text-[10px] text-[#8D8980]">{product.warranty_months}M Warranty</p>
@@ -916,7 +976,50 @@ export default function ProductsPage() {
                   </select>
                 </div>
 
-                {/* Barcode & Reference */}
+                {/* Subcategory */}
+                <div>
+                  <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Subcategory</label>
+                  <select 
+                    {...register('subcategory')} 
+                    className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6]"
+                  >
+                    <option value="">Select subcategory...</option>
+                    {subcategories
+                      .filter((s) => !s.category_slug || s.category_slug === watchedCategory)
+                      .map((subcat) => (
+                        <option key={subcat.id || subcat.slug} value={subcat.slug} className="bg-[#171613]">
+                          {subcat.name}
+                        </option>
+                      ))}
+                  </select>
+                </div>
+
+                {/* Article Code & Model Number */}
+                <div>
+                  <Input 
+                    label="Article Code" 
+                    placeholder="e.g. TIS-0062" 
+                    {...register('article_code')} 
+                  />
+                </div>
+
+                <div>
+                  <Input 
+                    label="Model Number / Caliber" 
+                    placeholder="e.g. T137.407.11.041.00" 
+                    {...register('model_number')} 
+                  />
+                </div>
+
+                {/* Size / Diameter & Barcode */}
+                <div>
+                  <Input 
+                    label="Case Size / Dimensions" 
+                    placeholder="e.g. 40mm, 42mm, Standard" 
+                    {...register('size')} 
+                  />
+                </div>
+
                 <div>
                   <Input 
                     label="Barcode / SKU Number" 
@@ -931,6 +1034,18 @@ export default function ProductsPage() {
                     label="Supplier / Vendor" 
                     placeholder="e.g. Swatch Group India Ltd" 
                     {...register('supplier_name')} 
+                  />
+                </div>
+
+                {/* MRP (Maximum Retail Price) */}
+                <div>
+                  <Input 
+                    label="MRP (₹)" 
+                    type="number" 
+                    step="any"
+                    placeholder="0" 
+                    {...register('mrp')} 
+                    error={errors.mrp?.message} 
                   />
                 </div>
 

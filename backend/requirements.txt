@@ -19,3 +19,5 @@ django-celery-beat>=2.5
 boto3>=1.28
 gunicorn>=21.0
 django-storages>=1.14
+whitenoise>=6.5.0
+

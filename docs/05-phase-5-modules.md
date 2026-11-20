@@ -15,8 +15,11 @@
 | Executive Dashboard & Real-Time KPIs | **COMPLETED** | `app/(dashboard)/dashboard/page.tsx` fetches `/api/analytics/dashboard/stats/`, `/sales-chart/`, `/recent-activity/`, and `/ai/insights/`. | None. |
 | POS Barcode Billing & Atomic Checkout | **COMPLETED** | `BarcodeScanner.tsx`, `sales/page.tsx`, `SaleCreateSerializer` (`@transaction.atomic`), thermal receipt modal in `Invoice.tsx`. | None. |
 | POS Split / Mixed Payment UI Support | **COMPLETED** | Multi-method split tender in `sales/page.tsx` (Cash, UPI, Card), real-time balance calculations, `payment_details` JSON storage, backend validation, and receipt rendering. | None. |
-| Product & Inventory Management with Bulk Import | **COMPLETED** | `products/page.tsx`, `ProductViewSet`, tabbed product modal, `BulkImport.tsx` with line-by-line validation. | None. |
-| Watch Repair Workshop & 5-Stage State Machine | **COMPLETED** | `repairs/page.tsx`, `RepairViewSet`, full lifecycle (`received` to `delivered`), automated WhatsApp hook on `ready`. | None. |
+| Product & Normalized Inventory with Immutable Ledger | **COMPLETED** | `products/page.tsx`, `purchasing/page.tsx`, `ProductViewSet`, normalized `Brand`/`Category`/`Subcategory`, `StockMovement` 10-type append-only ledger, and `BulkImport.tsx`. | None. |
+| Supplier Procurement & Purchasing Pipeline | **COMPLETED** | `purchasing/models.py`, `Supplier`, `ProductSupplier`, `PurchaseOrder`, `GoodsReceipt`, atomic stock intake via `PurchasingService`. | None. |
+| Watch Repair Atelier & 8-Stage Horology Workflow | **COMPLETED** | `repairs/page.tsx`, `RepairViewSet`, 8-stage lifecycle, 8 service types, technician assignment, QC verification, `RepairPart` catalog stock consumption/return. | None. |
+| Sales Returns & Digital Warranty Lifecycle | **COMPLETED** | `sales/models.py`, `SaleReturnService` with stock restock, `WarrantyService` with walk-in guest warranty issuance, claims resolution. | None. |
+| POS Cash Till Drawer Reconciliation | **COMPLETED** | `expenses/models.py`, `CashRegister` with automated `recalculate()`, cash float, expense deductions, physical count closing. | None. |
 | CRM Customer Directory & Loyalty Points Engine | **COMPLETED** | `customers/page.tsx`, `CustomerViewSet`, phone lookup, tier badges, points accrual and checkout redemption. | None. |
 | Customer Bulk Import Endpoint | **COMPLETED** | `CustomerImportView`, `CustomerExportTemplateView`, and `CustomerImportService` active in `apps/crm/views.py` and `apps/crm/urls.py`. | None. |
 | Operating Expense Tracker with Bill Upload | **COMPLETED** | `expenses/page.tsx`, `ExpenseViewSet`, category filtering, receipt image uploads, Net Profit impact. | None. |

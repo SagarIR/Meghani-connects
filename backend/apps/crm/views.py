@@ -8,8 +8,14 @@ from django.http import HttpResponse
 from io import BytesIO
 from django.db.models import Q, Sum
 from django.utils import timezone
-from .models import Customer, Enquiry
-from .serializers import CustomerSerializer, CustomerListSerializer, CustomerLoyaltySerializer, EnquirySerializer
+from django.core.exceptions import ValidationError
+from apps.users.permissions import IsManagerOrAbove
+from .models import Customer, Enquiry, LoyaltyTransaction
+from .serializers import (
+    CustomerSerializer, CustomerListSerializer, CustomerLoyaltySerializer,
+    EnquirySerializer, LoyaltyTransactionSerializer, CustomerMergeSerializer
+)
+from .services.customer_merge import CustomerMergeService
 from .import_service import CustomerImportService
 
 
@@ -80,32 +86,106 @@ class CustomerViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['post'])
     def loyalty(self, request, pk=None):
-        """Add or redeem loyalty points"""
+        """Add or redeem loyalty points via immutable ledger"""
         customer = self.get_object()
         serializer = CustomerLoyaltySerializer(data=request.data)
-        
-        if serializer.is_valid():
-            points = serializer.data['points']
-            action_type = serializer.data['action']
-            
-            if action_type == 'add':
-                customer.loyalty_points += points
-                customer.save()
-                return Response({
-                    'message': f'{points} points added',
-                    'new_balance': customer.loyalty_points
-                })
-            else:  # redeem
-                if customer.loyalty_points < points:
-                    return Response({'error': 'Insufficient points'}, status=status.HTTP_400_BAD_REQUEST)
-                discount = customer.redeem_points(points)
-                return Response({
-                    'message': f'{points} points redeemed',
-                    'discount': discount,
-                    'new_balance': customer.loyalty_points
-                })
-        
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+
+        points = serializer.validated_data['points']
+        action_type = serializer.validated_data['action']
+        reason = serializer.validated_data.get('reason', '')
+
+        if action_type == 'add':
+            earned = customer.add_loyalty_points(
+                sale_amount=points * 100,
+                reference_id=f"ADJ-{request.user.id if request.user.is_authenticated else 'SYS'}",
+                reason=reason or 'Manual loyalty point adjustment by staff',
+                user=request.user
+            )
+            return Response({
+                'message': f'{points} points added',
+                'new_balance': customer.loyalty_points
+            })
+        else:  # redeem
+            if customer.loyalty_points < points:
+                return Response({'error': f'Insufficient points. Customer has {customer.loyalty_points} points.'},
+                                status=status.HTTP_400_BAD_REQUEST)
+            discount = customer.redeem_points(
+                points_to_redeem=points,
+                reference_id=f"RED-{request.user.id if request.user.is_authenticated else 'SYS'}",
+                reason=reason or 'Manual loyalty redemption',
+                user=request.user
+            )
+            return Response({
+                'message': f'{points} points redeemed',
+                'discount': discount,
+                'new_balance': customer.loyalty_points
+            })
+
+    @action(detail=True, methods=['get'], url_path='loyalty-ledger')
+    def loyalty_ledger(self, request, pk=None):
+        """Get customer's immutable loyalty points ledger"""
+        customer = self.get_object()
+        ledger = customer.loyalty_ledger.all()
+        return Response(LoyaltyTransactionSerializer(ledger, many=True).data)
+
+    @action(detail=True, methods=['get'], url_path='dossier')
+    def dossier(self, request, pk=None):
+        """Unified 360 Customer Intelligence Dossier"""
+        customer = self.get_object()
+        from apps.sales.serializers import SaleListSerializer, WarrantySerializer
+        from apps.repairs.serializers import RepairListSerializer
+
+        sales = customer.sales.all().order_by('-sale_date')
+        repairs = customer.repairs.all().order_by('-received_date')
+        warranties = customer.warranties.all().order_by('-created_at')
+        ledger = customer.loyalty_ledger.all()[:15]
+
+        return Response({
+            'customer': CustomerSerializer(customer).data,
+            'sales': SaleListSerializer(sales, many=True).data,
+            'repairs': RepairListSerializer(repairs, many=True).data,
+            'warranties': WarrantySerializer(warranties, many=True).data,
+            'loyalty_ledger': LoyaltyTransactionSerializer(ledger, many=True).data,
+            'summary': {
+                'lifetime_spend': float(customer.total_purchases),
+                'total_orders': customer.purchase_count,
+                'total_repairs': customer.repair_count,
+                'active_warranties': customer.active_warranties_count,
+                'loyalty_balance': customer.loyalty_points
+            }
+        })
+
+    @action(detail=False, methods=['get'], url_path='duplicates', permission_classes=[IsManagerOrAbove])
+    def potential_duplicates(self, request):
+        """Scan and detect potential duplicate customer profiles"""
+        duplicates = CustomerMergeService.find_potential_duplicates()
+        result = []
+        for d in duplicates:
+            result.append({
+                'type': d['type'],
+                'match_value': d['match_value'],
+                'primary': CustomerListSerializer(d['primary_candidate']).data,
+                'duplicate': CustomerListSerializer(d['duplicate_candidate']).data
+            })
+        return Response(result)
+
+    @action(detail=False, methods=['post'], url_path='merge', permission_classes=[IsManagerOrAbove])
+    def merge(self, request):
+        """Consolidate duplicate customer profile into primary"""
+        serializer = CustomerMergeSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            merged = CustomerMergeService.merge_customers(
+                primary_customer_id=serializer.validated_data['primary_customer_id'],
+                duplicate_customer_id=serializer.validated_data['duplicate_customer_id'],
+                user=request.user
+            )
+            return Response(CustomerSerializer(merged).data, status=status.HTTP_200_OK)
+        except ValidationError as e:
+            return Response(e.message_dict if hasattr(e, 'message_dict') else {'detail': str(e)},
+                            status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['get'])
     def birthdays_today(self, request):

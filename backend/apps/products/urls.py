@@ -2,12 +2,13 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import (
     ProductViewSet, ProductImportView, ProductExportTemplateView,
-    PublicProductViewSet, BrandViewSet, CategoryViewSet
+    PublicProductViewSet, BrandViewSet, CategoryViewSet, SubcategoryViewSet
 )
 
 router = DefaultRouter()
 router.register('brands', BrandViewSet, basename='brands')
 router.register('categories', CategoryViewSet, basename='categories')
+router.register('subcategories', SubcategoryViewSet, basename='subcategories')
 router.register('public', PublicProductViewSet, basename='public-products')
 router.register('', ProductViewSet, basename='products')
 

@@ -4,7 +4,7 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // output: 'standalone', // For Docker deployment
+  output: 'standalone',
   images: {
     domains: [
       'localhost',

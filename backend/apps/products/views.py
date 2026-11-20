@@ -6,23 +6,28 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.permissions import IsAdminUser, AllowAny, IsAuthenticated
 from apps.users.permissions import CanManageProducts
 from django.db.models import Q
+from django.core.exceptions import ValidationError
 from django.conf import settings
 from django.http import HttpResponse
-from .models import Product, Brand, Category
+from .models import Product, ProductImage, Brand, Category, Subcategory
 from .serializers import (
     ProductSerializer, ProductListSerializer, ProductStockUpdateSerializer,
-    PublicProductSerializer, BrandSerializer, CategorySerializer
+    PublicProductSerializer, BrandSerializer, CategorySerializer, SubcategorySerializer,
+    ProductImageSerializer
 )
 from .import_service import ProductImportService
 
 
 class ProductViewSet(viewsets.ModelViewSet):
-    queryset = Product.objects.filter(is_active=True)
+    queryset = Product.objects.filter(is_active=True).select_related('brand', 'category', 'subcategory')
     serializer_class = ProductSerializer
     permission_classes = [CanManageProducts]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['name', 'brand', 'barcode', 'category']
-    ordering_fields = ['name', 'selling_price', 'stock', 'created_at']
+    search_fields = [
+        'name', 'brand__name', 'barcode', 'article_code', 'model_number',
+        'category__name', 'category__slug', 'subcategory__name'
+    ]
+    ordering_fields = ['name', 'selling_price', 'mrp', 'stock', 'created_at']
     ordering = ['-created_at']
 
     def get_serializer_class(self):
@@ -33,15 +38,29 @@ class ProductViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         queryset = super().get_queryset()
         
-        # Filter by category
+        # Filter by category (by slug or id)
         category = self.request.query_params.get('category')
         if category:
-            queryset = queryset.filter(category=category)
+            if category.isdigit():
+                queryset = queryset.filter(category_id=int(category))
+            else:
+                queryset = queryset.filter(Q(category__slug=category) | Q(category_slug=category))
+
+        # Filter by subcategory (by slug or id)
+        subcategory = self.request.query_params.get('subcategory')
+        if subcategory:
+            if subcategory.isdigit():
+                queryset = queryset.filter(subcategory_id=int(subcategory))
+            else:
+                queryset = queryset.filter(subcategory__slug=subcategory)
         
-        # Filter by brand
+        # Filter by brand (by name, id, or icontains)
         brand = self.request.query_params.get('brand')
         if brand:
-            queryset = queryset.filter(brand__icontains=brand)
+            if brand.isdigit():
+                queryset = queryset.filter(brand_id=int(brand))
+            else:
+                queryset = queryset.filter(Q(brand__name__icontains=brand) | Q(brand_text__icontains=brand))
         
         # Filter low stock
         low_stock = self.request.query_params.get('low_stock')
@@ -52,7 +71,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         return queryset
 
     def destroy(self, request, *args, **kwargs):
-        """Soft delete - just mark as inactive"""
+        """Soft delete - marks as inactive preserving historical relational integrity"""
         instance = self.get_object()
         instance.is_active = False
         instance.save()
@@ -60,28 +79,34 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'])
     def search(self, request):
-        """Quick search for POS system"""
-        query = request.query_params.get('q', '')
+        """Quick search for POS and staff portal"""
+        query = request.query_params.get('q', '').strip()
         if len(query) < 2:
             return Response([])
         
         products = Product.objects.filter(
             Q(name__icontains=query) |
-            Q(brand__icontains=query) |
-            Q(barcode__icontains=query),
+            Q(brand__name__icontains=query) |
+            Q(brand_text__icontains=query) |
+            Q(barcode__icontains=query) |
+            Q(article_code__icontains=query) |
+            Q(model_number__icontains=query),
             is_active=True,
             stock__gt=0
-        )[:20]
+        ).select_related('brand', 'category', 'subcategory')[:20]
         
         serializer = ProductListSerializer(products, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'], url_path='barcode/(?P<code>[^/.]+)')
     def by_barcode(self, request, code=None):
-        """Get product by barcode"""
+        """Get product by barcode or article code"""
         try:
-            product = Product.objects.get(barcode=code, is_active=True)
-            serializer = ProductSerializer(product)
+            product = Product.objects.select_related('brand', 'category', 'subcategory').get(
+                Q(barcode=code) | Q(article_code=code),
+                is_active=True
+            )
+            serializer = ProductSerializer(product, context={'request': request})
             return Response(serializer.data)
         except Product.DoesNotExist:
             return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -95,18 +120,52 @@ class ProductViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             quantity = serializer.data['quantity']
             action_type = serializer.data['action']
+            from apps.purchasing.services import InventoryService
             
-            if action_type == 'add':
-                product.stock += quantity
-            elif action_type == 'subtract':
-                if product.stock < quantity:
-                    return Response({'error': 'Insufficient stock'}, status=status.HTTP_400_BAD_REQUEST)
-                product.stock -= quantity
-            else:  # set
-                product.stock = quantity
-            
-            product.save()
-            return Response(ProductSerializer(product).data)
+            try:
+                if action_type == 'add':
+                    InventoryService.record_movement(
+                        product_or_id=product,
+                        movement_type='manual_adjustment',
+                        qty_in=quantity,
+                        qty_out=0,
+                        reason='Stock added via product inventory manager',
+                        user=request.user
+                    )
+                elif action_type == 'subtract':
+                    InventoryService.record_movement(
+                        product_or_id=product,
+                        movement_type='manual_adjustment',
+                        qty_in=0,
+                        qty_out=quantity,
+                        reason='Stock deducted via product inventory manager',
+                        user=request.user
+                    )
+                else:  # set
+                    delta = quantity - product.stock
+                    if delta > 0:
+                        InventoryService.record_movement(
+                            product_or_id=product,
+                            movement_type='manual_adjustment',
+                            qty_in=delta,
+                            qty_out=0,
+                            reason=f'Stock adjusted to {quantity}',
+                            user=request.user
+                        )
+                    elif delta < 0:
+                        InventoryService.record_movement(
+                            product_or_id=product,
+                            movement_type='manual_adjustment',
+                            qty_in=0,
+                            qty_out=abs(delta),
+                            reason=f'Stock adjusted to {quantity}',
+                            user=request.user
+                        )
+                product.refresh_from_db()
+                return Response(ProductSerializer(product, context={'request': request}).data)
+            except ValidationError as e:
+                return Response(e.message_dict if hasattr(e, 'message_dict') else {'error': str(e)},
+                                status=status.HTTP_400_BAD_REQUEST)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -114,26 +173,77 @@ class ProductViewSet(viewsets.ModelViewSet):
     def low_stock(self, request):
         """Get all low stock products"""
         threshold = getattr(settings, 'LOW_STOCK_THRESHOLD', 5)
-        products = Product.objects.filter(stock__lte=threshold, is_active=True)
+        products = Product.objects.filter(stock__lte=threshold, is_active=True).select_related('brand', 'category', 'subcategory')
         serializer = ProductListSerializer(products, many=True)
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def categories(self, request):
-        """Get all product categories with counts"""
-        from django.db.models import Count
-        categories = Product.objects.filter(is_active=True).values('category').annotate(
-            count=Count('id')
-        ).order_by('category')
-        return Response(categories)
+        """Get all product categories with subcategories and counts"""
+        categories = Category.objects.filter(is_active=True).prefetch_related('subcategories')
+        serializer = CategorySerializer(categories, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def brands(self, request):
         """Get all unique brands"""
-        brands = Product.objects.filter(is_active=True).exclude(
-            brand=''
-        ).values_list('brand', flat=True).distinct().order_by('brand')
-        return Response(list(brands))
+        brands = Brand.objects.filter(is_active=True).order_by('display_order', 'name')
+        serializer = BrandSerializer(brands, many=True)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=['post'], url_path='gallery')
+    def add_gallery_image(self, request, pk=None):
+        """Staff: Add gallery image to a product"""
+        product = self.get_object()
+        image_url = request.data.get('image_url')
+        file_obj = request.FILES.get('image') or request.FILES.get('file')
+        display_order = request.data.get('display_order', 0)
+        img = ProductImage.objects.create(
+            product=product,
+            image=file_obj,
+            image_url=image_url or '',
+            display_order=display_order
+        )
+        return Response(ProductImageSerializer(img).data, status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['delete'], url_path='gallery/(?P<image_id>[^/.]+)')
+    def delete_gallery_image(self, request, pk=None, image_id=None):
+        """Staff: Delete gallery image from a product"""
+        product = self.get_object()
+        try:
+            img = product.gallery_images.get(id=image_id)
+            img.delete()
+            return Response({'success': True, 'message': 'Image deleted'})
+        except Exception:
+            return Response({'error': 'Image not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+class SubcategoryViewSet(viewsets.ModelViewSet):
+    """
+    CRUD ViewSet for Subcategories belonging to Categories.
+    """
+    serializer_class = SubcategorySerializer
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'category__name', 'slug']
+    ordering_fields = ['display_order', 'name']
+    ordering = ['display_order', 'name']
+
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [AllowAny()]
+        return [CanManageProducts()]
+
+    def get_queryset(self):
+        qs = Subcategory.objects.select_related('category')
+        category = self.request.query_params.get('category')
+        if category:
+            if category.isdigit():
+                qs = qs.filter(category_id=int(category))
+            else:
+                qs = qs.filter(category__slug=category)
+        if not (self.request.user and self.request.user.is_authenticated):
+            qs = qs.filter(is_active=True)
+        return qs
 
 
 class ProductImportView(APIView):
@@ -144,21 +254,13 @@ class ProductImportView(APIView):
     parser_classes = [MultiPartParser, FormParser]
     
     def post(self, request):
-        """
-        Import products from uploaded file.
-        
-        Query params:
-            update_existing: If 'true', update products with matching barcode
-        """
         file = request.FILES.get('file')
         if not file:
             return Response({'error': 'No file uploaded'}, status=status.HTTP_400_BAD_REQUEST)
         
         update_existing = request.query_params.get('update_existing', 'false').lower() == 'true'
-        
         service = ProductImportService()
         
-        # Determine file type and process
         filename = file.name.lower()
         if filename.endswith('.xlsx') or filename.endswith('.xls'):
             result = service.import_from_excel(file, update_existing)
@@ -180,12 +282,8 @@ class ProductExportTemplateView(APIView):
     permission_classes = [IsAuthenticated]
     
     def get(self, request):
-        """Download sample import template."""
         from io import BytesIO
-        
         wb = ProductImportService.get_sample_template()
-        
-        # Save to BytesIO
         buffer = BytesIO()
         wb.save(buffer)
         buffer.seek(0)
@@ -207,7 +305,7 @@ class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
     """
     serializer_class = PublicProductSerializer
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    search_fields = ['name', 'brand', 'category', 'description']
+    search_fields = ['name', 'brand__name', 'category__name', 'description', 'article_code', 'model_number']
     ordering_fields = ['name', 'selling_price', 'created_at']
     ordering = ['-created_at']
 
@@ -217,15 +315,28 @@ class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
         return [AllowAny()]
 
     def get_queryset(self):
-        queryset = Product.objects.filter(is_active=True)
+        queryset = Product.objects.filter(is_active=True).select_related('brand', 'category', 'subcategory')
 
         category = self.request.query_params.get('category')
         if category:
-            queryset = queryset.filter(category=category)
+            if category.isdigit():
+                queryset = queryset.filter(category_id=int(category))
+            else:
+                queryset = queryset.filter(Q(category__slug=category) | Q(category_slug=category))
+
+        subcategory = self.request.query_params.get('subcategory')
+        if subcategory:
+            if subcategory.isdigit():
+                queryset = queryset.filter(subcategory_id=int(subcategory))
+            else:
+                queryset = queryset.filter(subcategory__slug=subcategory)
 
         brand = self.request.query_params.get('brand')
         if brand:
-            queryset = queryset.filter(brand__iexact=brand)
+            if brand.isdigit():
+                queryset = queryset.filter(brand_id=int(brand))
+            else:
+                queryset = queryset.filter(Q(brand__name__iexact=brand) | Q(brand_text__iexact=brand))
 
         availability = self.request.query_params.get('availability')
         if availability:
@@ -255,41 +366,28 @@ class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
     def brands(self, request):
         """List active brands with details"""
         db_brands = Brand.objects.filter(is_active=True)
-        if db_brands.exists():
-            serializer = BrandSerializer(db_brands, many=True)
-            return Response(serializer.data)
-        brands = Product.objects.filter(is_active=True).exclude(
-            brand=''
-        ).values_list('brand', flat=True).distinct().order_by('brand')
-        return Response([{'name': b, 'slug': b.lower(), 'count': 0} for b in brands])
+        serializer = BrandSerializer(db_brands, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def categories(self, request):
-        """List categories with product counts"""
-        db_categories = Category.objects.filter(is_active=True)
-        if db_categories.exists():
-            serializer = CategorySerializer(db_categories, many=True)
-            return Response(serializer.data)
-        from django.db.models import Count
-        categories = Product.objects.filter(is_active=True).values('category').annotate(
-            count=Count('id')
-        ).order_by('category')
-        return Response(categories)
+        """List categories with subcategories and product counts"""
+        db_categories = Category.objects.filter(is_active=True).prefetch_related('subcategories')
+        serializer = CategorySerializer(db_categories, many=True)
+        return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def featured(self, request):
         """List featured watches for public showcase"""
-        products = Product.objects.filter(is_active=True, is_featured=True)
+        products = Product.objects.filter(is_active=True, is_featured=True).select_related('brand', 'category', 'subcategory')
         if not products.exists():
-            products = Product.objects.filter(is_active=True)[:8]
+            products = Product.objects.filter(is_active=True).select_related('brand', 'category', 'subcategory')[:8]
         serializer = PublicProductSerializer(products, many=True)
         return Response(serializer.data)
 
     @action(detail=True, methods=['post'], url_path='gallery')
     def add_gallery_image(self, request, pk=None):
         """Add an additional gallery image to a product"""
-        from .models import ProductImage
-        from .serializers import ProductImageSerializer
         product = self.get_object()
         image_url = request.data.get('image_url')
         file_obj = request.FILES.get('image') or request.FILES.get('file')
@@ -352,12 +450,11 @@ class CategoryViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         if self.request.user and self.request.user.is_authenticated:
-            return Category.objects.all()
-        return Category.objects.filter(is_active=True)
+            return Category.objects.all().prefetch_related('subcategories')
+        return Category.objects.filter(is_active=True).prefetch_related('subcategories')
 
     def get_object(self):
         lookup_val = self.kwargs.get('pk') or self.kwargs.get('slug')
         if lookup_val and str(lookup_val).isdigit():
             return Category.objects.get(id=int(lookup_val))
         return Category.objects.get(slug=lookup_val)
-

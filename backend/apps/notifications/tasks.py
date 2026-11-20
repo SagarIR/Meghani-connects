@@ -67,10 +67,23 @@ def send_repair_notification_task(repair_id: int, status_event: str):
             f"has been safely received by the Meghani Watch Co. atelier for diagnostic evaluation. "
             f"We will update you once assessment is complete."
         ),
+        'diagnosing': (
+            f"Dear {customer.name}, your {item_desc} (Ticket: {repair.ticket_number}) "
+            f"is currently undergoing diagnostic inspection by our watchmaker. Meghani Watch Co."
+        ),
+        'awaiting_approval': (
+            f"Dear {customer.name}, diagnostic assessment for {item_desc} (Ticket: {repair.ticket_number}) "
+            f"is complete. Estimated service cost: ₹{repair.estimated_cost or repair.repair_charge or 0:,.2f}. "
+            f"Please contact us to confirm. Meghani Watch Co."
+        ),
         'in_repair': (
             f"Dear {customer.name}, your {item_desc} (Ticket: {repair.ticket_number}) "
             f"is currently undergoing precision servicing by our master watchmakers. "
             f"Meghani Watch Co."
+        ),
+        'testing': (
+            f"Dear {customer.name}, servicing on your {item_desc} (Ticket: {repair.ticket_number}) "
+            f"is complete. It is now undergoing timing accuracy & water resistance testing. Meghani Watch Co."
         ),
         'ready': (
             f"Dear {customer.name}, your {item_desc} (Ticket: {repair.ticket_number}) "

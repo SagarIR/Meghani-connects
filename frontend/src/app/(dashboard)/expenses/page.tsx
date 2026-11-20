@@ -6,10 +6,11 @@ import {
   Plus, Wallet, Calendar, Home, Users, Zap, Wrench, ShoppingCart, 
   Megaphone, Truck, MoreHorizontal, TrendingUp, TrendingDown, IndianRupee,
   Filter, Edit, Trash2, PieChart, LayoutGrid, List, ShieldCheck, Lock,
-  Building, FileText, CheckCircle2, AlertCircle
+  Building, FileText, CheckCircle2, AlertCircle, RefreshCw, DollarSign,
+  Receipt, Landmark, CreditCard, Smartphone
 } from 'lucide-react'
 import { api } from '@/services/api'
-import { Expense } from '@/types'
+import { Expense, CashRegister } from '@/types'
 import { useAuth } from '@/context/AuthContext'
 import Button from '@/components/ui/Button'
 import Modal, { ConfirmModal } from '@/components/ui/Modal'
@@ -32,9 +33,20 @@ const categoryConfig: Record<string, { label: string; icon: any; color: string; 
   other: { label: 'Other Expenses', icon: Wallet, color: 'text-[#8D8980]', bg: 'bg-[#1F1E1A]', border: 'border-[#2A261F]' },
 }
 
+const paymentModeLabels: Record<string, { label: string; icon: any; color: string }> = {
+  cash: { label: 'Cash Drawer', icon: DollarSign, color: 'text-emerald-400' },
+  upi: { label: 'UPI / QR', icon: Smartphone, color: 'text-purple-400' },
+  card: { label: 'Card Swipe', icon: CreditCard, color: 'text-blue-400' },
+  bank_transfer: { label: 'Net Banking', icon: Landmark, color: 'text-cyan-400' },
+  cheque: { label: 'Cheque', icon: FileText, color: 'text-amber-400' },
+}
+
 export default function ExpensesPage() {
   const { user } = useAuth()
   const isManagement = user?.role === 'admin' || user?.role === 'manager'
+
+  // Navigation tab
+  const [activeTab, setActiveTab] = useState<'expenses' | 'till'>('expenses')
 
   const [expenses, setExpenses] = useState<Expense[]>([])
   const [loading, setLoading] = useState(true)
@@ -45,6 +57,16 @@ export default function ExpensesPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [viewMode, setViewMode] = useState<'table' | 'list'>('table')
   
+  // Till / Cash Register state
+  const [till, setTill] = useState<CashRegister | null>(null)
+  const [loadingTill, setLoadingTill] = useState(false)
+  const [showOpenTillModal, setShowOpenTillModal] = useState(false)
+  const [showCloseTillModal, setShowCloseTillModal] = useState(false)
+  const [openingCashInput, setOpeningCashInput] = useState('5000')
+  const [actualCashInput, setActualCashInput] = useState('')
+  const [tillNotes, setTillNotes] = useState('')
+  const [submittingTill, setSubmittingTill] = useState(false)
+
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
@@ -59,9 +81,12 @@ export default function ExpensesPage() {
   const [formData, setFormData] = useState({
     category: 'other',
     amount: '',
+    tax_amount: '0',
+    payment_mode: 'cash',
     date: new Date().toISOString().split('T')[0],
     description: '',
     vendor_name: '',
+    gstin: '',
   })
 
   // Reset to page 1 when filters change
@@ -121,14 +146,99 @@ export default function ExpensesPage() {
     setCurrentPage(1)
   }, [])
 
+  useEffect(() => {
+    if (activeTab === 'till') {
+      fetchTill()
+    }
+  }, [activeTab])
+
+  const fetchTill = async () => {
+    setLoadingTill(true)
+    try {
+      const res = await api.get('/cash-registers/today/')
+      setTill(res.data)
+      if (res.data?.actual_closing_cash !== null && res.data?.actual_closing_cash !== undefined) {
+        setActualCashInput(res.data.actual_closing_cash.toString())
+      } else {
+        setActualCashInput(res.data.expected_closing_cash?.toString() || '0')
+      }
+      setTillNotes(res.data?.notes || '')
+    } catch (error: any) {
+      if (error.response?.status === 404) {
+        setTill(null)
+      } else {
+        console.error('Failed to load till:', error)
+      }
+    } finally {
+      setLoadingTill(false)
+    }
+  }
+
+  const handleOpenTill = async () => {
+    setSubmittingTill(true)
+    try {
+      const payload = {
+        opening_cash: parseFloat(openingCashInput) || 0,
+        register_date: new Date().toISOString().split('T')[0],
+      }
+      const res = await api.post('/cash-registers/', payload)
+      setTill(res.data)
+      setShowOpenTillModal(false)
+      toast.success('Cash drawer & register initialized for today')
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || 'Failed to open register')
+    } finally {
+      setSubmittingTill(false)
+    }
+  }
+
+  const handleRecalculateTill = async () => {
+    setSubmittingTill(true)
+    try {
+      const res = await api.post('/cash-registers/today/recalculate/')
+      setTill(res.data)
+      setActualCashInput(res.data.expected_closing_cash?.toString() || '0')
+      toast.success('Drawer totals reconciled with live POS & expense logs')
+    } catch (error) {
+      toast.error('Failed to recalculate till')
+    } finally {
+      setSubmittingTill(false)
+    }
+  }
+
+  const handleCloseTill = async () => {
+    if (!actualCashInput || isNaN(parseFloat(actualCashInput))) {
+      toast.error('Please enter the physical closing cash count')
+      return
+    }
+
+    setSubmittingTill(true)
+    try {
+      const res = await api.post('/cash-registers/today/close_till/', {
+        actual_closing_cash: parseFloat(actualCashInput),
+        notes: tillNotes,
+      })
+      setTill(res.data)
+      setShowCloseTillModal(false)
+      toast.success('Register reconciled and closed successfully')
+    } catch (error: any) {
+      toast.error(error.response?.data?.error || 'Failed to close register')
+    } finally {
+      setSubmittingTill(false)
+    }
+  }
+
   const openAddModal = () => {
     setSelectedExpense(null)
     setFormData({
       category: 'other',
       amount: '',
+      tax_amount: '0',
+      payment_mode: 'cash',
       date: new Date().toISOString().split('T')[0],
       description: '',
       vendor_name: '',
+      gstin: '',
     })
     setShowModal(true)
   }
@@ -138,9 +248,12 @@ export default function ExpensesPage() {
     setFormData({
       category: expense.category,
       amount: expense.amount.toString(),
+      tax_amount: expense.tax_amount?.toString() || '0',
+      payment_mode: expense.payment_mode || 'cash',
       date: expense.date,
       description: expense.description || '',
       vendor_name: expense.vendor_name || '',
+      gstin: expense.gstin || '',
     })
     setShowModal(true)
   }
@@ -166,6 +279,7 @@ export default function ExpensesPage() {
       const payload = {
         ...formData,
         amount: parseFloat(formData.amount),
+        tax_amount: parseFloat(formData.tax_amount || '0'),
       }
 
       if (selectedExpense) {
@@ -173,10 +287,13 @@ export default function ExpensesPage() {
         toast.success('Expense updated successfully')
       } else {
         await api.post('/expenses/', payload)
-        toast.success('Expense added successfully')
+        toast.success('Expense voucher created successfully')
       }
       setShowModal(false)
       fetchExpenses()
+      if (activeTab === 'till') {
+        fetchTill()
+      }
     } catch (error) {
       toast.error('Failed to save expense')
     } finally {
@@ -276,8 +393,43 @@ export default function ExpensesPage() {
         </div>
       </div>
 
-      {/* Expense KPI Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      {/* Module Navigation Tabs */}
+      <div className="flex items-center gap-2 border-b border-[#2A261F] pb-3">
+        <button
+          onClick={() => setActiveTab('expenses')}
+          className={clsx(
+            'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border',
+            activeTab === 'expenses'
+              ? 'bg-[#C9A45C] text-[#0B0B0A] border-[#C9A45C] shadow-md'
+              : 'bg-[#12110F] text-[#8D8980] border-[#2A261F] hover:text-[#F3EFE6]'
+          )}
+        >
+          <Receipt className="w-4 h-4" />
+          <span>Expense Ledgers & Vouchers</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('till')}
+          className={clsx(
+            'flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all border',
+            activeTab === 'till'
+              ? 'bg-[#C9A45C] text-[#0B0B0A] border-[#C9A45C] shadow-md'
+              : 'bg-[#12110F] text-[#8D8980] border-[#2A261F] hover:text-[#F3EFE6]'
+          )}
+        >
+          <Landmark className="w-4 h-4" />
+          <span>Till & Cash Drawer Reconciliation</span>
+          {till?.is_closed ? (
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+          ) : (
+            <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+          )}
+        </button>
+      </div>
+
+      {activeTab === 'expenses' ? (
+        <>
+          {/* Expense KPI Cards */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-rose-950/40 border border-rose-800/40 flex items-center justify-center text-rose-400">
@@ -410,14 +562,16 @@ export default function ExpensesPage() {
       ) : viewMode === 'table' ? (
         <div className="bg-[#171613] rounded-2xl border border-[#2A261F] overflow-hidden shadow-xl">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[850px]">
+            <table className="w-full min-w-[950px]">
               <thead className="bg-[#12110F] border-b border-[#2A261F]">
                 <tr>
                   <th className="px-5 py-3.5 text-left">
                     <SortableHeader label="Date" field="date" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Voucher #</th>
                   <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Category</th>
                   <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Vendor / Payee</th>
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Payment Mode</th>
                   <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Description</th>
                   <th className="px-5 py-3.5 text-right">
                     <SortableHeader label="Amount" field="amount" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
@@ -429,10 +583,16 @@ export default function ExpensesPage() {
                 {expenses.map((expense) => {
                   const cfg = categoryConfig[expense.category] || categoryConfig.other
                   const CatIcon = cfg.icon
+                  const modeCfg = paymentModeLabels[expense.payment_mode] || paymentModeLabels.cash
+                  const ModeIcon = modeCfg.icon
                   return (
                     <tr key={expense.id} className="hover:bg-[#1F1E1A] transition-colors">
                       <td className="px-5 py-4 font-mono text-xs text-[#F3EFE6]">
                         {formatDate(expense.date)}
+                      </td>
+
+                      <td className="px-4 py-4 font-mono text-xs font-bold text-[#C9A45C]">
+                        {expense.voucher_number || `EXP-${expense.id}`}
                       </td>
 
                       <td className="px-4 py-4">
@@ -444,10 +604,20 @@ export default function ExpensesPage() {
 
                       <td className="px-4 py-4">
                         <p className="font-medium text-sm text-[#F3EFE6]">{expense.vendor_name || 'Store Expense'}</p>
+                        {expense.gstin && (
+                          <span className="font-mono text-[10px] text-[#8D8980] block">GST: {expense.gstin}</span>
+                        )}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <span className="inline-flex items-center gap-1 text-xs text-[#F3EFE6]">
+                          <ModeIcon className={clsx('w-3.5 h-3.5', modeCfg.color)} />
+                          <span>{modeCfg.label}</span>
+                        </span>
                       </td>
 
                       <td className="px-5 py-4">
-                        <p className="text-xs text-[#8D8980] line-clamp-1 max-w-[280px]">{expense.description || '-'}</p>
+                        <p className="text-xs text-[#8D8980] line-clamp-1 max-w-[240px]">{expense.description || '-'}</p>
                       </td>
 
                       <td className="px-5 py-4 text-right font-mono font-bold text-base text-[#C9A45C]">
@@ -502,7 +672,7 @@ export default function ExpensesPage() {
                   className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl flex flex-col justify-between"
                 >
                   <div>
-                    <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-start justify-between mb-2">
                       <span className={clsx('text-xs font-semibold px-2.5 py-1 rounded-full inline-flex items-center gap-1.5 border', cfg.bg, cfg.color, cfg.border)}>
                         <CatIcon className="w-3.5 h-3.5" />
                         <span>{cfg.label}</span>
@@ -510,7 +680,19 @@ export default function ExpensesPage() {
                       <span className="text-xs font-mono text-[#8D8980]">{formatDate(expense.date)}</span>
                     </div>
 
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-mono text-xs font-bold text-[#C9A45C]">
+                        {expense.voucher_number || `EXP-${expense.id}`}
+                      </span>
+                      <span className="text-[11px] text-[#8D8980] flex items-center gap-1">
+                        {paymentModeLabels[expense.payment_mode]?.label || expense.payment_mode}
+                      </span>
+                    </div>
+
                     <p className="font-serif font-bold text-base text-[#F3EFE6] mt-1">{expense.vendor_name || 'Store Expense'}</p>
+                    {expense.gstin && (
+                      <span className="font-mono text-[10px] text-[#8D8980] block">GST: {expense.gstin}</span>
+                    )}
                     <p className="text-xs text-[#8D8980] mt-1 line-clamp-2">{expense.description || 'General store expense'}</p>
                   </div>
 
@@ -559,6 +741,190 @@ export default function ExpensesPage() {
           />
         </div>
       )}
+      </>
+    ) : (
+      /* Till & Cash Register Daily Reconciliation Dashboard */
+      <div className="space-y-6">
+        {loadingTill ? (
+          <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-12 text-center">
+            <div className="w-8 h-8 border-2 border-[#C9A45C] border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+            <p className="text-sm text-[#8D8980]">Reconciling store cash registers...</p>
+          </div>
+        ) : !till ? (
+          <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-12 text-center shadow-xl">
+            <div className="w-16 h-16 mx-auto bg-[#1F1E1A] border border-[#2A261F] rounded-2xl flex items-center justify-center mb-4">
+              <Landmark className="w-8 h-8 text-[#C9A45C]" />
+            </div>
+            <h3 className="text-lg font-serif font-bold text-[#F3EFE6] mb-1">Cash Register Not Initialized Today</h3>
+            <p className="text-sm text-[#8D8980] max-w-md mx-auto mb-6">
+              Open today&apos;s register drawer with the opening cash float to begin tracking physical drawer sales, cash repairs, and petty cash expenses.
+            </p>
+            <Button onClick={() => setShowOpenTillModal(true)} icon={<Plus className="w-4 h-4" />} className="shadow-gold">
+              Initialize Today&apos;s Register
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {/* Register Status Banner */}
+            <div className="bg-[#171613] rounded-2xl border border-[#2A261F] p-5 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-xl bg-[#1F1E1A] border border-[#2A261F] flex items-center justify-center text-[#C9A45C]">
+                  <Landmark className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2.5">
+                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Daily Till & Cash Drawer</h2>
+                    <span className={clsx(
+                      'text-xs font-semibold px-2.5 py-0.5 rounded-full border',
+                      till.is_closed 
+                        ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/40' 
+                        : 'bg-amber-950/40 text-amber-400 border-amber-800/40'
+                    )}>
+                      {till.is_closed ? 'Drawer Closed & Audited' : 'Drawer Open / Active'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#8D8980] mt-0.5 font-mono">
+                    Date: {formatDate(till.register_date)} | Opened by {till.opened_by_name}
+                    {till.is_closed && till.closed_by_name && ` | Closed by ${till.closed_by_name}`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2.5">
+                <Button 
+                  variant="secondary" 
+                  onClick={handleRecalculateTill} 
+                  loading={submittingTill}
+                  disabled={till.is_closed}
+                  icon={<RefreshCw className="w-4 h-4" />}
+                >
+                  Sync Live Balances
+                </Button>
+                {!till.is_closed && (
+                  <Button 
+                    onClick={() => setShowCloseTillModal(true)} 
+                    className="bg-emerald-600 hover:bg-emerald-500 text-black font-bold shadow-md"
+                  >
+                    <Lock className="w-4 h-4 mr-1.5" />
+                    Close & Audit Till
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* 4 Till Calculation Cards */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+              <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">1. Opening Float</span>
+                <p className="font-mono font-bold text-xl sm:text-2xl text-[#F3EFE6] mt-1">
+                  {formatCurrency(till.opening_cash)}
+                </p>
+                <span className="text-[10px] text-[#8D8980] mt-1 block">Starting drawer cash</span>
+              </div>
+
+              <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">2. Cash Inflows</span>
+                <p className="font-mono font-bold text-xl sm:text-2xl text-emerald-400 mt-1">
+                  +{formatCurrency(Number(till.cash_sales || 0) + Number(till.cash_repairs || 0))}
+                </p>
+                <span className="text-[10px] text-[#8D8980] mt-1 block">
+                  Sales: {formatCurrency(till.cash_sales)} | Repairs: {formatCurrency(till.cash_repairs)}
+                </span>
+              </div>
+
+              <div className="bg-[#171613] rounded-2xl p-4 border border-[#2A261F] shadow-lg">
+                <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">3. Cash Outflows</span>
+                <p className="font-mono font-bold text-xl sm:text-2xl text-rose-400 mt-1">
+                  -{formatCurrency(till.cash_expenses)}
+                </p>
+                <span className="text-[10px] text-[#8D8980] mt-1 block">Petty cash store expenses</span>
+              </div>
+
+              <div className="bg-[#171613] rounded-2xl p-4 border border-[#C9A45C]/40 bg-[#C9A45C]/5 shadow-lg">
+                <span className="text-[10px] text-[#C9A45C] uppercase tracking-wider font-bold block">4. Expected In Drawer</span>
+                <p className="font-mono font-bold text-xl sm:text-2xl text-[#C9A45C] mt-1">
+                  {formatCurrency(till.expected_closing_cash)}
+                </p>
+                <span className="text-[10px] text-[#8D8980] mt-1 block">System calculated physical cash</span>
+              </div>
+            </div>
+
+            {/* Till Variance & Audit Card */}
+            {till.is_closed ? (
+              <div className="p-6 bg-[#12110F] border border-[#2A261F] rounded-2xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-serif font-bold text-base text-[#F3EFE6] flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                    Till Closing Reconciliation Summary
+                  </h3>
+                  <span className={clsx(
+                    'text-xs font-mono font-bold px-3 py-1 rounded-full border',
+                    Number(till.variance || 0) === 0 
+                      ? 'bg-emerald-950/40 text-emerald-400 border-emerald-800/40' 
+                      : Number(till.variance || 0) > 0 
+                        ? 'bg-amber-950/40 text-amber-400 border-amber-800/40'
+                        : 'bg-rose-950/40 text-rose-400 border-rose-800/40'
+                  )}>
+                    {Number(till.variance || 0) === 0 
+                      ? '✓ Exact Match / Zero Variance' 
+                      : Number(till.variance || 0) > 0 
+                        ? `Surplus: +${formatCurrency(till.variance || 0)}` 
+                        : `Shortage: ${formatCurrency(till.variance || 0)}`}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2">
+                  <div className="p-3 bg-[#171613] rounded-xl border border-[#2A261F]">
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Physical Counted Cash</span>
+                    <p className="font-mono font-bold text-lg text-[#F3EFE6] mt-0.5">
+                      {formatCurrency(till.actual_closing_cash || 0)}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-[#171613] rounded-xl border border-[#2A261F]">
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Expected Drawer Balance</span>
+                    <p className="font-mono font-bold text-lg text-[#C9A45C] mt-0.5">
+                      {formatCurrency(till.expected_closing_cash || 0)}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-[#171613] rounded-xl border border-[#2A261F]">
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Cash Discrepancy / Variance</span>
+                    <p className={clsx(
+                      'font-mono font-bold text-lg mt-0.5',
+                      Number(till.variance || 0) === 0 ? 'text-emerald-400' :
+                      Number(till.variance || 0) > 0 ? 'text-amber-400' : 'text-rose-400'
+                    )}>
+                      {formatCurrency(till.variance || 0)}
+                    </p>
+                  </div>
+                </div>
+
+                {till.notes && (
+                  <div className="p-3 bg-[#171613] rounded-xl border border-[#2A261F]">
+                    <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block mb-1">Supervisor Closing Notes</span>
+                    <p className="text-xs text-[#F3EFE6]">{till.notes}</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="p-5 bg-gradient-to-r from-[#171613] to-[#1F1E1A] border border-[#2A261F] rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h4 className="font-serif font-bold text-sm text-[#F3EFE6]">Ready to balance tonight&apos;s cash register?</h4>
+                  <p className="text-xs text-[#8D8980] mt-0.5">
+                    Verify physical currency in the cash drawer and complete end-of-day reconciliation.
+                  </p>
+                </div>
+                <Button 
+                  onClick={() => setShowCloseTillModal(true)} 
+                  className="bg-emerald-600 hover:bg-emerald-500 text-black font-bold shadow-md"
+                >
+                  Perform End-of-Day Till Close
+                </Button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    )}
 
       {/* Add / Edit Expense Modal */}
       <Modal 
@@ -569,20 +935,37 @@ export default function ExpensesPage() {
         size="md"
       >
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Expense Category *</label>
-            <select
-              value={formData.category}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-              className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-xs text-[#F3EFE6]"
-            >
-              {categories.filter(c => c.value !== '').map((c) => (
-                <option key={c.value} value={c.value} className="bg-[#171613]">{c.label}</option>
-              ))}
-            </select>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <div>
+              <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Expense Category *</label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-xs text-[#F3EFE6]"
+              >
+                {categories.filter(c => c.value !== '').map((c) => (
+                  <option key={c.value} value={c.value} className="bg-[#171613]">{c.label}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Payment Method *</label>
+              <select
+                value={formData.payment_mode}
+                onChange={(e) => setFormData({ ...formData, payment_mode: e.target.value })}
+                className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-xs text-[#F3EFE6]"
+              >
+                <option value="cash" className="bg-[#171613]">Cash Drawer (Petty Cash)</option>
+                <option value="upi" className="bg-[#171613]">UPI / Store QR Code</option>
+                <option value="card" className="bg-[#171613]">Corporate Debit / Credit Card</option>
+                <option value="bank_transfer" className="bg-[#171613]">Bank Transfer / NEFT</option>
+                <option value="cheque" className="bg-[#171613]">Bank Cheque</option>
+              </select>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
             <Input 
               label="Amount (₹) *" 
               type="number" 
@@ -592,6 +975,14 @@ export default function ExpensesPage() {
               onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
             />
             <Input 
+              label="Tax / GST (₹)" 
+              type="number" 
+              step="any"
+              placeholder="0.00"
+              value={formData.tax_amount}
+              onChange={(e) => setFormData({ ...formData, tax_amount: e.target.value })}
+            />
+            <Input 
               label="Date *" 
               type="date"
               value={formData.date}
@@ -599,15 +990,23 @@ export default function ExpensesPage() {
             />
           </div>
 
-          <Input 
-            label="Vendor / Payee Name" 
-            placeholder="e.g. Torrent Power Ltd / Landlord / Packaging Supplier"
-            value={formData.vendor_name}
-            onChange={(e) => setFormData({ ...formData, vendor_name: e.target.value })}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <Input 
+              label="Vendor / Payee Name" 
+              placeholder="e.g. Torrent Power Ltd / Landlord / Spares Co."
+              value={formData.vendor_name}
+              onChange={(e) => setFormData({ ...formData, vendor_name: e.target.value })}
+            />
+            <Input 
+              label="Vendor GSTIN (Optional)" 
+              placeholder="e.g. 24AAACG1234F1Z5"
+              value={formData.gstin}
+              onChange={(e) => setFormData({ ...formData, gstin: e.target.value })}
+            />
+          </div>
 
           <div>
-            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Description / Notes</label>
+            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Description / Purpose</label>
             <textarea
               rows={3}
               className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-xs text-[#F3EFE6] resize-none"
@@ -629,10 +1028,115 @@ export default function ExpensesPage() {
               Cancel
             </Button>
             <Button type="submit" loading={isSubmitting} className="shadow-gold">
-              {selectedExpense ? 'Update Expense' : 'Add Expense'}
+              {selectedExpense ? 'Update Expense' : 'Generate Expense Voucher'}
             </Button>
           </div>
         </form>
+      </Modal>
+
+      {/* Open Till Register Modal */}
+      <Modal
+        isOpen={showOpenTillModal}
+        onClose={() => setShowOpenTillModal(false)}
+        title="Open Daily Cash Drawer"
+        description="Initialize the physical POS register float balance for today's store operations."
+        size="sm"
+      >
+        <div className="space-y-4">
+          <Input
+            label="Opening Cash Float (₹) *"
+            type="number"
+            step="any"
+            placeholder="5000.00"
+            value={openingCashInput}
+            onChange={(e) => setOpeningCashInput(e.target.value)}
+          />
+          <p className="text-xs text-[#8D8980]">
+            Count the physical notes and coins currently sitting in the cash drawer before starting morning retail transactions.
+          </p>
+
+          <div className="flex justify-end gap-2.5 pt-3 border-t border-[#2A261F]">
+            <Button variant="secondary" onClick={() => setShowOpenTillModal(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleOpenTill} 
+              loading={submittingTill}
+              className="shadow-gold font-bold"
+            >
+              Open Register
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Close & Reconcile Till Modal */}
+      <Modal
+        isOpen={showCloseTillModal}
+        onClose={() => setShowCloseTillModal(false)}
+        title="Close & Reconcile Cash Register"
+        description="Verify physical cash in drawer, review variance against system sales, and lock today's register."
+        size="md"
+      >
+        <div className="space-y-4">
+          <div className="p-4 bg-[#12110F] border border-[#2A261F] rounded-xl flex items-center justify-between">
+            <div>
+              <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Expected In Drawer</span>
+              <p className="font-mono font-bold text-xl text-[#C9A45C]">
+                {formatCurrency(till?.expected_closing_cash || 0)}
+              </p>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] text-[#8D8980] uppercase tracking-wider block">Calculated Variance</span>
+              {(() => {
+                const actual = parseFloat(actualCashInput) || 0
+                const expected = Number(till?.expected_closing_cash || 0)
+                const diff = actual - expected
+                return (
+                  <p className={clsx(
+                    'font-mono font-bold text-base',
+                    diff === 0 ? 'text-emerald-400' : diff > 0 ? 'text-amber-400' : 'text-rose-400'
+                  )}>
+                    {diff === 0 ? 'Balanced (₹0)' : diff > 0 ? `+${formatCurrency(diff)}` : formatCurrency(diff)}
+                  </p>
+                )
+              })()}
+            </div>
+          </div>
+
+          <Input
+            label="Actual Physical Cash Counted (₹) *"
+            type="number"
+            step="any"
+            placeholder="0.00"
+            value={actualCashInput}
+            onChange={(e) => setActualCashInput(e.target.value)}
+          />
+
+          <div>
+            <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Reconciliation Notes</label>
+            <textarea
+              rows={2}
+              className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-xs text-[#F3EFE6] resize-none"
+              placeholder="Note any cash shortages, surplus reasons, or handover remarks..."
+              value={tillNotes}
+              onChange={(e) => setTillNotes(e.target.value)}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2.5 pt-3 border-t border-[#2A261F]">
+            <Button variant="secondary" onClick={() => setShowCloseTillModal(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleCloseTill} 
+              loading={submittingTill}
+              className="bg-emerald-600 hover:bg-emerald-500 text-black font-bold shadow-md"
+            >
+              Lock & Archive Register
+            </Button>
+          </div>
+        </div>
       </Modal>
 
       {/* Delete Confirmation Modal */}

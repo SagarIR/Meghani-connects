@@ -77,18 +77,26 @@ class CRMAnalyticsService:
 
         # Preferred Brands & Categories
         purchased_items = SaleItem.objects.filter(sale__customer=customer)
-        brand_counts = purchased_items.values('product__brand').annotate(
+        brand_counts = purchased_items.values('product__brand__name').annotate(
             count=Count('id'),
             spend=Sum('subtotal')
         ).order_by('-spend')
 
-        category_counts = purchased_items.values('product__category').annotate(
+        category_counts = purchased_items.values('product__category__name').annotate(
             count=Count('id'),
             spend=Sum('subtotal')
         ).order_by('-spend')
 
-        preferred_brand = brand_counts[0]['product__brand'] if brand_counts.exists() and brand_counts[0]['product__brand'] else 'Various'
-        preferred_category = category_counts[0]['product__category'] if category_counts.exists() else 'Various'
+        preferred_brand = (
+            brand_counts[0]['product__brand__name']
+            if brand_counts.exists() and brand_counts[0]['product__brand__name']
+            else 'Various'
+        )
+        preferred_category = (
+            category_counts[0]['product__category__name']
+            if category_counts.exists() and category_counts[0]['product__category__name']
+            else 'Various'
+        )
 
         # Segment Assignment
         segments = []

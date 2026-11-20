@@ -4,6 +4,7 @@ from .views import (
     RecentActivityView, AlertsView, SalesReportView, ProfitReportView,
     ProductPerformanceView, RepairIncomeView, ExpenseReportView,
     CustomerLoyaltyView, InventoryReportView, ReportExportView,
+    FinancialStatementReportView, GSTReportView,
     # AI Views
     SalesForecastView, StockPredictionView, StockoutPredictionView,
     SmartAlertsView, ProfitPredictionView, AIInsightsView,
@@ -28,6 +29,8 @@ urlpatterns = [
     path('reports/expenses/', ExpenseReportView.as_view(), name='expense-report'),
     path('reports/customers/', CustomerLoyaltyView.as_view(), name='customer-report'),
     path('reports/inventory/', InventoryReportView.as_view(), name='inventory-report'),
+    path('reports/financial-statement/', FinancialStatementReportView.as_view(), name='financial-statement-report'),
+    path('reports/gst/', GSTReportView.as_view(), name='gst-report'),
     
     # Export
     path('reports/<str:report_type>/export/<str:format_type>/', ReportExportView.as_view(), name='report-export'),

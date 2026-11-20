@@ -15,7 +15,8 @@ from apps.expenses.models import Expense
 from apps.crm.models import Customer
 from .reports import (
     SalesReport, ProductReport, RepairReport, ExpenseReport,
-    CustomerReport, InventoryReport, export_to_csv, export_to_excel, export_to_pdf
+    CustomerReport, InventoryReport, FinancialStatementReport, GSTReport,
+    export_to_csv, export_to_excel, export_to_pdf
 )
 from .services.forecasting import SalesForecast
 from .services.stock_predictor import StockPredictor
@@ -108,13 +109,24 @@ class TopProductsView(APIView):
         top_products = SaleItem.objects.filter(
             sale__sale_date__date__gte=start_date
         ).values(
-            'product__id', 'product__name', 'product__brand'
+            'product__id', 'product__name', 'product__brand__name'
         ).annotate(
             quantity_sold=Sum('quantity'),
             revenue=Sum('subtotal')
         ).order_by('-quantity_sold')[:limit]
+
+        formatted = [
+            {
+                'product__id': item['product__id'],
+                'product__name': item['product__name'],
+                'product__brand': item.get('product__brand__name') or '',
+                'quantity_sold': item['quantity_sold'],
+                'revenue': item['revenue']
+            }
+            for item in top_products
+        ]
         
-        return Response(list(top_products))
+        return Response(formatted)
 
 
 class RecentActivityView(APIView):
@@ -158,9 +170,10 @@ class AlertsView(APIView):
         today = timezone.now().date()
         
         # Low stock products
-        low_stock = list(Product.objects.filter(
-            stock__lte=threshold, is_active=True
-        ).values('id', 'name', 'stock', 'brand')[:10])
+        low_stock = [
+            {'id': p.id, 'name': p.name, 'stock': p.stock, 'brand': p.brand_name}
+            for p in Product.objects.filter(stock__lte=threshold, is_active=True).select_related('brand')[:10]
+        ]
         
         # Overdue repairs
         overdue = list(Repair.objects.filter(
@@ -379,6 +392,28 @@ class InventoryReportView(APIView):
         return Response(data)
 
 
+class FinancialStatementReportView(APIView):
+    """Profit & Loss Statement and Income Statement"""
+    permission_classes = [CanViewReports]
+
+    def get(self, request):
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+        data = FinancialStatementReport.generate(start_date, end_date)
+        return Response(data)
+
+
+class GSTReportView(APIView):
+    """GST Compliance & GSTR-1 Summary"""
+    permission_classes = [CanViewReports]
+
+    def get(self, request):
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+        data = GSTReport.generate(start_date, end_date)
+        return Response(data)
+
+
 class ReportExportView(APIView):
     """Export reports to different formats"""
     permission_classes = [CanViewReports]
@@ -413,6 +448,42 @@ class ReportExportView(APIView):
             headers = ['Product', 'Brand', 'Stock', 'Category']
             rows = [(p['name'], p['brand'], p['stock'], p['category']) for p in data['low_stock_items']]
             title = 'Inventory Report'
+        elif report_type == 'financial-statement':
+            data = FinancialStatementReport.generate(start_date, end_date)
+            headers = ['Metric / Component', 'Amount (INR)']
+            rows = [
+                ('Gross Sales Revenue', data['revenue']['sales_gross']),
+                ('Sales Discounts Given', data['revenue']['sales_discounts']),
+                ('Sales Taxes Collected', data['revenue']['sales_tax']),
+                ('Net Sales Revenue', data['revenue']['sales_net']),
+                ('Watch Repair Service Revenue', data['revenue']['repairs_revenue']),
+                ('Total Operating Revenue', data['revenue']['total_revenue']),
+                ('Cost of Goods Sold (COGS)', data['cogs']['goods_sold_cost']),
+                ('Gross Profit', data['gross_profit']),
+                ('Gross Margin (%)', f"{data['gross_margin_percentage']}%"),
+                ('Total Operating Expenses', data['operating_expenses']['total']),
+                ('Net Operating Profit', data['net_profit']),
+                ('Net Margin (%)', f"{data['net_margin_percentage']}%"),
+            ]
+            title = 'Financial Statement (P&L) Report'
+        elif report_type == 'gst':
+            data = GSTReport.generate(start_date, end_date)
+            headers = ['HSN Code', 'Description', 'Quantity', 'Taxable Value', 'Rate (%)', 'CGST', 'SGST', 'IGST', 'Total GST']
+            rows = [
+                (
+                    h['hsn_code'],
+                    h['description'],
+                    h['quantity'],
+                    h['taxable_value'],
+                    f"{h['tax_rate']}%",
+                    h['cgst_amount'],
+                    h['sgst_amount'],
+                    h['igst_amount'],
+                    h['total_tax']
+                )
+                for h in data['hsn_summary']
+            ]
+            title = 'GST Compliance & HSN Report'
         else:
             return Response({'error': 'Invalid report type'}, status=400)
         
@@ -616,8 +687,8 @@ class SmartReorderView(APIView):
                 'id': r.id,
                 'product_id': r.product.id,
                 'product_name': r.product.name,
-                'brand': getattr(r.product, 'brand', ''),
-                'category': r.product.category,
+                'brand': r.product.brand_name,
+                'category': r.product.category_slug_val,
                 'current_stock': r.current_stock,
                 'daily_velocity': float(r.daily_velocity),
                 'lead_time_days': r.lead_time_days,

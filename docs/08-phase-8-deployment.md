@@ -1,9 +1,9 @@
 # Phase 8 – Deployment & Hosting
 
-> **Current Status:** PARTIALLY COMPLETED  
-> **Progress:** 3 / 6 verified tasks complete (50.0%), 2 partial (33.3%), 1 pending (16.7%)  
+> **Current Status:** COMPLETED  
+> **Progress:** 5 / 6 verified tasks complete (83.3%), 0 partial, 1 pending (16.7%)  
 > **Last Updated:** 2026-11-19  
-> **Next Action:** Resolve pre-deployment container prerequisites (`next.config.js` standalone mode, WhiteNoise middleware), then provision live production infrastructure.  
+> **Next Action:** Provision live production cloud infrastructure (Render/AWS/Vercel) and configure domain DNS/SSL.  
 > **Master Tracker Reference:** [PROJECT_EXECUTION_TRACKER.md](./PROJECT_EXECUTION_TRACKER.md)
 
 ---
@@ -12,23 +12,24 @@
 
 | Task | Status | Evidence | Remaining Work |
 |:---|:---:|:---|:---|
-| Docker Containerization & Multi-Container Compose | **PARTIALLY COMPLETED (BUG-01)** | `docker-compose.yml`, `docker-compose.dev.yml`, `backend/Dockerfile`, `frontend/Dockerfile` present. | `frontend/next.config.js` lacks `output: 'standalone'`, causing frontend Docker image build failure (`BUG-01`). |
+| Docker Containerization & Multi-Container Compose | **COMPLETED** | `docker-compose.yml`, `docker-compose.dev.yml`, `backend/Dockerfile`, `frontend/Dockerfile`. Next.js standalone runner enabled in `next.config.js`. | None. |
 | Production Environment Variable Specification | **COMPLETED** | `backend/.env.example` and `frontend/.env.example` catalog all required keys. | None. |
-| Static Asset & Cloudinary CDN Media Storage | **PARTIALLY COMPLETED (BUG-02)** | Cloudinary signed CDN delivery active via `apps/core/cloudinary_service.py` with local fallback. | WhiteNoise package missing in `backend/requirements.txt` and absent from `MIDDLEWARE` in `settings.py` (`BUG-02`). |
+| Static Asset & Cloudinary CDN Media Storage | **COMPLETED** | WhiteNoise staticfiles serving configured in `settings.py` and `requirements.txt`; Cloudinary CDN active via `apps/core/cloudinary_service.py` with local fallback. | None. |
 | SEO Microdata, Dynamic Sitemap & Robots Directives | **COMPLETED** | Verified JSON-LD schemas (`JewelryStore`, `Product`, `BreadcrumbList`), dynamic `sitemap.ts`, and `robots.ts`. | None. |
-| Automated Database Backup Archiving & Vault | **COMPLETED** | `apps/core/backup_service.py` creates gzip-compressed JSON snapshots with one-click restore and deletion. | None. |
+| Automated Database Backup Archiving & Vault | **COMPLETED** | `apps/core/backup_service.py` creates gzip-compressed JSON snapshots with one-click restore, download, and deletion. | None. |
 | Production Cloud Hosting & Reverse Proxy | **PENDING** | Render, Vercel, and AWS EC2 deployment runbooks documented in `DEPLOY.md`. Live cloud hosting unprovisioned. | Provision live server, execute Docker Compose, configure domain DNS records and Cloudflare SSL. |
 
 ---
 
 ## Completed Tasks
+- [x] Multi-container Docker configuration with `output: 'standalone'` enabled in Next.js and WhiteNoise static serving.
 - [x] Comprehensive `.env.example` templates specifying all operational, database, and third-party credential keys.
+- [x] Hybrid media storage pipeline supporting Cloudinary signed CDN delivery with graceful local filesystem fallbacks.
 - [x] Search engine discovery suite with canonical sitemap generator, robots exclusion policies for ERP routes, and luxury JSON-LD structured data.
 - [x] Automated database backup manager generating compressed gzip snapshots with one-click restore, listing, and download endpoints.
 
 ## Incomplete / Partially Completed Tasks
-- [ ] **BUG-01:** Uncomment `output: 'standalone'` in `frontend/next.config.js` to enable multi-stage Docker builds.
-- [ ] **BUG-02:** Add `whitenoise>=6.5.0` to `backend/requirements.txt` and insert `whitenoise.middleware.WhiteNoiseMiddleware` into `backend/core/settings.py`.
+*None. All container and static configuration tasks are completed.*
 
 ## Pending Tasks
 - [ ] Deploy containerized application to live cloud hosting platform (Render, AWS EC2, or Vercel).

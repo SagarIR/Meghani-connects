@@ -131,8 +131,8 @@ class CanManageRepairs(permissions.BasePermission):
             return True
             
         role = getattr(request.user, 'role', '')
-        # Staff can create repairs and update status
-        if request.method in ['POST', 'PATCH']:
+        # Staff can create repairs, update status, and manage parts; only managers can delete whole repair records
+        if request.method in ['POST', 'PATCH'] or getattr(view, 'action', '') == 'remove_part':
             return role in ['admin', 'manager', 'staff']
         return role in ['admin', 'manager']
 

@@ -14,7 +14,11 @@ class ProductImportService:
     """
     
     REQUIRED_COLUMNS = ['name', 'selling_price']
-    OPTIONAL_COLUMNS = ['barcode', 'brand', 'category', 'cost_price', 'stock', 'description', 'warranty_months']
+    OPTIONAL_COLUMNS = [
+        'barcode', 'article_code', 'model_number', 'size', 'brand',
+        'category', 'subcategory', 'cost_price', 'mrp', 'stock',
+        'description', 'warranty_months'
+    ]
     
     def __init__(self):
         self.errors = []
@@ -177,6 +181,15 @@ class ProductImportService:
             # Optional fields
             if data.get('barcode'):
                 cleaned['barcode'] = str(data['barcode']).strip()
+
+            if data.get('article_code'):
+                cleaned['article_code'] = str(data['article_code']).strip()
+
+            if data.get('model_number'):
+                cleaned['model_number'] = str(data['model_number']).strip()
+
+            if data.get('size'):
+                cleaned['size'] = str(data['size']).strip()
             
             if data.get('brand'):
                 cleaned['brand'] = str(data['brand']).strip()
@@ -184,6 +197,18 @@ class ProductImportService:
             if data.get('category'):
                 cleaned['category'] = str(data['category']).strip()
             
+            if data.get('subcategory'):
+                from .models import Subcategory
+                sub_str = str(data['subcategory']).strip()
+                sub_obj = Subcategory.objects.filter(slug=sub_str).first() or Subcategory.objects.filter(name__iexact=sub_str).first()
+                if sub_obj:
+                    cleaned['subcategory'] = sub_obj
+
+            if data.get('mrp'):
+                cleaned['mrp'] = self._parse_decimal(data['mrp'])
+            elif cleaned.get('selling_price'):
+                cleaned['mrp'] = cleaned['selling_price']
+
             if data.get('cost_price'):
                 cleaned['cost_price'] = self._parse_decimal(data['cost_price'])
             
