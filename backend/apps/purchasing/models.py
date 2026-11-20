@@ -8,7 +8,23 @@ from django.db.models import Q, Max
 
 
 class Supplier(models.Model):
+    SUPPLIER_TYPE_CHOICES = [
+        ('manufacturer', 'Manufacturer'),
+        ('distributor', 'Distributor'),
+        ('importer', 'Importer'),
+        ('wholesaler', 'Wholesaler'),
+        ('retailer', 'Retailer'),
+        ('service_provider', 'Service Provider'),
+    ]
+
     name = models.CharField(max_length=200, unique=True)
+    supplier_type = models.CharField(
+        max_length=30,
+        choices=SUPPLIER_TYPE_CHOICES,
+        default='distributor',
+        blank=True,
+        help_text='Classification of supplier (Manufacturer, Distributor, etc.)'
+    )
     contact_person = models.CharField(max_length=100, blank=True, default='')
     phone = models.CharField(max_length=20, blank=True, default='')
     email = models.EmailField(blank=True, default='')
@@ -104,10 +120,18 @@ class PurchaseOrder(models.Model):
     def generate_order_number(cls):
         """
         Concurrency-safe sequence generator for purchase order numbers.
-        Format: PO-YYYYMMDD-XXXX
+        Format: PO-YYYYMMDD-XXXX (or custom prefix from BusinessSettings)
         """
         today_str = timezone.now().strftime('%Y%m%d')
-        prefix = f"PO-{today_str}-"
+        po_prefix = 'PO'
+        try:
+            from apps.core.settings_models import BusinessSettings
+            bs = BusinessSettings.get_settings()
+            if bs and bs.po_prefix:
+                po_prefix = bs.po_prefix.strip().upper()
+        except Exception:
+            po_prefix = 'PO'
+        prefix = f"{po_prefix}-{today_str}-"
         
         with transaction.atomic():
             last_po = cls.objects.select_for_update().filter(

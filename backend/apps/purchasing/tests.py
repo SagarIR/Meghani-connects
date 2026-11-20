@@ -280,3 +280,15 @@ class PurchasingWorkflowTests(TestCase):
         self.assertEqual(movement.quantity_out, 2)
         self.assertEqual(movement.previous_balance, initial_stock)
         self.assertEqual(movement.resulting_balance, initial_stock - 2)
+
+    def test_supplier_type_field_and_choices(self):
+        """Verify supplier_type choices and default assignment"""
+        s = Supplier.objects.create(
+            name='Test Manufacturer Unit',
+            supplier_type='manufacturer'
+        )
+        self.assertEqual(s.supplier_type, 'manufacturer')
+
+        # Check default value
+        s2 = Supplier.objects.create(name='Test Default Supplier')
+        self.assertEqual(s2.supplier_type, 'distributor')

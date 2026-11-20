@@ -139,6 +139,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'name', 'brand', 'brand_id', 'category', 'category_id',
             'subcategory', 'subcategory_id', 'subcategory_name',
             'mrp', 'cost_price', 'selling_price',
+            'hsn_code', 'tax_rate', 'unit',
             'price_visible', 'availability',
             'stock', 'barcode', 'supplier_name', 'image', 'gallery_images',
             'description', 'specifications', 'warranty_months',
@@ -203,7 +204,7 @@ class ProductListSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'id', 'article_code', 'name', 'brand', 'category', 'subcategory',
-            'mrp', 'selling_price', 'price_visible', 'availability',
+            'mrp', 'selling_price', 'hsn_code', 'tax_rate', 'unit', 'price_visible', 'availability',
             'stock', 'barcode', 'image', 'is_featured', 'is_new_arrival', 'is_low_stock'
         ]
 
@@ -225,7 +226,7 @@ class PublicProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'id', 'article_code', 'model_number', 'size', 'name', 'brand',
-            'category', 'subcategory', 'mrp', 'price', 'price_visible',
+            'category', 'subcategory', 'unit', 'mrp', 'price', 'price_visible',
             'availability', 'barcode', 'image', 'gallery_images',
             'description', 'specifications', 'warranty_months',
             'is_featured', 'is_new_arrival', 'created_at'

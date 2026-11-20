@@ -1,6 +1,7 @@
 """
 Business Settings Models
 """
+from decimal import Decimal
 from django.db import models
 from django.conf import settings
 
@@ -14,6 +15,12 @@ class BusinessSettings(models.Model):
     business_name = models.CharField(max_length=200, default='Meghani Watch Co.')
     tagline = models.CharField(max_length=300, blank=True)
     logo = models.ImageField(upload_to='business/', null=True, blank=True)
+    
+    # Currency & Localization
+    currency_code = models.CharField(max_length=10, default='INR', help_text='ISO currency code (e.g. INR)')
+    currency_symbol = models.CharField(max_length=5, default='₹', help_text='Currency symbol (e.g. ₹)')
+    country = models.CharField(max_length=50, default='India')
+    timezone = models.CharField(max_length=50, default='Asia/Kolkata')
     
     # Contact Information
     phone = models.CharField(max_length=20, blank=True)
@@ -42,10 +49,15 @@ class BusinessSettings(models.Model):
     # Tax Information
     gst_number = models.CharField(max_length=20, blank=True, verbose_name='GSTIN')
     pan_number = models.CharField(max_length=15, blank=True, verbose_name='PAN')
+    default_tax_rate = models.DecimalField(
+        max_digits=5, decimal_places=2, default=Decimal('18.00'),
+        help_text='Default GST tax rate percentage'
+    )
     
-    # Invoice Settings
+    # Invoice & Document Prefixes
     invoice_prefix = models.CharField(max_length=10, default='INV')
     repair_prefix = models.CharField(max_length=10, default='REP')
+    po_prefix = models.CharField(max_length=10, default='PO')
     invoice_footer = models.TextField(blank=True, default='Thank you for your business!')
     terms_and_conditions = models.TextField(blank=True)
     

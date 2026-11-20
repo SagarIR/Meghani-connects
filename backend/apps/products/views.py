@@ -191,6 +191,30 @@ class ProductViewSet(viewsets.ModelViewSet):
         serializer = BrandSerializer(brands, many=True)
         return Response(serializer.data)
 
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def metadata(self, request):
+        """Standardized attributes and registries for products, horology attributes and inventory"""
+        from . import constants
+        return Response({
+            'movements': constants.WATCH_MOVEMENTS,
+            'displays': constants.WATCH_DISPLAYS,
+            'strap_materials': constants.STRAP_MATERIALS,
+            'case_materials': constants.CASE_MATERIALS,
+            'glass_types': constants.GLASS_TYPES,
+            'dial_shapes': constants.DIAL_SHAPES,
+            'dial_colors': constants.DIAL_COLORS,
+            'strap_colors': constants.STRAP_COLORS,
+            'genders': constants.GENDER_CHOICES,
+            'water_resistance': constants.WATER_RESISTANCE_CHOICES,
+            'sizes': constants.PRODUCT_SIZES,
+            'units': constants.UNITS_OF_MEASURE,
+            'gst_reference_rates': constants.GST_REFERENCE_RATES,
+            'payment_terms': constants.SUPPLIER_PAYMENT_TERMS,
+            'invoice_types': constants.INVOICE_TYPES,
+            'adjustment_reasons': constants.STOCK_ADJUSTMENT_REASONS,
+            'customer_classifications': constants.CUSTOMER_CLASSIFICATIONS,
+        })
+
     @action(detail=True, methods=['post'], url_path='gallery')
     def add_gallery_image(self, request, pk=None):
         """Staff: Add gallery image to a product"""
@@ -375,6 +399,26 @@ class PublicProductViewSet(viewsets.ReadOnlyModelViewSet):
         db_categories = Category.objects.filter(is_active=True).prefetch_related('subcategories')
         serializer = CategorySerializer(db_categories, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def metadata(self, request):
+        """Standardized attributes and registries for public catalogue and filters"""
+        from . import constants
+        return Response({
+            'movements': constants.WATCH_MOVEMENTS,
+            'displays': constants.WATCH_DISPLAYS,
+            'strap_materials': constants.STRAP_MATERIALS,
+            'case_materials': constants.CASE_MATERIALS,
+            'glass_types': constants.GLASS_TYPES,
+            'dial_shapes': constants.DIAL_SHAPES,
+            'dial_colors': constants.DIAL_COLORS,
+            'strap_colors': constants.STRAP_COLORS,
+            'genders': constants.GENDER_CHOICES,
+            'water_resistance': constants.WATER_RESISTANCE_CHOICES,
+            'sizes': constants.PRODUCT_SIZES,
+            'units': constants.UNITS_OF_MEASURE,
+            'gst_reference_rates': constants.GST_REFERENCE_RATES,
+        })
 
     @action(detail=False, methods=['get'])
     def featured(self, request):

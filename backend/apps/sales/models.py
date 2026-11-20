@@ -56,7 +56,15 @@ class Sale(models.Model):
     def generate_invoice_number(cls):
         """Generate unique invoice number: INV-YYYYMMDD-XXXX with concurrency protection"""
         today = timezone.now().strftime('%Y%m%d')
-        prefix = f"INV-{today}-"
+        inv_prefix = 'INV'
+        try:
+            from apps.core.settings_models import BusinessSettings
+            bs = BusinessSettings.get_settings()
+            if bs and bs.invoice_prefix:
+                inv_prefix = bs.invoice_prefix.strip().upper()
+        except Exception:
+            inv_prefix = 'INV'
+        prefix = f"{inv_prefix}-{today}-"
         
         try:
             last_sale = cls.objects.select_for_update().filter(

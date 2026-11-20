@@ -16,18 +16,28 @@ import Invoice from '@/components/features/Invoice'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
 
-const categories = [
-  { value: '', label: 'All Watches' },
-  { value: 'analog', label: 'Analog' },
-  { value: 'digital', label: 'Digital' },
-  { value: 'smart', label: 'Smart' },
+const defaultCategories = [
+  { value: '', label: 'All Collections' },
+  { value: 'analog', label: 'Analog Watches' },
+  { value: 'digital', label: 'Digital Watches' },
+  { value: 'smart', label: 'Smartwatches' },
+  { value: 'luxury', label: 'Luxury Watches' },
+  { value: 'sports', label: 'Sports Watches' },
+  { value: 'kids', label: 'Kids Watches' },
   { value: 'wall', label: 'Wall Clocks' },
+  { value: 'table-clocks', label: 'Table Clocks' },
+  { value: 'alarm-clocks', label: 'Alarm Clocks' },
+  { value: 'pocket-watches', label: 'Pocket Watches' },
   { value: 'accessory', label: 'Accessories' },
+  { value: 'spare-parts', label: 'Spare Parts' },
+  { value: 'straps', label: 'Straps' },
+  { value: 'gift-sets', label: 'Gift Sets' },
 ]
 
 export default function POSPage() {
   const [products, setProducts] = useState<Product[]>([])
   const [initialProducts, setInitialProducts] = useState<Product[]>([])
+  const [categoriesList, setCategoriesList] = useState<{ value: string; label: string }[]>(defaultCategories)
   const [selectedCategory, setSelectedCategory] = useState('')
   const [cart, setCart] = useState<CartItem[]>([])
   const [search, setSearch] = useState('')
@@ -44,7 +54,9 @@ export default function POSPage() {
     name: 'Meghani Watch Co.',
     address: 'Cactus Park, 23, New Sama Rd, Near Abhilasha Char Rasta, Vadodara, Gujarat - 390008',
     phone: '+91 91066 80191',
-    gst: '24AAAAA0000A1Z5'
+    gst: '24AAAAA0000A1Z5',
+    currencySymbol: '₹',
+    defaultTaxRate: 18.00
   })
   const [discount, setDiscount] = useState(0)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
@@ -63,11 +75,27 @@ export default function POSPage() {
   const [loadingProducts, setLoadingProducts] = useState(false)
   const searchInputRef = useRef<HTMLInputElement>(null)
 
-  // Fetch initial catalog and authoritative store settings on mount
+  // Fetch initial catalog, categories, and authoritative store settings on mount
   useEffect(() => {
     fetchInitialCatalog()
     fetchStoreSettings()
+    fetchCategories()
   }, [])
+
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get('/categories/')
+      const items = Array.isArray(res.data) ? res.data : (res.data?.results || [])
+      if (items.length > 0) {
+        setCategoriesList([
+          { value: '', label: 'All Collections' },
+          ...items.map((c: any) => ({ value: c.slug, label: c.name }))
+        ])
+      }
+    } catch (e) {
+      console.error('Failed to load categories:', e)
+    }
+  }
 
   const fetchStoreSettings = async () => {
     try {
@@ -79,7 +107,9 @@ export default function POSPage() {
           name: d.business_name || 'Meghani Watch Co.',
           address: addrParts.join(', ') || 'Cactus Park, 23, New Sama Rd, Near Abhilasha Char Rasta, Vadodara, Gujarat - 390008',
           phone: d.phone || '+91 91066 80191',
-          gst: d.gst_number || '24AAAAA0000A1Z5'
+          gst: d.gst_number || '24AAAAA0000A1Z5',
+          currencySymbol: d.currency_symbol || '₹',
+          defaultTaxRate: d.default_tax_rate ? parseFloat(d.default_tax_rate) : 18.00
         })
       }
     } catch {
@@ -452,7 +482,7 @@ export default function POSPage() {
 
           {/* Quick Filter Categories */}
           <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pt-3 scrollbar-hide">
-            {categories.map((cat) => (
+            {categoriesList.map((cat) => (
               <button
                 key={cat.value}
                 onClick={() => setSelectedCategory(cat.value)}

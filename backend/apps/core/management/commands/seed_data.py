@@ -30,6 +30,12 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if options['clear']:
+            from django.conf import settings
+            from django.core.management.base import CommandError
+            if not getattr(settings, 'DEBUG', False) or getattr(settings, 'IS_PRODUCTION', False):
+                raise CommandError(
+                    "CRITICAL SAFETY BLOCK: Destructive --clear flag is prohibited in production or when DEBUG=False."
+                )
             self.stdout.write('Clearing existing data...')
             self.clear_data()
 

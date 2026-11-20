@@ -12,9 +12,9 @@ class ProductSupplierInline(admin.TabularInline):
 
 @admin.register(Supplier)
 class SupplierAdmin(admin.ModelAdmin):
-    list_display = ('name', 'contact_person', 'phone', 'email', 'gstin', 'is_active', 'created_at')
+    list_display = ('name', 'supplier_type', 'contact_person', 'phone', 'email', 'gstin', 'is_active', 'created_at')
     search_fields = ('name', 'contact_person', 'phone', 'email', 'gstin')
-    list_filter = ('is_active', 'created_at')
+    list_filter = ('supplier_type', 'is_active', 'created_at')
     inlines = [ProductSupplierInline]
 
 

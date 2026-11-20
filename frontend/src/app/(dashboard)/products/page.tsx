@@ -39,6 +39,9 @@ const schema = yup.object({
   cost_price: yup.number().required('Cost price is required').min(0),
   selling_price: yup.number().required('Selling price is required').min(0),
   stock: yup.number().required('Stock is required').min(0),
+  unit: yup.string().default('Piece'),
+  hsn_code: yup.string().nullable(),
+  tax_rate: yup.number().min(0, 'Tax rate cannot be negative').max(100, 'Tax rate cannot exceed 100%').nullable().transform((v, o) => (o === '' || o === null || isNaN(v) ? null : v)),
   barcode: yup.string().nullable(),
   supplier_name: yup.string(),
   description: yup.string(),
@@ -57,12 +60,21 @@ const schema = yup.object({
 
 type FormData = yup.InferType<typeof schema>
 
-const categories = [
-  { value: 'analog', label: 'Analog Watch' },
-  { value: 'digital', label: 'Digital Watch' },
-  { value: 'smart', label: 'Smartwatch' },
-  { value: 'wall', label: 'Wall Clock' },
-  { value: 'accessory', label: 'Accessories' },
+const defaultCategories = [
+  { value: 'analog', label: 'Analog Watches' },
+  { value: 'digital', label: 'Digital Watches' },
+  { value: 'smart', label: 'Smartwatches' },
+  { value: 'luxury', label: 'Luxury Watches' },
+  { value: 'sports', label: 'Sports Watches' },
+  { value: 'kids', label: 'Kids Watches' },
+  { value: 'wall', label: 'Wall Clocks' },
+  { value: 'table-clocks', label: 'Table & Desk Clocks' },
+  { value: 'alarm-clocks', label: 'Alarm Clocks' },
+  { value: 'pocket-watches', label: 'Pocket Watches' },
+  { value: 'accessory', label: 'Watch Accessories' },
+  { value: 'spare-parts', label: 'Watch Spare Parts' },
+  { value: 'straps', label: 'Watch Straps' },
+  { value: 'gift-sets', label: 'Gift Sets' },
 ]
 
 export default function ProductsPage() {
@@ -96,18 +108,22 @@ export default function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Master data & options
+  const [categoriesList, setCategoriesList] = useState<{ value: string; label: string }[]>(defaultCategories)
+  const [availableBrands, setAvailableBrands] = useState<{ id: number; name: string }[]>([])
+  const [subcategories, setSubcategories] = useState<{ id: number; name: string; slug: string; category: number; category_slug?: string }[]>([])
+  const [metadata, setMetadata] = useState<any>(null)
+
   // Tab and form state
   type FormTab = 'general' | 'media' | 'specs'
   const [activeModalTab, setActiveModalTab] = useState<FormTab>('general')
-  const [availableBrands, setAvailableBrands] = useState<{ id: number; name: string }[]>([])
-  const [subcategories, setSubcategories] = useState<{ id: number; name: string; slug: string; category: number; category_slug?: string }[]>([])
   const [isCustomBrand, setIsCustomBrand] = useState(false)
   const [isUploadingImage, setIsUploadingImage] = useState(false)
   const [showUrlInput, setShowUrlInput] = useState(false)
 
   const { register, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<FormData>({
     resolver: yupResolver(schema),
-    defaultValues: { category: 'analog', stock: 0, warranty_months: 24, cost_price: 0, selling_price: 0 }
+    defaultValues: { category: 'analog', stock: 0, warranty_months: 24, cost_price: 0, selling_price: 0, unit: 'Piece' }
   })
 
   // Watched form values for live preview
@@ -121,6 +137,8 @@ export default function ProductsPage() {
   useEffect(() => {
     fetchBrands()
     fetchSubcategories()
+    fetchCategories()
+    fetchMetadata()
   }, [])
 
   const fetchBrands = async () => {
@@ -140,6 +158,29 @@ export default function ProductsPage() {
       setSubcategories(items)
     } catch (e) {
       console.error('Failed to fetch subcategories:', e)
+    }
+  }
+
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get('/categories/')
+      const items = Array.isArray(res.data) ? res.data : (res.data?.results || [])
+      if (items.length > 0) {
+        setCategoriesList(items.map((c: any) => ({ value: c.slug, label: c.name })))
+      }
+    } catch (e) {
+      console.error('Failed to fetch categories:', e)
+    }
+  }
+
+  const fetchMetadata = async () => {
+    try {
+      const res = await api.get('/products/metadata/')
+      if (res.data) {
+        setMetadata(res.data)
+      }
+    } catch (e) {
+      console.error('Failed to fetch metadata:', e)
     }
   }
 
@@ -211,6 +252,9 @@ export default function ProductsPage() {
       article_code: '',
       model_number: '',
       size: '',
+      unit: 'Piece',
+      hsn_code: '',
+      tax_rate: null,
       mrp: null,
       stock: 0,
       warranty_months: 24,
@@ -247,6 +291,9 @@ export default function ProductsPage() {
       article_code: product.article_code || '',
       model_number: product.model_number || '',
       size: product.size || '',
+      unit: product.unit || 'Piece',
+      hsn_code: product.hsn_code || '',
+      tax_rate: product.tax_rate ?? null,
       mrp: product.mrp ?? product.selling_price,
       is_featured: product.is_featured ?? false,
       is_new_arrival: product.is_new_arrival ?? false,
@@ -333,6 +380,9 @@ export default function ProductsPage() {
         mrp: data.mrp != null ? Number(data.mrp) : Number(data.selling_price),
         cost_price: Number(data.cost_price),
         selling_price: Number(data.selling_price),
+        unit: data.unit || 'Piece',
+        hsn_code: data.hsn_code || '',
+        tax_rate: data.tax_rate != null ? Number(data.tax_rate) : null,
         stock: Number(data.stock),
         barcode: data.barcode || null,
         supplier_name: data.supplier_name || '',
@@ -455,7 +505,7 @@ export default function ProductsPage() {
                          outline-none cursor-pointer"
               >
                 <option value="">All Categories</option>
-                {categories.map((cat) => (
+                {categoriesList.map((cat) => (
                   <option key={cat.value} value={cat.value} className="bg-[#171613] text-[#F3EFE6]">{cat.label}</option>
                 ))}
               </select>
@@ -550,7 +600,7 @@ export default function ProductsPage() {
                     {/* Category pill */}
                     <div className="absolute top-3 left-3">
                       <span className="px-2.5 py-1 bg-[#0B0B0A]/85 backdrop-blur-md border border-[#2A261F] rounded-full text-[10px] font-medium text-[#E8D5A7]">
-                        {categories.find(c => c.value === product.category)?.label || product.category}
+                        {categoriesList.find(c => c.value === product.category)?.label || product.category}
                       </span>
                     </div>
 
@@ -747,7 +797,7 @@ export default function ProductsPage() {
                     <td className="px-4 py-3.5">
                       <div className="flex flex-col gap-1 items-start">
                         <span className="px-2.5 py-1 bg-[#1F1E1A] border border-[#2A261F] text-[#E8D5A7] rounded-full text-xs">
-                          {categories.find(c => c.value === product.category)?.label || product.category}
+                          {categoriesList.find(c => c.value === product.category)?.label || product.category}
                         </span>
                         {product.subcategory && (
                           <span className="text-[10px] text-[#8D8980]">
@@ -970,7 +1020,7 @@ export default function ProductsPage() {
                     {...register('category')} 
                     className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6]"
                   >
-                    {categories.map((cat) => (
+                    {categoriesList.map((cat) => (
                       <option key={cat.value} value={cat.value} className="bg-[#171613]">{cat.label}</option>
                     ))}
                   </select>
@@ -1118,6 +1168,47 @@ export default function ProductsPage() {
                     placeholder="24" 
                     {...register('warranty_months')} 
                   />
+                </div>
+
+                {/* Unit of Measurement */}
+                <div>
+                  <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Unit of Measure</label>
+                  <select 
+                    {...register('unit')} 
+                    className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6]"
+                  >
+                    <option value="Piece">Piece (Pcs)</option>
+                    <option value="Pair">Pair (Pr)</option>
+                    <option value="Box">Box (Bx)</option>
+                    <option value="Set">Set</option>
+                    <option value="Pack">Pack (Pk)</option>
+                    <option value="Dozen">Dozen (Dzn)</option>
+                  </select>
+                </div>
+
+                {/* HSN Code */}
+                <div>
+                  <Input 
+                    label="HSN Code (GST)" 
+                    placeholder="e.g. 9101, 9102" 
+                    {...register('hsn_code')} 
+                  />
+                </div>
+
+                {/* Applicable GST Rate */}
+                <div>
+                  <label className="block text-xs font-medium text-[#F3EFE6] mb-1.5">Applicable GST Rate</label>
+                  <select 
+                    {...register('tax_rate')} 
+                    className="w-full px-3.5 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl focus:border-[#C9A45C] outline-none text-sm text-[#F3EFE6]"
+                  >
+                    <option value="">Store Default (18% Standard GST)</option>
+                    <option value="0.00">0% (Nil / Exempted)</option>
+                    <option value="5.00">5% Concessional</option>
+                    <option value="12.00">12% (Select Clocks/Parts)</option>
+                    <option value="18.00">18% Standard Horology GST</option>
+                    <option value="28.00">28% Luxury Gold/Precious Items</option>
+                  </select>
                 </div>
               </div>
             </div>
@@ -1294,12 +1385,94 @@ export default function ProductsPage() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                  <Input label="Movement" placeholder="e.g. Automatic / Quartz" {...register('movement')} />
+                  <div>
+                    <Input label="Movement" placeholder="e.g. Automatic / Quartz" list="movements-list" {...register('movement')} />
+                    <datalist id="movements-list">
+                      {metadata?.movements?.map((m: any) => (
+                        <option key={m.code} value={m.name} />
+                      )) || (
+                        <>
+                          <option value="Automatic (Self-Winding)" />
+                          <option value="Quartz (Battery Powered)" />
+                          <option value="Manual Hand-Wound Mechanical" />
+                          <option value="Solar Powered / Eco-Drive" />
+                          <option value="Kinetic / Auto-Quartz" />
+                          <option value="Smart Digital Processor" />
+                        </>
+                      )}
+                    </datalist>
+                  </div>
+
                   <Input label="Case Diameter" placeholder="e.g. 40.5 mm" {...register('caseDiameter')} />
-                  <Input label="Case Material" placeholder="e.g. Stainless Steel" {...register('caseMaterial')} />
-                  <Input label="Glass / Crystal" placeholder="e.g. Sapphire Crystal / Mineral Glass" {...register('glass')} />
-                  <Input label="Water Resistance" placeholder="e.g. 100m / 10 ATM" {...register('waterResistance')} />
-                  <Input label="Strap / Belt" placeholder="e.g. Stainless Steel / Leather" {...register('strapMaterial')} />
+
+                  <div>
+                    <Input label="Case Material" placeholder="e.g. Stainless Steel" list="case-materials-list" {...register('caseMaterial')} />
+                    <datalist id="case-materials-list">
+                      {metadata?.case_materials?.map((c: any) => (
+                        <option key={c.code} value={c.name} />
+                      )) || (
+                        <>
+                          <option value="Stainless Steel (316L)" />
+                          <option value="Grade 5 Titanium" />
+                          <option value="High-Tech Ceramic" />
+                          <option value="Shock-Resistant Resin" />
+                          <option value="Anodized Aluminium" />
+                          <option value="18K Solid Gold" />
+                        </>
+                      )}
+                    </datalist>
+                  </div>
+
+                  <div>
+                    <Input label="Glass / Crystal" placeholder="e.g. Sapphire Crystal / Mineral Glass" list="glass-list" {...register('glass')} />
+                    <datalist id="glass-list">
+                      {metadata?.glass_types?.map((g: any) => (
+                        <option key={g.code} value={g.name} />
+                      )) || (
+                        <>
+                          <option value="Sapphire Crystal (Scratchproof)" />
+                          <option value="Hardened Mineral Crystal" />
+                          <option value="Hardlex Mineral Glass" />
+                          <option value="Acrylic / Hesalite Crystal" />
+                        </>
+                      )}
+                    </datalist>
+                  </div>
+
+                  <div>
+                    <Input label="Water Resistance" placeholder="e.g. 100m / 10 ATM" list="water-resistance-list" {...register('waterResistance')} />
+                    <datalist id="water-resistance-list">
+                      {metadata?.water_resistance?.map((w: any) => (
+                        <option key={w.code} value={w.name} />
+                      )) || (
+                        <>
+                          <option value="30m / 3 ATM (Splash / Rain Resistant)" />
+                          <option value="50m / 5 ATM (Handwash / Light Swim)" />
+                          <option value="100m / 10 ATM (Swimming / Snorkeling)" />
+                          <option value="200m / 20 ATM (Diving / ISO 6425 Standard)" />
+                          <option value="300m+ / Professional Saturation Diver" />
+                        </>
+                      )}
+                    </datalist>
+                  </div>
+
+                  <div>
+                    <Input label="Strap / Belt" placeholder="e.g. Stainless Steel / Leather" list="strap-materials-list" {...register('strapMaterial')} />
+                    <datalist id="strap-materials-list">
+                      {metadata?.strap_materials?.map((s: any) => (
+                        <option key={s.code} value={s.name} />
+                      )) || (
+                        <>
+                          <option value="Genuine Leather" />
+                          <option value="Stainless Steel (Mesh/Link)" />
+                          <option value="Silicone" />
+                          <option value="Rubber / Fluoroelastomer (FKM)" />
+                          <option value="Nylon / NATO Weave" />
+                          <option value="Ceramic" />
+                        </>
+                      )}
+                    </datalist>
+                  </div>
                 </div>
               </div>
             </div>
@@ -1373,8 +1546,23 @@ export default function ProductsPage() {
                 <h3 className="text-lg font-serif font-bold text-[#F3EFE6] leading-tight truncate">{selectedProduct.name}</h3>
                 <div className="flex items-center gap-2 mt-2">
                   <span className="px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#E8D5A7] border border-[#2A261F] text-[11px]">
-                    {categories.find(c => c.value === selectedProduct.category)?.label || selectedProduct.category}
+                    {categoriesList.find(c => c.value === selectedProduct.category)?.label || selectedProduct.category}
                   </span>
+                  {selectedProduct.unit && (
+                    <span className="px-2 py-0.5 rounded-full bg-[#12110F] text-[#8D8980] border border-[#2A261F] text-[11px]">
+                      Unit: {selectedProduct.unit}
+                    </span>
+                  )}
+                  {selectedProduct.hsn_code && (
+                    <span className="px-2 py-0.5 rounded-full bg-[#12110F] text-[#C9A45C] border border-[#2A261F] text-[11px]">
+                      HSN: {selectedProduct.hsn_code}
+                    </span>
+                  )}
+                  {selectedProduct.tax_rate !== null && selectedProduct.tax_rate !== undefined && (
+                    <span className="px-2 py-0.5 rounded-full bg-[#12110F] text-emerald-400 border border-[#2A261F] text-[11px]">
+                      GST: {selectedProduct.tax_rate}%
+                    </span>
+                  )}
                   {selectedProduct.barcode && (
                     <span className="text-[11px] font-mono text-[#8D8980]">SKU: {selectedProduct.barcode}</span>
                   )}

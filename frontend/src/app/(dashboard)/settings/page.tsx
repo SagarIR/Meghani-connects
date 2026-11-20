@@ -21,6 +21,10 @@ interface BusinessSettings {
   tagline: string
   logo: string | null
   logo_url: string | null
+  currency_code?: string
+  currency_symbol?: string
+  country?: string
+  timezone?: string
   phone: string
   alternate_phone: string
   email: string
@@ -32,8 +36,10 @@ interface BusinessSettings {
   pincode: string
   gst_number: string
   pan_number: string
+  default_tax_rate?: number
   invoice_prefix: string
   repair_prefix: string
+  po_prefix?: string
   invoice_footer: string
   terms_and_conditions: string
   privacy_policy?: string
@@ -454,10 +460,41 @@ export default function SettingsPage() {
                     </div>
                   </div>
 
+                  {/* Currency & Localization */}
+                  <div className="space-y-3 pt-3 border-t border-[#2A261F]">
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Currency & Localization</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                      <Input 
+                        label="Currency Code" 
+                        value={businessSettings?.currency_code || 'INR'} 
+                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, currency_code: e.target.value} : null)}
+                        placeholder="INR"
+                      />
+                      <Input 
+                        label="Currency Symbol" 
+                        value={businessSettings?.currency_symbol || '₹'} 
+                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, currency_symbol: e.target.value} : null)}
+                        placeholder="₹"
+                      />
+                      <Input 
+                        label="Country" 
+                        value={businessSettings?.country || 'India'} 
+                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, country: e.target.value} : null)}
+                        placeholder="India"
+                      />
+                      <Input 
+                        label="Timezone" 
+                        value={businessSettings?.timezone || 'Asia/Kolkata'} 
+                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, timezone: e.target.value} : null)}
+                        placeholder="Asia/Kolkata"
+                      />
+                    </div>
+                  </div>
+
                   {/* Tax & Invoice Prefixes */}
                   <div className="space-y-3 pt-3 border-t border-[#2A261F]">
-                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Tax Details & Invoice Numbering</span>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Tax Details & Document Prefixes</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       <Input 
                         label="GSTIN Number" 
                         value={businessSettings?.gst_number || ''} 
@@ -471,14 +508,27 @@ export default function SettingsPage() {
                         placeholder="AAAAA0000A"
                       />
                       <Input 
+                        label="Default GST Rate (%)" 
+                        type="number"
+                        step="0.01"
+                        value={businessSettings?.default_tax_rate !== undefined ? businessSettings.default_tax_rate : '18.00'} 
+                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, default_tax_rate: parseFloat(e.target.value) || 0} : null)}
+                        placeholder="18.00"
+                      />
+                      <Input 
                         label="Sales Invoice Prefix" 
-                        value={businessSettings?.invoice_prefix || 'MWC-INV-'} 
+                        value={businessSettings?.invoice_prefix || 'INV'} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, invoice_prefix: e.target.value} : null)}
                       />
                       <Input 
                         label="Repair Ticket Prefix" 
-                        value={businessSettings?.repair_prefix || 'MWC-REP-'} 
+                        value={businessSettings?.repair_prefix || 'REP'} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, repair_prefix: e.target.value} : null)}
+                      />
+                      <Input 
+                        label="Purchase Order Prefix" 
+                        value={businessSettings?.po_prefix || 'PO'} 
+                        onChange={(e) => setBusinessSettings(prev => prev ? {...prev, po_prefix: e.target.value} : null)}
                       />
                     </div>
                   </div>

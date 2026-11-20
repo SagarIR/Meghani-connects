@@ -39,6 +39,9 @@ export interface Product {
   mrp?: number | null
   cost_price: number
   selling_price: number
+  hsn_code?: string | null
+  tax_rate?: number | null
+  unit?: string | null
   price_visible?: boolean
   availability?: string
   stock: number
@@ -503,4 +506,49 @@ export interface StockMovement {
   reason: string
   created_by_name: string
   created_at: string
+}
+
+export interface BusinessSettings {
+  id: number
+  business_name: string
+  tagline: string
+  logo: string | null
+  logo_url: string | null
+  currency_code: string
+  currency_symbol: string
+  country: string
+  timezone: string
+  phone: string
+  alternate_phone: string
+  whatsapp_number: string
+  email: string
+  website: string
+  address_line1: string
+  address_line2: string
+  city: string
+  state: string
+  pincode: string
+  landmark: string
+  gst_number: string
+  pan_number: string
+  default_tax_rate: number
+  invoice_prefix: string
+  repair_prefix: string
+  po_prefix: string
+  invoice_footer: string
+  terms_and_conditions: string
+  privacy_policy?: string
+  opening_hours_weekdays?: string
+  opening_hours_sunday?: string
+  google_maps_url?: string
+  google_maps_embed_src?: string
+  instagram_url?: string
+  facebook_url?: string
+  loyalty_points_per_100: number
+  loyalty_redemption_rate: number
+  low_stock_threshold: number
+  enable_whatsapp: boolean
+  enable_sms: boolean
+  enable_email: boolean
+  updated_at: string
 }

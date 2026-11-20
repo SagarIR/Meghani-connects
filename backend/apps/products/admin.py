@@ -18,8 +18,8 @@ class ProductAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('Basic Info', {'fields': ('name', 'article_code', 'model_number', 'size', 'brand', 'category', 'subcategory', 'description')}),
-        ('Pricing & Visibility', {'fields': ('mrp', 'cost_price', 'selling_price', 'price_visible', 'availability')}),
-        ('Inventory', {'fields': ('stock', 'barcode', 'supplier_name')}),
+        ('Pricing & Visibility', {'fields': ('mrp', 'cost_price', 'selling_price', 'tax_rate', 'price_visible', 'availability')}),
+        ('Inventory', {'fields': ('stock', 'unit', 'hsn_code', 'barcode', 'supplier_name')}),
         ('Specifications & Display', {'fields': ('specifications', 'is_featured', 'is_new_arrival')}),
         ('Media', {'fields': ('image',)}),
         ('Settings', {'fields': ('warranty_months', 'is_active')}),

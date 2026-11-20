@@ -81,3 +81,82 @@ class PublicCoreApiTests(TestCase):
         """Unauthenticated requests to /api/upload/image/ must be blocked with 401"""
         response = self.client.post('/api/upload/image/', {})
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+
+    def test_business_settings_phase2_fields(self):
+        """Verify currency, country, timezone, tax, and PO prefix defaults and serialization"""
+        response = self.client.get('/api/settings/public/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data.get('currency_code'), 'INR')
+        self.assertEqual(response.data.get('currency_symbol'), '₹')
+        self.assertEqual(response.data.get('country'), 'India')
+        self.assertEqual(response.data.get('timezone'), 'Asia/Kolkata')
+        self.assertEqual(float(response.data.get('default_tax_rate')), 18.0)
+
+    def test_seed_data_clear_safety_guard(self):
+        """Ensure seed_data --clear raises CommandError when DEBUG=False"""
+        from django.test import override_settings
+        from django.core.management.base import CommandError
+        from apps.core.management.commands.seed_data import Command
+
+        cmd = Command()
+        with override_settings(DEBUG=False):
+            with self.assertRaises(CommandError):
+                cmd.handle(clear=True)
+
+
+class MasterDataSeedTests(TestCase):
+    """Test suite for Phase 3 Master Data Engineering"""
+    def setUp(self):
+        self.client = APIClient()
+
+    def test_seed_master_data_command_and_idempotency(self):
+        """seed_master_data populates taxonomy, brands and templates and is safe to rerun"""
+        from django.core.management import call_command
+        from io import StringIO
+        from apps.products.models import Brand, Category, Subcategory
+        from apps.notifications.models import MessageTemplate
+
+        out = StringIO()
+        call_command('seed_master_data', stdout=out)
+        output = out.getvalue()
+        self.assertIn('Master Data Seeding Completed Successfully', output)
+
+        cat_count_1 = Category.objects.count()
+        subcat_count_1 = Subcategory.objects.count()
+        brand_count_1 = Brand.objects.count()
+        tpl_count_1 = MessageTemplate.objects.count()
+
+        self.assertGreaterEqual(cat_count_1, 14)
+        self.assertGreaterEqual(subcat_count_1, 60)
+        self.assertGreaterEqual(brand_count_1, 70)
+        self.assertEqual(tpl_count_1, 8)
+
+        # Run command second time - must be 100% idempotent
+        out2 = StringIO()
+        call_command('seed_master_data', stdout=out2)
+        
+        self.assertEqual(Category.objects.count(), cat_count_1)
+        self.assertEqual(Subcategory.objects.count(), subcat_count_1)
+        self.assertEqual(Brand.objects.count(), brand_count_1)
+        self.assertEqual(MessageTemplate.objects.count(), tpl_count_1)
+
+    def test_message_template_rendering(self):
+        """Ensure seeded message templates render dynamic variables properly"""
+        from django.core.management import call_command
+        from apps.notifications.models import MessageTemplate
+
+        call_command('seed_master_data')
+        tpl = MessageTemplate.objects.get(name='sale_confirmation')
+        rendered = tpl.render(customer_name='Amit Shah', invoice_number='INV-20261120-0001', amount='12500.00')
+        self.assertIn('Dear Amit Shah', rendered)
+        self.assertIn('INV-20261120-0001', rendered)
+        self.assertIn('₹12500.00', rendered)
+
+    def test_product_metadata_endpoint(self):
+        """Verify static registries returned by /api/products/metadata/"""
+        response = self.client.get('/api/products/metadata/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        for key in ['movements', 'displays', 'strap_materials', 'case_materials', 'glass_types',
+                    'dial_shapes', 'dial_colors', 'strap_colors', 'genders', 'water_resistance',
+                    'sizes', 'units', 'gst_reference_rates', 'payment_terms', 'invoice_types']:
+            self.assertIn(key, response.data)

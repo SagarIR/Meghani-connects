@@ -329,6 +329,35 @@ class CatalogNormalizationAndIntegrityTests(TestCase):
         with self.assertRaises(ProtectedError):
             prod.delete()
 
+    def test_product_phase2_fields_and_validation(self):
+        """Verify hsn_code, tax_rate, and unit defaults and constraints"""
+        from decimal import Decimal
+        from django.core.exceptions import ValidationError
+
+        product = Product.objects.create(
+            name='Field Test Watch',
+            brand='Titan',
+            category='analog',
+            cost_price=Decimal('1000.00'),
+            selling_price=Decimal('2000.00'),
+            hsn_code='9102',
+            tax_rate=Decimal('18.00'),
+            unit='Piece'
+        )
+        self.assertEqual(product.hsn_code, '9102')
+        self.assertEqual(product.tax_rate, Decimal('18.00'))
+        self.assertEqual(product.unit, 'Piece')
+
+        # Invalid tax rate (< 0)
+        product.tax_rate = Decimal('-5.00')
+        with self.assertRaises(ValidationError):
+            product.full_clean()
+
+        # Invalid tax rate (> 100)
+        product.tax_rate = Decimal('120.00')
+        with self.assertRaises(ValidationError):
+            product.full_clean()
+
 
 
 

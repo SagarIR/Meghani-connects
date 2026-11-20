@@ -42,6 +42,9 @@ class Product(models.Model):
     stock = models.PositiveIntegerField(default=0)
     barcode = models.CharField(max_length=50, unique=True, blank=True, null=True)
     supplier_name = models.CharField(max_length=100, blank=True)
+    hsn_code = models.CharField(max_length=20, blank=True, default='', help_text='HSN Chapter 91 code (e.g. 9101, 9102)')
+    tax_rate = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True, help_text='Item GST percentage (null uses shop default)')
+    unit = models.CharField(max_length=20, default='Piece', blank=True, help_text='Unit of measurement (Piece, Pair, Box, Set, Pack, Dozen)')
     image = models.ImageField(upload_to='products/', blank=True, null=True)
     description = models.TextField(blank=True)
     warranty_months = models.PositiveIntegerField(default=0)
@@ -64,6 +67,7 @@ class Product(models.Model):
             models.CheckConstraint(check=Q(selling_price__gte=0), name='product_selling_price_gte_0'),
             models.CheckConstraint(check=Q(stock__gte=0), name='product_stock_gte_0'),
             models.CheckConstraint(check=Q(mrp__isnull=True) | Q(mrp__gte=0), name='product_mrp_gte_0'),
+            models.CheckConstraint(check=Q(tax_rate__isnull=True) | (Q(tax_rate__gte=0) & Q(tax_rate__lte=100)), name='product_tax_rate_range'),
         ]
 
     def __init__(self, *args, **kwargs):
@@ -143,6 +147,8 @@ class Product(models.Model):
             raise ValidationError({'selling_price': 'Selling price cannot exceed MRP.'})
         if self.stock is not None and self.stock < 0:
             raise ValidationError({'stock': 'Stock cannot be negative.'})
+        if self.tax_rate is not None and (self.tax_rate < 0 or self.tax_rate > 100):
+            raise ValidationError({'tax_rate': 'Tax rate must be between 0 and 100.'})
 
     def save(self, *args, **kwargs):
         # Auto-sync legacy fields for backwards compatibility

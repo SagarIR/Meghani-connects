@@ -24,12 +24,13 @@ class BusinessSettingsSerializer(serializers.ModelSerializer):
         model = BusinessSettings
         fields = [
             'id', 'business_name', 'tagline', 'logo', 'logo_url',
+            'currency_code', 'currency_symbol', 'country', 'timezone',
             'phone', 'alternate_phone', 'whatsapp_number', 'email', 'website',
             'address_line1', 'address_line2', 'city', 'state', 'pincode', 'landmark',
             'opening_hours_weekdays', 'opening_hours_sunday', 'google_maps_url', 'google_maps_embed_src',
             'instagram_url', 'facebook_url',
-            'gst_number', 'pan_number',
-            'invoice_prefix', 'repair_prefix', 'invoice_footer', 'terms_and_conditions', 'privacy_policy',
+            'gst_number', 'pan_number', 'default_tax_rate',
+            'invoice_prefix', 'repair_prefix', 'po_prefix', 'invoice_footer', 'terms_and_conditions', 'privacy_policy',
             'loyalty_points_per_100', 'loyalty_redemption_rate', 'low_stock_threshold',
             'enable_whatsapp', 'enable_sms', 'enable_email',
             'updated_at'
@@ -53,6 +54,7 @@ class PublicBusinessSettingsSerializer(serializers.ModelSerializer):
         model = BusinessSettings
         fields = [
             'business_name', 'tagline', 'logo_url',
+            'currency_code', 'currency_symbol', 'country', 'timezone', 'default_tax_rate',
             'phone', 'alternate_phone', 'whatsapp_number', 'email', 'website',
             'address_line1', 'address_line2', 'city', 'state', 'pincode', 'landmark',
             'opening_hours_weekdays', 'opening_hours_sunday',

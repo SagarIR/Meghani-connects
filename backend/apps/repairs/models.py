@@ -80,7 +80,15 @@ class Repair(models.Model):
     def generate_ticket_number(cls):
         """Generate unique ticket number: REP-YYYYMMDD-XXXX with concurrency protection"""
         today = timezone.now().strftime('%Y%m%d')
-        prefix = f"REP-{today}-"
+        rep_prefix = 'REP'
+        try:
+            from apps.core.settings_models import BusinessSettings
+            bs = BusinessSettings.get_settings()
+            if bs and bs.repair_prefix:
+                rep_prefix = bs.repair_prefix.strip().upper()
+        except Exception:
+            rep_prefix = 'REP'
+        prefix = f"{rep_prefix}-{today}-"
         
         try:
             last_repair = cls.objects.select_for_update().filter(
