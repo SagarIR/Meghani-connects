@@ -10,6 +10,7 @@ import {
   History, Bell, ChevronRight, X, Globe, Shield, ShieldCheck, User as UserIcon, Sparkles, Truck
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
+import { usePreferences } from '@/context/PreferencesContext'
 
 interface NavItem {
   name: string
@@ -23,46 +24,47 @@ interface NavSection {
   items: NavItem[]
 }
 
-const navSections: NavSection[] = [
-  {
-    title: 'Store Operations',
-    items: [
-      { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-      { name: 'POS Terminal', href: '/sales', icon: ShoppingCart },
-      { name: 'Sales History', href: '/sales/history', icon: History },
-      { name: 'Products & Inventory', href: '/products', icon: Package },
-      { name: 'Purchasing & Ledger', href: '/purchasing', icon: Truck },
-      { name: 'Watch Repairs', href: '/repairs', icon: Wrench },
-    ]
-  },
-  {
-    title: 'Customers & Finance',
-    items: [
-      { name: 'Customers & CRM', href: '/customers', icon: Users },
-      { name: 'Warranties & Claims', href: '/warranties', icon: ShieldCheck },
-      { name: 'Store Expenses', href: '/expenses', icon: Wallet },
-      { name: 'AI & Business Intelligence', href: '/analytics', icon: Sparkles, badge: 'AI 360' },
-      { name: 'Reports & Analytics', href: '/reports', icon: BarChart3 },
-    ]
-  },
-  {
-    title: 'Website & Settings',
-    items: [
-      { name: 'Website CMS', href: '/website-cms', icon: Globe },
-      { name: 'Notifications', href: '/notifications', icon: Bell },
-      { name: 'Store Settings', href: '/settings', icon: Settings },
-    ]
-  }
-]
-
 interface SidebarProps {
-  isOpen: boolean
+  isOpen?: boolean
   onClose: () => void
 }
 
 export default function Sidebar({ isOpen, onClose }: SidebarProps) {
   const pathname = usePathname()
   const { user, logout } = useAuth()
+  const { t } = usePreferences()
+
+  const navSections: NavSection[] = [
+    {
+      title: t('storeOperations', 'Store Operations'),
+      items: [
+        { name: t('dashboard', 'Dashboard'), href: '/dashboard', icon: LayoutDashboard },
+        { name: t('posTerminal', 'POS Terminal'), href: '/sales', icon: ShoppingCart },
+        { name: t('salesHistory', 'Sales History'), href: '/sales/history', icon: History },
+        { name: t('productsInventory', 'Products & Inventory'), href: '/products', icon: Package },
+        { name: t('purchasingLedger', 'Purchasing & Ledger'), href: '/purchasing', icon: Truck },
+        { name: t('watchRepairs', 'Watch Repairs'), href: '/repairs', icon: Wrench },
+      ]
+    },
+    {
+      title: t('customersFinance', 'Customers & Finance'),
+      items: [
+        { name: t('customersCRM', 'Customers & CRM'), href: '/customers', icon: Users },
+        { name: t('warrantiesClaims', 'Warranties & Claims'), href: '/warranties', icon: ShieldCheck },
+        { name: t('storeExpenses', 'Store Expenses'), href: '/expenses', icon: Wallet },
+        { name: t('aiIntelligence', 'AI & Business Intelligence'), href: '/analytics', icon: Sparkles, badge: 'AI 360' },
+        { name: t('reportsAnalytics', 'Reports & Analytics'), href: '/reports', icon: BarChart3 },
+      ]
+    },
+    {
+      title: t('websiteSettings', 'Website & Settings'),
+      items: [
+        { name: t('websiteCMS', 'Website CMS'), href: '/website-cms', icon: Globe },
+        { name: t('notifications', 'Notifications'), href: '/notifications', icon: Bell },
+        { name: t('storeSettings', 'Store Settings'), href: '/settings', icon: Settings },
+      ]
+    }
+  ]
 
   const handleNavClick = () => {
     if (window.innerWidth < 1024) {
@@ -70,7 +72,16 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
     }
   }
 
-  const roleLabel = user?.role ? user.role.toUpperCase() : 'STAFF'
+  const getRoleLabel = () => {
+    const r = user?.role?.toLowerCase()
+    if (r === 'admin') return t('roleAdmin', 'ADMIN')
+    if (r === 'manager') return t('roleManager', 'MANAGER')
+    if (r === 'cashier') return t('roleCashier', 'CASHIER')
+    if (r === 'technician') return t('roleTechnician', 'TECHNICIAN')
+    return t('roleStaff', 'STAFF')
+  }
+
+  const roleLabel = getRoleLabel()
 
   return (
     <>

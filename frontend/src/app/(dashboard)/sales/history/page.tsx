@@ -9,6 +9,7 @@ import {
 import { api } from '@/services/api'
 import { Sale } from '@/types'
 import { useAuth } from '@/context/AuthContext'
+import { usePreferences } from '@/context/PreferencesContext'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import Modal from '@/components/ui/Modal'
@@ -20,6 +21,7 @@ import toast from 'react-hot-toast'
 
 export default function SalesHistoryPage() {
   const { user } = useAuth()
+  const { t } = usePreferences()
   const isManagement = user?.role === 'admin' || user?.role === 'manager'
 
   const [sales, setSales] = useState<Sale[]>([])
@@ -240,12 +242,12 @@ export default function SalesHistoryPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Sales History & Invoices</h1>
+              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">{t('routeSalesHistoryTitle', 'Sales History & Invoices')}</h1>
               <span className="text-xs px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F] font-mono">
-                {filteredSales.length} records
+                {filteredSales.length} {t('totalItemsLabel', 'records')}
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[#8D8980]">View all completed sales, payment methods, and GST invoices</p>
+            <p className="text-xs sm:text-sm text-[#8D8980]">{t('salesHistory', 'View all completed sales, payment methods, and GST invoices')}</p>
           </div>
         </div>
 
@@ -257,7 +259,7 @@ export default function SalesHistoryPage() {
           />
           <Link href="/sales">
             <Button icon={<ShoppingCart className="w-4 h-4" />} className="shadow-gold">
-              Open POS
+              {t('openPOS', 'Open POS')}
             </Button>
           </Link>
         </div>
@@ -266,19 +268,19 @@ export default function SalesHistoryPage() {
       {/* Summary KPI Strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-[#171613] border border-[#2A261F] rounded-xl p-4">
-          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Total Sales</span>
+          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">{t('totalSales', 'Total Sales')}</span>
           <p className="text-xl sm:text-2xl font-bold font-mono text-[#C9A45C] mt-1">
             {formatCurrency(summaryMetrics.totalVolume)}
           </p>
-          <span className="text-[11px] text-[#8D8980] mt-0.5 block">Across filtered range</span>
+          <span className="text-[11px] text-[#8D8980] mt-0.5 block">{t('catOverview', 'Across filtered range')}</span>
         </div>
 
         <div className="bg-[#171613] border border-[#2A261F] rounded-xl p-4">
-          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Total Orders</span>
+          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">{t('totalTransactions', 'Total Orders')}</span>
           <p className="text-xl sm:text-2xl font-bold font-mono text-[#F3EFE6] mt-1">
             {summaryMetrics.count}
           </p>
-          <span className="text-[11px] text-[#8D8980] mt-0.5 block">Total orders completed</span>
+          <span className="text-[11px] text-[#8D8980] mt-0.5 block">{t('statusDelivered', 'Total orders completed')}</span>
         </div>
 
         <div className="bg-[#171613] border border-[#2A261F] rounded-xl p-4">
@@ -290,18 +292,18 @@ export default function SalesHistoryPage() {
         </div>
 
         <div className="bg-[#171613] border border-[#2A261F] rounded-xl p-4">
-          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Gross Profit</span>
+          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">{t('grossProfit', 'Gross Profit')}</span>
           {isManagement ? (
             <div>
               <p className="text-xl sm:text-2xl font-bold font-mono text-emerald-400 mt-1">
                 +{formatCurrency(summaryMetrics.totalProfit)}
               </p>
-              <span className="text-[11px] text-emerald-500/80 mt-0.5 block">Realized net margin</span>
+              <span className="text-[11px] text-emerald-500/80 mt-0.5 block">{t('profitLabel', 'Realized net margin')}</span>
             </div>
           ) : (
             <div className="flex items-center gap-1.5 mt-2 text-xs text-[#8D8980] font-mono">
               <Lock className="w-3.5 h-3.5 text-[#C9A45C]" />
-              <span>Hidden for Staff</span>
+              <span>{t('hiddenForStaff', 'Hidden for Staff')}</span>
             </div>
           )}
         </div>
@@ -315,7 +317,7 @@ export default function SalesHistoryPage() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8D8980] group-focus-within:text-[#C9A45C] transition-colors" />
             <input
               type="text"
-              placeholder="Search by invoice number (e.g. INV-1001) or customer name..."
+              placeholder={t('searchStore', 'Search by invoice number (e.g. INV-1001) or customer name...')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl 

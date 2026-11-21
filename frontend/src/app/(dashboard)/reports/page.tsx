@@ -12,6 +12,7 @@ import {
 } from 'recharts'
 import { api } from '@/services/api'
 import { useAuth } from '@/context/AuthContext'
+import { usePreferences } from '@/context/PreferencesContext'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import clsx from 'clsx'
@@ -34,6 +35,7 @@ const LUXURY_PALETTE = ['#C9A45C', '#10b981', '#E8D5A7', '#38bdf8', '#fbbf24', '
 
 export default function ReportsPage() {
   const { user } = useAuth()
+  const { t } = usePreferences()
   const isManagement = user?.role === 'admin' || user?.role === 'manager'
 
   const [activeReport, setActiveReport] = useState<ReportType>('sales')
@@ -109,12 +111,12 @@ export default function ReportsPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Reports & Analytics</h1>
+              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">{t('routeReportsTitle', 'Reports & Analytics')}</h1>
               <span className="text-xs px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F] font-mono">
-                Real-Time
+                {t('liveBadge', 'Live')}
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[#8D8980]">Sales performance, product trends, repairs, expenses, and inventory reports</p>
+            <p className="text-xs sm:text-sm text-[#8D8980]">{t('reportsAnalytics', 'Sales performance, product trends, repairs, expenses, and inventory reports')}</p>
           </div>
         </div>
 

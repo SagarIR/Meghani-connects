@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { api } from '@/services/api'
+import { usePreferences } from '@/context/PreferencesContext'
 import { format } from 'date-fns'
 
 interface SalesData {
@@ -13,6 +14,7 @@ interface SalesData {
 }
 
 export default function SalesChart() {
+  const { t, theme } = usePreferences()
   const [data, setData] = useState<SalesData[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -55,8 +57,8 @@ export default function SalesChart() {
     return (
       <div className="h-48 sm:h-64 lg:h-80 flex items-center justify-center text-center text-[#8D8980]">
         <div>
-          <p className="text-sm font-semibold text-[#F3EFE6]">No Sales Records Found</p>
-          <p className="text-xs mt-1">Transactions logged via the POS terminal will appear here</p>
+          <p className="text-sm font-semibold text-[#F3EFE6]">{t('noSalesRecordsFound', 'No Sales Records Found')}</p>
+          <p className="text-xs mt-1">{t('salesChartEmptyDesc', 'Transactions logged via the POS terminal will appear here')}</p>
         </div>
       </div>
     )
@@ -67,6 +69,10 @@ export default function SalesChart() {
     formattedDate: format(new Date(item.date), 'MMM d'),
   }))
 
+  const isLight = theme === 'light'
+  const gridStroke = isLight ? '#DFD7C5' : '#2A261F'
+  const textStroke = isLight ? '#5C574F' : '#8D8980'
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -75,7 +81,7 @@ export default function SalesChart() {
           <div className="space-y-1">
             <div className="flex items-center justify-between gap-4">
               <span className="flex items-center gap-1.5 text-[#8D8980]">
-                <span className="w-2 h-2 rounded-full bg-[#C9A45C]" /> Sales:
+                <span className="w-2 h-2 rounded-full bg-[#C9A45C]" /> {t('salesLabel', 'Sales:')}
               </span>
               <span className="font-mono font-bold text-[#F3EFE6]">
                 ₹{payload[0]?.value?.toLocaleString('en-IN')}
@@ -84,7 +90,7 @@ export default function SalesChart() {
             {payload[1] && (
               <div className="flex items-center justify-between gap-4">
                 <span className="flex items-center gap-1.5 text-[#8D8980]">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400" /> Profit:
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" /> {t('profitLabel', 'Profit:')}
                 </span>
                 <span className="font-mono font-bold text-emerald-400">
                   ₹{payload[1]?.value?.toLocaleString('en-IN')}
@@ -104,24 +110,24 @@ export default function SalesChart() {
         <AreaChart data={formattedData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
           <defs>
             <linearGradient id="goldSalesGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#C9A45C" stopOpacity={0.35}/>
+              <stop offset="5%" stopColor="#C9A45C" stopOpacity={isLight ? 0.25 : 0.35}/>
               <stop offset="95%" stopColor="#C9A45C" stopOpacity={0}/>
             </linearGradient>
             <linearGradient id="emeraldMarginGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#10b981" stopOpacity={0.25}/>
+              <stop offset="5%" stopColor="#10b981" stopOpacity={isLight ? 0.2 : 0.25}/>
               <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2A261F" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke={gridStroke} vertical={false} />
           <XAxis 
             dataKey="formattedDate" 
-            stroke="#8D8980" 
+            stroke={textStroke} 
             fontSize={11}
             tickLine={false}
             axisLine={false}
           />
           <YAxis 
-            stroke="#8D8980" 
+            stroke={textStroke} 
             fontSize={11}
             tickLine={false}
             axisLine={false}

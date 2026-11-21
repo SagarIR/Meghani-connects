@@ -7,6 +7,7 @@ import {
   ChevronRight, Bell, ChevronDown, CheckCircle2
 } from 'lucide-react'
 import { api } from '@/services/api'
+import { usePreferences } from '@/context/PreferencesContext'
 import clsx from 'clsx'
 
 interface LowStockItem {
@@ -45,6 +46,7 @@ interface AlertsData {
 }
 
 export default function AlertsWidget() {
+  const { t } = usePreferences()
   const [alerts, setAlerts] = useState<AlertsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'stock' | 'warranty' | 'repairs' | 'birthdays'>('stock')
@@ -78,28 +80,28 @@ export default function AlertsWidget() {
   const tabs = [
     { 
       id: 'stock', 
-      label: 'Low Stock', 
+      label: t('lowStock', 'Low Stock'), 
       icon: Package, 
       count: alerts?.low_stock?.length || 0,
       pill: 'bg-red-950/60 text-red-300 border-red-800/50'
     },
     { 
       id: 'repairs', 
-      label: 'Overdue Repairs', 
+      label: t('overdueRepairs', 'Overdue Repairs'), 
       icon: Clock, 
       count: alerts?.overdue_repairs?.length || 0,
       pill: 'bg-amber-950/60 text-amber-300 border-amber-800/50'
     },
     { 
       id: 'warranty', 
-      label: 'Warranties', 
+      label: t('warranties', 'Warranties'), 
       icon: Shield, 
       count: alerts?.expiring_warranties?.length || 0,
       pill: 'bg-sky-950/60 text-sky-300 border-sky-800/50'
     },
     { 
       id: 'birthdays', 
-      label: 'Customer Birthdays', 
+      label: t('customerBirthdays', 'Customer Birthdays'), 
       icon: Cake, 
       count: alerts?.birthdays_today?.length || 0,
       pill: 'bg-purple-950/60 text-purple-300 border-purple-800/50'
@@ -134,16 +136,16 @@ export default function AlertsWidget() {
             <Bell className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <h3 className="font-serif font-bold text-sm sm:text-base text-[#F3EFE6]">Store Action Alerts</h3>
+            <h3 className="font-serif font-bold text-sm sm:text-base text-[#F3EFE6]">{t('storeActionAlerts', 'Store Action Alerts')}</h3>
             <p className="text-[11px] font-mono text-[#8D8980]">
-              {totalAlerts > 0 ? `${totalAlerts} items require attention` : 'All inventory and repairs are up to date'}
+              {totalAlerts > 0 ? `${totalAlerts} ${t('itemsRequireAttention', 'items require attention')}` : t('allUpToDate', 'All inventory and repairs are up to date')}
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {totalAlerts > 0 && (
             <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-[#C9A45C]/20 border border-[#C9A45C]/40 text-[#C9A45C]">
-              {totalAlerts} Active
+              {totalAlerts} {t('activeAlerts', 'Active')}
             </span>
           )}
           <ChevronDown className={clsx('w-4 h-4 text-[#8D8980] transition-transform duration-200', isExpanded && 'rotate-180')} />
@@ -197,13 +199,13 @@ export default function AlertsWidget() {
                           <p className="text-[11px] text-[#8D8980]">{item.brand || 'Store'}</p>
                         </div>
                         <span className="font-mono text-red-400 bg-red-950/60 border border-red-800/40 px-2 py-0.5 rounded-full font-bold">
-                          Stock: {item.stock} left
+                          {t('stockLeft', 'Stock:')} {item.stock}
                         </span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-center py-4 text-xs text-[#8D8980]">No low stock alerts</p>
+                  <p className="text-center py-4 text-xs text-[#8D8980]">{t('noLowStockAlerts', 'No low stock alerts')}</p>
                 )
               )}
 
@@ -214,16 +216,16 @@ export default function AlertsWidget() {
                       <div key={r.id} className="flex items-center justify-between py-2 text-xs">
                         <div>
                           <p className="font-semibold text-[#F3EFE6]">{r.ticket_number} • {r.item_type}</p>
-                          <p className="text-[11px] text-[#8D8980]">Customer: {r.customer__name || 'Walk-in'}</p>
+                          <p className="text-[11px] text-[#8D8980]">{t('customer', 'Customer:')} {r.customer__name || t('walkInCustomer', 'Walk-in Customer')}</p>
                         </div>
                         <span className="font-mono text-amber-300 bg-amber-950/60 border border-amber-800/40 px-2 py-0.5 rounded-full">
-                          Due: {r.expected_delivery || 'Immediate'}
+                          {t('due', 'Due:')} {r.expected_delivery || 'Immediate'}
                         </span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-center py-4 text-xs text-[#8D8980]">All repair tickets are on schedule</p>
+                  <p className="text-center py-4 text-xs text-[#8D8980]">{t('allRepairsOnSchedule', 'All repair tickets are on schedule')}</p>
                 )
               )}
 
@@ -234,16 +236,16 @@ export default function AlertsWidget() {
                       <div key={w.id} className="flex items-center justify-between py-2 text-xs">
                         <div>
                           <p className="font-semibold text-[#F3EFE6]">{w.product__name}</p>
-                          <p className="text-[11px] text-[#8D8980]">Customer: {w.customer__name}</p>
+                          <p className="text-[11px] text-[#8D8980]">{t('customer', 'Customer:')} {w.customer__name}</p>
                         </div>
                         <span className="font-mono text-sky-300 bg-sky-950/60 border border-sky-800/40 px-2 py-0.5 rounded-full">
-                          Expires: {w.expiry_date}
+                          {t('expires', 'Expires:')} {w.expiry_date}
                         </span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-center py-4 text-xs text-[#8D8980]">No warranty expirations this week</p>
+                  <p className="text-center py-4 text-xs text-[#8D8980]">{t('noWarrantyExpirations', 'No warranty expirations this week')}</p>
                 )
               )}
 
@@ -257,13 +259,13 @@ export default function AlertsWidget() {
                           <p className="text-[11px] font-mono text-[#8D8980]">{b.phone}</p>
                         </div>
                         <span className="font-mono text-purple-300 bg-purple-950/60 border border-purple-800/40 px-2.5 py-0.5 rounded-full font-bold">
-                          Birthday Today!
+                          {t('customerBirthdays', 'Birthday Today!')}
                         </span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-center py-4 text-xs text-[#8D8980]">No customer birthdays today</p>
+                  <p className="text-center py-4 text-xs text-[#8D8980]">{t('noBirthdaysToday', 'No customer birthdays today')}</p>
                 )
               )}
             </div>

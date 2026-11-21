@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { ShoppingBag, User, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { api } from '@/services/api'
+import { usePreferences } from '@/context/PreferencesContext'
 
 interface Sale {
   id: number
@@ -16,6 +17,7 @@ interface Sale {
 }
 
 export default function RecentSales() {
+  const { t } = usePreferences()
   const [sales, setSales] = useState<Sale[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -51,12 +53,12 @@ export default function RecentSales() {
               <ShoppingBag className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-serif font-bold text-sm sm:text-base text-[#F3EFE6]">Recent Sales</h3>
-              <p className="text-[11px] font-mono text-[#8D8980]">Latest store sales</p>
+              <h3 className="font-serif font-bold text-sm sm:text-base text-[#F3EFE6]">{t('recentSales', 'Recent Sales')}</h3>
+              <p className="text-[11px] font-mono text-[#8D8980]">{t('latestStoreSales', 'Latest store sales')}</p>
             </div>
           </div>
           <Link href="/sales/history" className="text-xs font-semibold text-[#C9A45C] hover:text-[#E8D5A7] flex items-center gap-1 transition-colors">
-            <span>View all</span>
+            <span>{t('viewAll', 'View all')}</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -78,7 +80,7 @@ export default function RecentSales() {
           </div>
         ) : sales.length === 0 ? (
           <div className="p-6 text-center text-[#8D8980]">
-            <p className="text-xs">No sales recorded today</p>
+            <p className="text-xs">{t('noSalesToday', 'No sales recorded today')}</p>
           </div>
         ) : (
           sales.slice(0, 5).map((sale, index) => (
@@ -95,7 +97,7 @@ export default function RecentSales() {
                 </div>
                 <div className="min-w-0">
                   <p className="text-xs sm:text-sm font-semibold text-[#F3EFE6] truncate group-hover:text-[#C9A45C] transition-colors">
-                    {sale.customer || 'Walk-in Customer'}
+                    {sale.customer || t('walkInCustomer', 'Walk-in Customer')}
                   </p>
                   <p className="text-[11px] font-mono text-[#8D8980]">
                     {sale.invoice}

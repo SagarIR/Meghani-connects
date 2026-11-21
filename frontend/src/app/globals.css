@@ -23,6 +23,231 @@
   --radius: 0.75rem;
 }
 
+[data-theme="light"],
+html.light {
+  --background: #F7F5F0;
+  --foreground: #1A1815;
+  --card: #FFFFFF;
+  --card-foreground: #1A1815;
+  --primary: #B38E46;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F0ECE1;
+  --secondary-foreground: #5C574F;
+  --muted: #EBE6D8;
+  --muted-foreground: #6B655B;
+  --accent: #DFC17B;
+  --accent-foreground: #1A1815;
+  --destructive: #dc2626;
+  --border: #DFD7C5;
+  --ring: #B38E46;
+}
+
+/* ========================================================
+   LIGHT MODE DESIGN SYSTEM - LUXURY BOUTIQUE DAYLIGHT PALETTE
+   ======================================================== */
+[data-theme="light"] body,
+html.light body {
+  background-color: #F7F5F0 !important;
+  color: #1A1815 !important;
+}
+
+/* Page canvas, main headers & structural bars */
+[data-theme="light"] [class*="bg-[#0B0B0A]"],
+html.light [class*="bg-[#0B0B0A]"],
+[data-theme="light"] [class*="bg-[#0E0D0B]"],
+html.light [class*="bg-[#0E0D0B]"],
+[data-theme="light"] [class*="bg-[#070706]"],
+html.light [class*="bg-[#070706]"],
+[data-theme="light"] [class*="bg-[#080807]"],
+html.light [class*="bg-[#080807]"],
+[data-theme="light"] [class*="bg-[#0C0B0A]"],
+html.light [class*="bg-[#0C0B0A]"],
+[data-theme="light"] [class*="bg-[#0E0E0E]"],
+html.light [class*="bg-[#0E0E0E]"],
+[data-theme="light"] [class*="bg-[#111111]"],
+html.light [class*="bg-[#111111]"],
+[data-theme="light"] header,
+html.light header {
+  background-color: #FAF8F5 !important;
+}
+
+/* Cards & Elevated Containers (Pure White Luxury Card Canvas) */
+[data-theme="light"] [class*="bg-[#171613]"],
+html.light [class*="bg-[#171613]"],
+[data-theme="light"] [class*="bg-[#141311]"],
+html.light [class*="bg-[#141311]"],
+[data-theme="light"] [class*="bg-[#141310]"],
+html.light [class*="bg-[#141310]"],
+[data-theme="light"] [class*="bg-[#181818]"],
+html.light [class*="bg-[#181818]"] {
+  background-color: #FFFFFF !important;
+  box-shadow: 0 4px 20px -2px rgba(26, 24, 21, 0.05), 0 2px 6px -1px rgba(26, 24, 21, 0.03) !important;
+}
+
+/* Inset panels, inputs, filter strips & well areas */
+[data-theme="light"] [class*="bg-[#12110F]"],
+html.light [class*="bg-[#12110F]"],
+[data-theme="light"] [class*="bg-[#1A1814]"],
+html.light [class*="bg-[#1A1814]"],
+[data-theme="light"] [class*="bg-[#1A1815]"],
+html.light [class*="bg-[#1A1815]"],
+[data-theme="light"] [class*="bg-[#1A1816]"],
+html.light [class*="bg-[#1A1816]"],
+[data-theme="light"] [class*="bg-[#1A1916]"],
+html.light [class*="bg-[#1A1916]"],
+[data-theme="light"] [class*="bg-[#1B1914]"],
+html.light [class*="bg-[#1B1914]"],
+[data-theme="light"] [class*="bg-[#1C1811]"],
+html.light [class*="bg-[#1C1811]"],
+[data-theme="light"] [class*="bg-[#1E1B15]"],
+html.light [class*="bg-[#1E1B15]"],
+[data-theme="light"] [class*="bg-[#1E1C17]"],
+html.light [class*="bg-[#1E1C17]"] {
+  background-color: #F4F1EA !important;
+}
+
+/* Hover, active states, chips & secondary button surfaces */
+[data-theme="light"] [class*="bg-[#1F1E1A]"],
+html.light [class*="bg-[#1F1E1A]"],
+[data-theme="light"] [class*="bg-[#201D17]"],
+html.light [class*="bg-[#201D17]"],
+[data-theme="light"] [class*="bg-[#282620]"],
+html.light [class*="bg-[#282620]"] {
+  background-color: #EDE8DC !important;
+}
+
+/* Soft champagne borders & dividers */
+[data-theme="light"] [class*="border-[#2A261F]"],
+html.light [class*="border-[#2A261F]"],
+[data-theme="light"] [class*="border-[#1C1A15]"],
+html.light [class*="border-[#1C1A15]"],
+[data-theme="light"] [class*="border-[#201D17]"],
+html.light [class*="border-[#201D17]"],
+[data-theme="light"] [class*="border-[#221E17]"],
+html.light [class*="border-[#221E17]"],
+[data-theme="light"] [class*="border-[#221F1A]"],
+html.light [class*="border-[#221F1A]"],
+[data-theme="light"] [class*="border-[#23201A]"],
+html.light [class*="border-[#23201A]"],
+[data-theme="light"] [class*="border-[#242018]"],
+html.light [class*="border-[#242018]"],
+[data-theme="light"] [class*="border-[#24211A]"],
+html.light [class*="border-[#24211A]"],
+[data-theme="light"] [class*="border-[#2B271F]"],
+html.light [class*="border-[#2B271F]"],
+[data-theme="light"] [class*="border-[#2E281E]"],
+html.light [class*="border-[#2E281E]"],
+[data-theme="light"] [class*="border-[#2E2A22]"],
+html.light [class*="border-[#2E2A22]"],
+[data-theme="light"] [class*="border-[#3D372E]"],
+html.light [class*="border-[#3D372E]"],
+[data-theme="light"] aside,
+html.light aside,
+[data-theme="light"] header,
+html.light header {
+  border-color: #DFD7C5 !important;
+}
+
+[data-theme="light"] [class*="divide-[#2A261F]"] > :not([hidden]) ~ :not([hidden]),
+html.light [class*="divide-[#2A261F]"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: #DFD7C5 !important;
+}
+
+/* Primary text & headings (Rich Onyx Charcoal) */
+[data-theme="light"] [class*="text-[#F3EFE6]"],
+html.light [class*="text-[#F3EFE6]"],
+[data-theme="light"] [class*="text-[#F5F0E6]"],
+html.light [class*="text-[#F5F0E6]"] {
+  color: #1A1815 !important;
+}
+
+/* Secondary & Muted text (Warm Taupe Slate, High Contrast) */
+[data-theme="light"] [class*="text-[#8D8980]"],
+html.light [class*="text-[#8D8980]"],
+[data-theme="light"] [class*="text-[#8E877A]"],
+html.light [class*="text-[#8E877A]"],
+[data-theme="light"] [class*="text-[#9A9180]"],
+html.light [class*="text-[#9A9180]"],
+[data-theme="light"] [class*="text-[#A8A194]"],
+html.light [class*="text-[#A8A194]"],
+[data-theme="light"] [class*="text-[#C0B9AC]"],
+html.light [class*="text-[#C0B9AC]"],
+[data-theme="light"] [class*="text-[#D0C8B8]"],
+html.light [class*="text-[#D0C8B8]"],
+[data-theme="light"] [class*="text-[#6E6960]"],
+html.light [class*="text-[#6E6960]"],
+[data-theme="light"] [class*="text-[#6A665E]"],
+html.light [class*="text-[#6A665E]"],
+[data-theme="light"] [class*="text-[#6A6354]"],
+html.light [class*="text-[#6A6354]"],
+[data-theme="light"] [class*="text-[#5A5448]"],
+html.light [class*="text-[#5A5448]"],
+[data-theme="light"] [class*="text-[#3D382E]"],
+html.light [class*="text-[#3D382E]"] {
+  color: #5C574F !important;
+}
+
+/* Luxury Antique Gold highlights in light mode */
+[data-theme="light"] [class*="text-[#E8D5A7]"],
+html.light [class*="text-[#E8D5A7]"],
+[data-theme="light"] [class*="text-[#DFC17B]"],
+html.light [class*="text-[#DFC17B]"] {
+  color: #8C6D2B !important;
+}
+
+/* Form inputs & select */
+[data-theme="light"] input,
+[data-theme="light"] select,
+[data-theme="light"] textarea,
+html.light input,
+html.light select,
+html.light textarea {
+  color: #1A1815 !important;
+  background-color: #FFFFFF !important;
+  border-color: #DFD7C5 !important;
+}
+
+[data-theme="light"] input::placeholder,
+html.light input::placeholder {
+  color: #9C9588 !important;
+}
+
+/* Status & Alert Pills */
+[data-theme="light"] [class*="bg-red-950"],
+html.light [class*="bg-red-950"] {
+  background-color: #FEE2E2 !important;
+  color: #991B1B !important;
+  border-color: #FCA5A5 !important;
+}
+
+[data-theme="light"] [class*="bg-amber-950"],
+html.light [class*="bg-amber-950"] {
+  background-color: #FEF3C7 !important;
+  color: #92400E !important;
+  border-color: #FCD34D !important;
+}
+
+[data-theme="light"] [class*="bg-emerald-950"],
+html.light [class*="bg-emerald-950"] {
+  background-color: #D1FAE5 !important;
+  color: #065F46 !important;
+  border-color: #6EE7B7 !important;
+}
+
+[data-theme="light"] [class*="bg-sky-950"],
+html.light [class*="bg-sky-950"] {
+  background-color: #E0F2FE !important;
+  color: #075985 !important;
+  border-color: #7DD3FC !important;
+}
+
+[data-theme="light"] [class*="bg-purple-950"],
+html.light [class*="bg-purple-950"] {
+  background-color: #F3E8FF !important;
+  color: #6B21A8 !important;
+  border-color: #D8B4FE !important;
+}
+
 * {
   box-sizing: border-box;
   padding: 0;

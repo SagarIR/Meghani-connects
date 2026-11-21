@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { api } from '@/services/api'
 import { Customer } from '@/types'
+import { usePreferences } from '@/context/PreferencesContext'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import Input from '@/components/ui/Input'
@@ -42,6 +43,7 @@ const statusConfig = {
 }
 
 export default function NotificationsPage() {
+  const { t } = usePreferences()
   const [activeTab, setActiveTab] = useState<'history' | 'templates' | 'send'>('history')
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [templates, setTemplates] = useState<Template[]>([])
@@ -212,12 +214,12 @@ export default function NotificationsPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Customer Notifications & Messaging</h1>
+              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">{t('routeNotificationsTitle', 'Customer Notifications & Messaging')}</h1>
               <span className="text-xs px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F] font-mono">
                 WhatsApp & SMS
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[#8D8980]">Send repair updates, promotional messages, and customer notifications via WhatsApp and SMS</p>
+            <p className="text-xs sm:text-sm text-[#8D8980]">{t('customerNotifications', 'Send repair updates, promotional messages, and customer notifications via WhatsApp and SMS')}</p>
           </div>
         </div>
 
@@ -226,7 +228,7 @@ export default function NotificationsPage() {
           onClick={fetchData} 
           icon={<RefreshCw className={clsx('w-4 h-4 text-[#C9A45C]', loading && 'animate-spin')} />}
         >
-          Refresh
+          {t('reload', 'Refresh')}
         </Button>
       </div>
 

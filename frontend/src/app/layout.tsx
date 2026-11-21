@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Toaster } from 'react-hot-toast';
 import './globals.css';
 import { AuthProvider } from '@/context/AuthContext';
+import { PreferencesProvider } from '@/context/PreferencesContext';
 import {
   SITE_URL,
   SITE_NAME,
@@ -121,11 +122,36 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
         />
+        {/* Theme Anti-Flash Script */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              try {
+                var theme = localStorage.getItem('meghani_theme');
+                if (theme === 'light') {
+                  document.documentElement.setAttribute('data-theme', 'light');
+                  document.documentElement.classList.add('light');
+                  document.documentElement.classList.remove('dark');
+                } else if (theme === 'dark') {
+                  document.documentElement.setAttribute('data-theme', 'dark');
+                  document.documentElement.classList.add('dark');
+                  document.documentElement.classList.remove('light');
+                } else if (theme === 'system' && window.matchMedia('(prefers-color-scheme: light)').matches) {
+                  document.documentElement.setAttribute('data-theme', 'light');
+                  document.documentElement.classList.add('light');
+                  document.documentElement.classList.remove('dark');
+                }
+              } catch (e) {}
+            `,
+          }}
+        />
       </head>
       <body>
         <AuthProvider>
-          {children}
-          <Toaster position="top-right" />
+          <PreferencesProvider>
+            {children}
+            <Toaster position="top-right" />
+          </PreferencesProvider>
         </AuthProvider>
       </body>
     </html>

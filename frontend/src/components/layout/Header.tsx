@@ -9,21 +9,8 @@ import {
   Keyboard, Menu, ShoppingCart, Shield, Sparkles, ExternalLink, Watch
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
+import { usePreferences } from '@/context/PreferencesContext'
 import clsx from 'clsx'
-
-const routeTitles: Record<string, { title: string; category: string }> = {
-  '/dashboard': { title: 'Store Dashboard', category: 'Overview' },
-  '/sales': { title: 'Point of Sale (POS)', category: 'Sales' },
-  '/sales/history': { title: 'Sales History & Invoices', category: 'Sales' },
-  '/products': { title: 'Watch Catalog & Inventory', category: 'Inventory' },
-  '/repairs': { title: 'Watch Repairs & Service', category: 'Service' },
-  '/customers': { title: 'Customers & CRM', category: 'Customers' },
-  '/expenses': { title: 'Store Expenses', category: 'Finance' },
-  '/reports': { title: 'Reports & Analytics', category: 'Reports' },
-  '/website-cms': { title: 'Website Content Management', category: 'Website' },
-  '/notifications': { title: 'Customer Notifications', category: 'Messages' },
-  '/settings': { title: 'Store Settings', category: 'Settings' },
-}
 
 interface HeaderProps {
   onOpenSidebar?: () => void
@@ -33,14 +20,44 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
   const pathname = usePathname()
   const router = useRouter()
   const { user, logout } = useAuth()
+  const { t } = usePreferences()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
-  // Current route metadata
-  const currentRoute = routeTitles[pathname] || {
-    title: pathname.split('/').filter(Boolean).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' / ') || 'Store Management',
-    category: 'Meghani 360'
+  // Dynamic route translation metadata
+  const getRouteMeta = () => {
+    switch (pathname) {
+      case '/dashboard':
+        return { title: t('routeDashboardTitle', 'Store Dashboard'), category: t('catOverview', 'Overview') }
+      case '/sales':
+        return { title: t('routePOSTitle', 'Point of Sale (POS)'), category: t('catSales', 'Sales') }
+      case '/sales/history':
+        return { title: t('routeSalesHistoryTitle', 'Sales History & Invoices'), category: t('catSales', 'Sales') }
+      case '/products':
+        return { title: t('routeProductsTitle', 'Watch Catalog & Inventory'), category: t('catInventory', 'Inventory') }
+      case '/repairs':
+        return { title: t('routeRepairsTitle', 'Watch Repairs & Service'), category: t('catService', 'Service') }
+      case '/customers':
+        return { title: t('routeCustomersTitle', 'Customers & CRM'), category: t('catCustomers', 'Customers') }
+      case '/expenses':
+        return { title: t('routeExpensesTitle', 'Store Expenses'), category: t('catFinance', 'Finance') }
+      case '/reports':
+        return { title: t('routeReportsTitle', 'Reports & Analytics'), category: t('catReports', 'Reports') }
+      case '/website-cms':
+        return { title: t('routeWebsiteCMSTitle', 'Website Content Management'), category: t('catWebsite', 'Website') }
+      case '/notifications':
+        return { title: t('routeNotificationsTitle', 'Customer Notifications'), category: t('catMessages', 'Messages') }
+      case '/settings':
+        return { title: t('routeSettingsTitle', 'Store Settings'), category: t('catSettings', 'Settings') }
+      default:
+        return {
+          title: pathname.split('/').filter(Boolean).map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(' / ') || t('storeManagement', 'Store Management'),
+          category: 'Meghani 360'
+        }
+    }
   }
+
+  const currentRoute = getRouteMeta()
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -61,10 +78,19 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
     window.dispatchEvent(new CustomEvent('showShortcuts'))
   }
 
-  const roleLabel = user?.role ? user.role.toUpperCase() : 'STAFF'
+  const getRoleLabel = () => {
+    const r = user?.role?.toLowerCase()
+    if (r === 'admin') return t('roleAdmin', 'ADMIN')
+    if (r === 'manager') return t('roleManager', 'MANAGER')
+    if (r === 'cashier') return t('roleCashier', 'CASHIER')
+    if (r === 'technician') return t('roleTechnician', 'TECHNICIAN')
+    return t('roleStaff', 'STAFF')
+  }
+
+  const roleLabel = getRoleLabel()
 
   return (
-    <header className="h-16 lg:h-20 bg-[#0E0D0B]/95 backdrop-blur-md border-b border-[#2A261F] px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30 select-none">
+    <header className="h-16 lg:h-20 bg-[#0E0D0B]/95 backdrop-blur-md border-b border-[#2A261F] px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-30 select-none transition-colors">
       {/* Left - Hamburger (Mobile) + Breadcrumb Context */}
       <div className="flex items-center gap-3 min-w-0">
         {onOpenSidebar && (
@@ -107,7 +133,7 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
             className="hidden md:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-[#C9A45C] via-[#DFC17B] to-[#C9A45C] text-[#0B0B0A] text-xs font-bold tracking-wide shadow-md shadow-[#C9A45C]/20 hover:brightness-105 transition-all"
           >
             <ShoppingCart className="w-3.5 h-3.5" />
-            <span>Open POS</span>
+            <span>{t('openPOS', 'Open POS')}</span>
           </Link>
         )}
 
@@ -115,12 +141,12 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
         <button
           onClick={triggerSearch}
           className="flex items-center gap-2 px-3 py-1.5 sm:px-3.5 sm:py-2 bg-[#171613] hover:bg-[#1F1E1A] border border-[#2A261F] hover:border-[#C9A45C]/40 rounded-xl transition-all group"
-          title="Search (Ctrl + K)"
+          title={`${t('search', 'Search')} (Ctrl + K)`}
         >
           <Search className="w-4 h-4 text-[#8D8980] group-hover:text-[#C9A45C] transition-colors" />
-          <span className="text-xs text-[#8D8980] hidden sm:inline">Search store...</span>
+          <span className="text-xs text-[#8D8980] hidden sm:inline">{t('searchStore', 'Search store...')}</span>
           <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-[#12110F] border border-[#2A261F] rounded text-[10px] text-[#8D8980] font-mono group-hover:text-[#C9A45C]">
-            Ctrl K
+            {t('ctrlK', 'Ctrl K')}
           </kbd>
         </button>
 
@@ -128,7 +154,7 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
         <button
           onClick={triggerShortcuts}
           className="p-2 sm:px-2.5 sm:py-2 bg-[#171613] hover:bg-[#1F1E1A] border border-[#2A261F] hover:border-[#C9A45C]/40 rounded-xl transition-all text-[#8D8980] hover:text-[#C9A45C]"
-          title="Keyboard shortcuts (Shift + ?)"
+          title={`${t('keyboardShortcuts', 'Keyboard shortcuts')} (Shift + ?)`}
         >
           <Keyboard className="w-4 h-4" />
         </button>
@@ -137,7 +163,7 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
         <Link
           href="/notifications"
           className="relative p-2 sm:px-2.5 sm:py-2 bg-[#171613] hover:bg-[#1F1E1A] border border-[#2A261F] hover:border-[#C9A45C]/40 rounded-xl transition-all text-[#8D8980] hover:text-[#C9A45C]"
-          title="Customer Notifications"
+          title={t('customerNotifications', 'Customer Notifications')}
         >
           <Bell className="w-4 h-4" />
           <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-[#C9A45C] rounded-full ring-2 ring-[#0E0D0B]" />
@@ -154,7 +180,7 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
             </div>
             <div className="hidden sm:block text-left">
               <p className="font-semibold text-xs text-[#F3EFE6] leading-tight truncate max-w-[100px]">
-                {user?.name || user?.username || 'Staff Member'}
+                {user?.name || user?.username || 'Staff'}
               </p>
               <span className="text-[10px] font-mono text-[#C9A45C] font-semibold tracking-wider">
                 {roleLabel}
@@ -195,7 +221,7 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
                     className="flex items-center gap-2.5 px-4 py-2 text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#1F1E1A] transition-colors"
                   >
                     <Watch className="w-4 h-4 text-[#C9A45C]" />
-                    Dashboard
+                    {t('dashboard', 'Dashboard')}
                   </Link>
                   <Link
                     href="/sales"
@@ -203,7 +229,7 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
                     className="flex items-center gap-2.5 px-4 py-2 text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#1F1E1A] transition-colors"
                   >
                     <ShoppingCart className="w-4 h-4 text-[#C9A45C]" />
-                    POS Terminal
+                    {t('posTerminal', 'POS Terminal')}
                   </Link>
                   <Link
                     href="/settings"
@@ -211,7 +237,7 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
                     className="flex items-center gap-2.5 px-4 py-2 text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#1F1E1A] transition-colors"
                   >
                     <Settings className="w-4 h-4 text-[#C9A45C]" />
-                    Store Settings
+                    {t('storeSettings', 'Store Settings')}
                   </Link>
                   <Link
                     href="/"
@@ -221,9 +247,9 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
                   >
                     <span className="flex items-center gap-2.5">
                       <ExternalLink className="w-4 h-4 text-[#C9A45C]" />
-                      View Website
+                      {t('viewWebsite', 'View Website')}
                     </span>
-                    <span className="text-[10px] text-[#8D8980]/70">Live</span>
+                    <span className="text-[10px] text-[#8D8980]/70 font-mono">{t('liveBadge', 'Live')}</span>
                   </Link>
                 </div>
 
@@ -233,10 +259,10 @@ export default function Header({ onOpenSidebar }: HeaderProps) {
                       setShowUserMenu(false)
                       logout()
                     }}
-                    className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-red-400 hover:text-red-300 hover:bg-red-950/30 transition-colors"
+                    className="w-full flex items-center gap-2.5 px-4 py-2 text-xs font-semibold text-red-500 hover:text-red-400 hover:bg-red-50 transition-colors"
                   >
                     <LogOut className="w-4 h-4" />
-                    Sign Out
+                    {t('logout', 'Sign Out')}
                   </button>
                 </div>
               </motion.div>

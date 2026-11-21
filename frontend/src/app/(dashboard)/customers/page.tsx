@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { api } from '@/services/api'
 import { Customer, Sale, Repair, LoyaltyTransaction, CustomerDossier } from '@/types'
+import { usePreferences } from '@/context/PreferencesContext'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import Input from '@/components/ui/Input'
@@ -78,6 +79,7 @@ const getLoyaltyTier = (points: number) => {
 }
 
 export default function CustomersPage() {
+  const { t } = usePreferences()
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -384,12 +386,12 @@ export default function CustomersPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Customers & CRM</h1>
+              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">{t('customersTitle', 'Customers & CRM')}</h1>
               <span className="text-xs px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F] font-mono">
-                {stats.total} customers
+                {stats.total} {t('customersCRM', 'customers')}
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[#8D8980]">Customer directories, purchase histories, and loyalty points</p>
+            <p className="text-xs sm:text-sm text-[#8D8980]">{t('customersSubtitle', 'Customer directories, purchase histories, and loyalty points')}</p>
           </div>
         </div>
 
@@ -408,7 +410,7 @@ export default function CustomersPage() {
             filename={`meghani_customers_${new Date().toISOString().split('T')[0]}`} 
           />
           <Button onClick={openAddModal} icon={<Plus className="w-4 h-4" />} className="shadow-gold">
-            <span>Add Customer</span>
+            <span>{t('addCustomer', 'Add Customer')}</span>
           </Button>
         </div>
       </div>
@@ -421,7 +423,7 @@ export default function CustomersPage() {
               <Users className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Total Customers</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">{t('customersCRM', 'Total Customers')}</p>
               <p className="text-2xl font-bold font-mono text-[#F3EFE6]">{stats.total}</p>
             </div>
           </div>
@@ -433,7 +435,7 @@ export default function CustomersPage() {
               <TrendingUp className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Total Sales</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">{t('totalSales', 'Total Sales')}</p>
               <p className="text-xl sm:text-2xl font-bold font-mono text-emerald-400">
                 {formatCurrency(stats.totalPurchases)}
               </p>
@@ -447,7 +449,7 @@ export default function CustomersPage() {
               <Gift className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Total Loyalty Points</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">{t('loyaltyPoints', 'Total Loyalty Points')}</p>
               <p className="text-2xl font-bold font-mono text-[#C9A45C]">{stats.totalPoints.toLocaleString()}</p>
             </div>
           </div>
@@ -473,7 +475,7 @@ export default function CustomersPage() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8D8980] group-focus-within:text-[#C9A45C] transition-colors" />
             <input
               type="text"
-              placeholder="Search customers by name, phone, email, or tier..."
+              placeholder={t('searchCustomers', 'Search customers by name, phone, email, or tier...')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl 

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { api } from '@/services/api'
 import { Repair, Customer, RepairPart } from '@/types'
+import { usePreferences } from '@/context/PreferencesContext'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import Input from '@/components/ui/Input'
@@ -158,6 +159,7 @@ interface ProductItem {
 }
 
 export default function RepairsPage() {
+  const { t } = usePreferences()
   const [repairs, setRepairs] = useState<Repair[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -532,12 +534,12 @@ export default function RepairsPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Watch Workshop & Repairs</h1>
+              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">{t('workshopTitle', 'Watch Workshop & Repairs')}</h1>
               <span className="text-xs px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F] font-mono">
-                {stats.total} total tickets
+                {stats.total} {t('totalTickets', 'total tickets')}
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[#8D8980]">Atelier job tracking, horologist dispatch, spare parts consumption, and QC assurance</p>
+            <p className="text-xs sm:text-sm text-[#8D8980]">{t('workshopSubtitle', 'Atelier job tracking, horologist dispatch, spare parts consumption, and QC assurance')}</p>
           </div>
         </div>
 
@@ -548,7 +550,7 @@ export default function RepairsPage() {
             filename={`meghani_repairs_${new Date().toISOString().split('T')[0]}`} 
           />
           <Button onClick={openAddModal} icon={<Plus className="w-4 h-4" />} className="shadow-gold">
-            <span>New Repair Ticket</span>
+            <span>{t('newRepairTicket', 'New Repair Ticket')}</span>
           </Button>
         </div>
       </div>
@@ -561,7 +563,7 @@ export default function RepairsPage() {
               <Package className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Total Tickets</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">{t('totalTickets', 'Total Tickets')}</p>
               <p className="text-2xl font-bold font-mono text-[#F3EFE6]">{stats.total}</p>
             </div>
           </div>
@@ -573,7 +575,7 @@ export default function RepairsPage() {
               <Wrench className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">In Atelier / Bench</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">{t('inAtelierBench', 'In Atelier / Bench')}</p>
               <p className="text-2xl font-bold font-mono text-amber-400">{stats.inWorkshop}</p>
             </div>
           </div>
@@ -585,7 +587,7 @@ export default function RepairsPage() {
               <CheckCircle className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Ready for Collection</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">{t('readyForCollection', 'Ready for Collection')}</p>
               <p className="text-2xl font-bold font-mono text-emerald-400">{stats.ready}</p>
             </div>
           </div>
@@ -597,7 +599,7 @@ export default function RepairsPage() {
               <Truck className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Delivered</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">{t('deliveredStatus', 'Delivered')}</p>
               <p className="text-2xl font-bold font-mono text-sky-400">{stats.delivered}</p>
             </div>
           </div>
@@ -611,7 +613,7 @@ export default function RepairsPage() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8D8980] group-focus-within:text-[#C9A45C] transition-colors" />
             <input
               type="text"
-              placeholder="Search by ticket # (e.g. REP-1002), customer, watch brand, model or horologist..."
+              placeholder={t('searchRepairsPlaceholder', 'Search by ticket # (e.g. REP-1002), customer, watch brand, model or horologist...')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl 

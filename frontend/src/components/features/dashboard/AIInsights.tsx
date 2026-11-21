@@ -7,6 +7,7 @@ import {
   CheckCircle, Info, RefreshCw
 } from 'lucide-react'
 import { api } from '@/services/api'
+import { usePreferences } from '@/context/PreferencesContext'
 import clsx from 'clsx'
 
 interface Insight {
@@ -49,6 +50,7 @@ const typeStyles: Record<string, { pill: string; icon: React.ReactNode }> = {
 }
 
 export default function AIInsights() {
+  const { t } = usePreferences()
   const [data, setData] = useState<AIInsightsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -78,15 +80,15 @@ export default function AIInsights() {
             <Sparkles className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="font-serif font-bold text-sm sm:text-base text-[#F3EFE6]">Stock & Sales Insights</h3>
-            <p className="text-[11px] font-mono text-[#8D8980]">Stock turnover and sales trends</p>
+            <h3 className="font-serif font-bold text-sm sm:text-base text-[#F3EFE6]">{t('stockSalesInsights', 'Stock & Sales Insights')}</h3>
+            <p className="text-[11px] font-mono text-[#8D8980]">{t('stockTurnoverTrends', 'Stock turnover and sales trends')}</p>
           </div>
         </div>
         <button
           onClick={() => fetchInsights(true)}
           disabled={refreshing}
           className="p-1.5 rounded-lg text-[#8D8980] hover:text-[#F3EFE6] hover:bg-[#1F1E1A] transition-colors"
-          title="Refresh insights"
+          title={t('refreshInsights', 'Refresh insights')}
         >
           <RefreshCw className={clsx('w-3.5 h-3.5', refreshing && 'animate-spin')} />
         </button>
@@ -124,8 +126,8 @@ export default function AIInsights() {
         ) : (
           <div className="h-full flex flex-col items-center justify-center text-center p-4 text-[#8D8980]">
             <TrendingUp className="w-8 h-8 text-[#2A261F] mb-2" />
-            <p className="text-xs font-semibold text-[#F3EFE6]">Sales & Stock Stable</p>
-            <p className="text-[11px] text-[#8D8980] mt-0.5">Watch sales are tracking as expected</p>
+            <p className="text-xs font-semibold text-[#F3EFE6]">{t('salesStockStable', 'Sales & Stock Stable')}</p>
+            <p className="text-[11px] text-[#8D8980] mt-0.5">{t('salesTrackingExpected', 'Watch sales are tracking as expected')}</p>
           </div>
         )}
       </div>

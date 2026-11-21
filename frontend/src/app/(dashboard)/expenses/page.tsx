@@ -12,6 +12,7 @@ import {
 import { api } from '@/services/api'
 import { Expense, CashRegister } from '@/types'
 import { useAuth } from '@/context/AuthContext'
+import { usePreferences } from '@/context/PreferencesContext'
 import Button from '@/components/ui/Button'
 import Modal, { ConfirmModal } from '@/components/ui/Modal'
 import Input from '@/components/ui/Input'
@@ -43,6 +44,7 @@ const paymentModeLabels: Record<string, { label: string; icon: any; color: strin
 
 export default function ExpensesPage() {
   const { user } = useAuth()
+  const { t } = usePreferences()
   const isManagement = user?.role === 'admin' || user?.role === 'manager'
 
   // Navigation tab
@@ -372,12 +374,12 @@ export default function ExpensesPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Store Expenses</h1>
+              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">{t('routeExpensesTitle', 'Store Expenses')}</h1>
               <span className="text-xs px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F] font-mono">
-                {totalItems} entries
+                {totalItems} {t('totalItemsLabel', 'entries')}
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[#8D8980]">Track store expenses, rent, utilities, payroll, and supplies</p>
+            <p className="text-xs sm:text-sm text-[#8D8980]">{t('storeExpenses', 'Track store expenses, rent, utilities, payroll, and supplies')}</p>
           </div>
         </div>
 
@@ -388,7 +390,7 @@ export default function ExpensesPage() {
             filename={`meghani_expenses_${new Date().toISOString().split('T')[0]}`} 
           />
           <Button onClick={openAddModal} icon={<Plus className="w-4 h-4" />} className="shadow-gold">
-            <span>Add Expense</span>
+            <span>{t('add', '+ Add Expense')}</span>
           </Button>
         </div>
       </div>

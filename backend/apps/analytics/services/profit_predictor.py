@@ -56,17 +56,17 @@ class ProfitPredictor:
         predicted_sales = forecast['predicted_total']
         
         # Calculate predicted profit from sales
-        profit_margin = self.get_historical_profit_margin()
-        predicted_sales_profit = predicted_sales * profit_margin
+        profit_margin = float(self.get_historical_profit_margin())
+        predicted_sales_profit = float(predicted_sales) * profit_margin
         
         # Estimate repair income
-        avg_repair_income = self.get_average_repair_income()
+        avg_repair_income = float(self.get_average_repair_income())
         
         # Total gross profit
         predicted_gross_profit = predicted_sales_profit + avg_repair_income
         
         # Estimate expenses
-        avg_expenses = self.get_average_monthly_expenses()
+        avg_expenses = float(self.get_average_monthly_expenses())
         
         # Net profit
         predicted_net_profit = predicted_gross_profit - avg_expenses

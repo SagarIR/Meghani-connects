@@ -227,3 +227,45 @@ export const expenseExportColumns: ExportColumn[] = [
   { key: 'amount', header: 'Amount', transform: (v) => formatCurrencyForExport(v) },
   { key: 'payment_method', header: 'Payment Method' },
 ]
+
+export const purchaseOrderExportColumns: ExportColumn[] = [
+  { key: 'order_number', header: 'PO Number' },
+  { key: 'supplier_name', header: 'Supplier' },
+  { key: 'status', header: 'Status' },
+  { key: 'order_date', header: 'Order Date', transform: (v) => formatDateForExport(v) },
+  { key: 'total_amount', header: 'Total Amount (₹)', transform: (v) => formatCurrencyForExport(v) },
+]
+
+export const stockMovementExportColumns: ExportColumn[] = [
+  { key: 'created_at', header: 'Timestamp', transform: (v) => formatDateForExport(v) },
+  { key: 'product_name', header: 'Product Name' },
+  { key: 'movement_type', header: 'Movement Type' },
+  { key: 'quantity_in', header: 'Inward (+)' },
+  { key: 'quantity_out', header: 'Outward (-)' },
+  { key: 'resulting_balance', header: 'Resulting Stock' },
+  { key: 'reference_id', header: 'Reference ID' },
+  { key: 'reason', header: 'Reason' },
+  { key: 'created_by_name', header: 'Staff' },
+]
+
+export const warrantyExportColumns: ExportColumn[] = [
+  { key: 'warranty_code', header: 'Certificate #' },
+  { key: 'product_name', header: 'Product' },
+  { key: 'customer_name', header: 'Customer' },
+  { key: 'customer_phone', header: 'Phone' },
+  { key: 'sale_invoice_number', header: 'Invoice Ref' },
+  { key: 'start_date', header: 'Start Date', transform: (v) => formatDateForExport(v) },
+  { key: 'expiry_date', header: 'Expiry Date', transform: (v) => formatDateForExport(v) },
+  { key: 'warranty_months', header: 'Duration (Months)' },
+  { key: 'status', header: 'Status' },
+]
+
+export const warrantyClaimExportColumns: ExportColumn[] = [
+  { key: 'claim_number', header: 'Claim #' },
+  { key: 'claim_date', header: 'Date', transform: (v) => formatDateForExport(v) },
+  { key: 'issue_description', header: 'Issue Reported' },
+  { key: 'covered_amount', header: 'Covered Amount (₹)', transform: (v) => formatCurrencyForExport(v) },
+  { key: 'repair_ticket', header: 'Repair Ticket' },
+  { key: 'status_display', header: 'Status' },
+  { key: 'created_by_name', header: 'Staff' },
+]

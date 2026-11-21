@@ -96,17 +96,18 @@ export default function DashboardLayout({
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       {/* Main Content Workspace */}
-      <div className="lg:ml-72 min-h-screen flex flex-col bg-[#0B0B0A]">
+      <div className="lg:ml-72 min-h-screen flex flex-col bg-[#0B0B0A] min-w-0 max-w-full overflow-x-hidden">
         {/* Universal Top Navigation Header */}
         <Header onOpenSidebar={() => setSidebarOpen(true)} />
 
         {/* Page Content Body */}
-        <main className="flex-1 p-3 sm:p-5 lg:p-7 xl:p-8">
+        <main className="flex-1 p-3 sm:p-5 lg:p-6 xl:p-7 min-w-0">
           <ErrorBoundary>
             <motion.div
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
+              className="w-full min-w-0"
             >
               {children}
             </motion.div>

@@ -9,6 +9,7 @@ import {
   Watch, Building, Sparkles
 } from 'lucide-react'
 import { useAuth } from '@/context/AuthContext'
+import { usePreferences } from '@/context/PreferencesContext'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import toast from 'react-hot-toast'
@@ -76,10 +77,42 @@ interface UserPreferences {
 
 export default function SettingsPage() {
   const { user } = useAuth()
+  const {
+    theme: prefTheme,
+    language: prefLang,
+    autoPrintReceipt: prefAutoPrint,
+    defaultPaymentMode: prefPayMode,
+    defaultDashboardPeriod: prefDashPeriod,
+    setTheme: setContextTheme,
+    setLanguage: setContextLang,
+    setAutoPrintReceipt: setContextAutoPrint,
+    setDefaultPaymentMode: setContextPayMode,
+    setDefaultDashboardPeriod: setContextDashPeriod,
+    savePreferences: saveContextPrefs,
+    saving: prefSaving,
+    t,
+  } = usePreferences()
+
   const [activeTab, setActiveTab] = useState('profile')
   const [saving, setSaving] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   
+  const [profileForm, setProfileForm] = useState({
+    name: user?.name || '',
+    email: user?.email || '',
+    phone: user?.phone || '',
+  })
+
+  useEffect(() => {
+    if (user) {
+      setProfileForm({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+      })
+    }
+  }, [user])
+
   const [businessSettings, setBusinessSettings] = useState<BusinessSettings | null>(null)
   const [logoFile, setLogoFile] = useState<File | null>(null)
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
@@ -93,12 +126,12 @@ export default function SettingsPage() {
   const [backupLoading, setBackupLoading] = useState(false)
 
   const tabs = [
-    { id: 'profile', label: 'User Profile', icon: User },
-    { id: 'business', label: 'Store Profile', icon: Store },
-    { id: 'preferences', label: 'App Preferences', icon: Monitor },
-    { id: 'notifications', label: 'Notification Channels', icon: Bell },
-    { id: 'security', label: 'Security & Password', icon: Shield },
-    { id: 'backup', label: 'Database Backups', icon: Database },
+    { id: 'profile', label: t('userProfile', 'User Profile'), icon: User },
+    { id: 'business', label: t('storeProfile', 'Store Profile'), icon: Store },
+    { id: 'preferences', label: t('appPreferences', 'App Preferences'), icon: Monitor },
+    { id: 'notifications', label: t('notificationChannels', 'Notification Channels'), icon: Bell },
+    { id: 'security', label: t('securityPassword', 'Security & Password'), icon: Shield },
+    { id: 'backup', label: t('databaseBackups', 'Database Backups'), icon: Database },
   ]
 
   useEffect(() => {
@@ -125,6 +158,24 @@ export default function SettingsPage() {
       setPreferences(response.data)
     } catch (error) {
       console.log('No user preferences found')
+    }
+  }
+
+  const handleProfileSave = async () => {
+    setSaving(true)
+    try {
+      await api.patch('/users/update_profile/', profileForm)
+      toast.success(
+        prefLang === 'gu'
+          ? 'પ્રોફાઇલ સફળતાપૂર્વક સાચવવામાં આવી!'
+          : prefLang === 'hi'
+          ? 'प्रोफ़ाइल सफलतापूर्वक सहेजी गई!'
+          : 'User profile updated successfully!'
+      )
+    } catch (error: any) {
+      toast.error(error.response?.data?.detail || error.response?.data?.error || 'Failed to update profile')
+    } finally {
+      setSaving(false)
     }
   }
 
@@ -257,8 +308,8 @@ export default function SettingsPage() {
           <Store className="w-5 h-5 text-[#C9A45C]" />
         </div>
         <div>
-          <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Store & System Settings</h1>
-          <p className="text-xs sm:text-sm text-[#8D8980]">Manage store details, invoice settings, tax details, security, and backups</p>
+          <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">{t('storeSystemSettings', 'Store & System Settings')}</h1>
+          <p className="text-xs sm:text-sm text-[#8D8980]">{t('manageStoreDetails', 'Manage store details, invoice settings, tax details, security, and backups')}</p>
         </div>
       </div>
 
@@ -340,8 +391,8 @@ export default function SettingsPage() {
               {activeTab === 'profile' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">User Profile</h2>
-                    <p className="text-xs text-[#8D8980] mt-0.5">Your account information and role permissions</p>
+                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">{t('userProfileTitle', 'User Profile')}</h2>
+                    <p className="text-xs text-[#8D8980] mt-0.5">{t('userProfileSubtitle', 'Your account information and role permissions')}</p>
                   </div>
                   
                   <div className="flex flex-col sm:flex-row items-center gap-5 p-6 bg-[#12110F] border border-[#2A261F] rounded-2xl">
@@ -356,19 +407,38 @@ export default function SettingsPage() {
                         </span>
                       </div>
                       <p className="text-xs text-[#8D8980] font-mono mt-1">{user?.email || 'staff@meghaniwatch.com'}</p>
-                      <p className="text-[11px] text-[#8D8980] mt-1">Meghani Watch Co. Vadodara • Staff Account</p>
+                      <p className="text-[11px] text-[#8D8980] mt-1">{t('roleAccountDesc', 'Meghani Watch Co. Vadodara • Staff Account')}</p>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <Input label="Full Name" defaultValue={user?.name} icon={<User className="w-4 h-4 text-[#8D8980]" />} />
-                    <Input label="Username" defaultValue={user?.username} disabled icon={<Lock className="w-4 h-4 text-[#C9A45C]" />} />
-                    <Input label="Email" type="email" defaultValue={user?.email} />
-                    <Input label="Phone Number" defaultValue={user?.phone} />
+                    <Input 
+                      label={t('fullName', 'Full Name')} 
+                      value={profileForm.name} 
+                      onChange={(e) => setProfileForm(prev => ({ ...prev, name: e.target.value }))}
+                      icon={<User className="w-4 h-4 text-[#8D8980]" />} 
+                    />
+                    <Input 
+                      label={t('username', 'Username')} 
+                      defaultValue={user?.username} 
+                      disabled 
+                      icon={<Lock className="w-4 h-4 text-[#C9A45C]" />} 
+                    />
+                    <Input 
+                      label={t('email', 'Email')} 
+                      type="email" 
+                      value={profileForm.email} 
+                      onChange={(e) => setProfileForm(prev => ({ ...prev, email: e.target.value }))}
+                    />
+                    <Input 
+                      label={t('phoneNumber', 'Phone Number')} 
+                      value={profileForm.phone} 
+                      onChange={(e) => setProfileForm(prev => ({ ...prev, phone: e.target.value }))}
+                    />
                   </div>
 
-                  <Button icon={<Save className="w-4 h-4" />} className="shadow-gold">
-                    Save Profile Changes
+                  <Button onClick={handleProfileSave} loading={saving} icon={<Save className="w-4 h-4" />} className="shadow-gold">
+                    {t('saveProfile', 'Save Profile Changes')}
                   </Button>
                 </div>
               )}
@@ -378,11 +448,11 @@ export default function SettingsPage() {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Store Details & Branding</h2>
-                      <p className="text-xs text-[#8D8980] mt-0.5">Information shown on invoices, receipts, and website</p>
+                      <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">{t('storeDetailsBranding', 'Store Details & Branding')}</h2>
+                      <p className="text-xs text-[#8D8980] mt-0.5">{t('storeDetailsSubtitle', 'Information shown on invoices, receipts, and website')}</p>
                     </div>
                     <Button variant="secondary" size="sm" onClick={fetchBusinessSettings} icon={<RefreshCw className="w-3.5 h-3.5" />}>
-                      Reload
+                      {t('reload', 'Reload')}
                     </Button>
                   </div>
 
@@ -402,31 +472,31 @@ export default function SettingsPage() {
                       </label>
                     </div>
                     <div className="text-center sm:text-left">
-                      <h3 className="font-serif font-bold text-[#F3EFE6] text-base">Store Logo</h3>
-                      <p className="text-xs text-[#8D8980] mt-1">Displayed on printed receipts and PDF invoices</p>
-                      <p className="text-[11px] text-[#8D8980] mt-2 font-mono">PNG / WEBP format recommended (transparent background)</p>
+                      <h3 className="font-serif font-bold text-[#F3EFE6] text-base">{t('storeLogo', 'Store Logo')}</h3>
+                      <p className="text-xs text-[#8D8980] mt-1">{t('storeLogoDesc', 'Displayed on printed receipts and PDF invoices')}</p>
+                      <p className="text-[11px] text-[#8D8980] mt-2 font-mono">{t('logoRecommendDesc', 'PNG / WEBP format recommended (transparent background)')}</p>
                     </div>
                   </div>
                   
                   {/* Business Info */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <Input 
-                      label="Store / Business Name" 
+                      label={t('storeName', 'Store / Business Name')} 
                       value={businessSettings?.business_name || ''} 
                       onChange={(e) => setBusinessSettings(prev => prev ? {...prev, business_name: e.target.value} : null)}
                     />
                     <Input 
-                      label="Store Tagline" 
+                      label={t('storeTagline', 'Store Tagline')} 
                       value={businessSettings?.tagline || ''} 
                       onChange={(e) => setBusinessSettings(prev => prev ? {...prev, tagline: e.target.value} : null)}
                     />
                     <Input 
-                      label="Store Phone Number" 
+                      label={t('storePhone', 'Store Phone Number')} 
                       value={businessSettings?.phone || ''} 
                       onChange={(e) => setBusinessSettings(prev => prev ? {...prev, phone: e.target.value} : null)}
                     />
                     <Input 
-                      label="Store Email" 
+                      label={t('storeEmail', 'Store Email')} 
                       type="email" 
                       value={businessSettings?.email || ''} 
                       onChange={(e) => setBusinessSettings(prev => prev ? {...prev, email: e.target.value} : null)}
@@ -435,25 +505,25 @@ export default function SettingsPage() {
 
                   {/* Address */}
                   <div className="space-y-3 pt-3 border-t border-[#2A261F]">
-                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Store Address</span>
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">{t('storeAddress', 'Store Address')}</span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input 
-                        label="Address Line 1" 
+                        label={t('addressLine1', 'Address Line 1')} 
                         value={businessSettings?.address_line1 || ''} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, address_line1: e.target.value} : null)}
                       />
                       <Input 
-                        label="City" 
+                        label={t('city', 'City')} 
                         value={businessSettings?.city || ''} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, city: e.target.value} : null)}
                       />
                       <Input 
-                        label="State" 
+                        label={t('state', 'State')} 
                         value={businessSettings?.state || ''} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, state: e.target.value} : null)}
                       />
                       <Input 
-                        label="Pincode" 
+                        label={t('pincode', 'Pincode')} 
                         value={businessSettings?.pincode || ''} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, pincode: e.target.value} : null)}
                       />
@@ -462,28 +532,28 @@ export default function SettingsPage() {
 
                   {/* Currency & Localization */}
                   <div className="space-y-3 pt-3 border-t border-[#2A261F]">
-                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Currency & Localization</span>
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">{t('currencyLocalization', 'Currency & Localization')}</span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                       <Input 
-                        label="Currency Code" 
+                        label={t('currencyCode', 'Currency Code')} 
                         value={businessSettings?.currency_code || 'INR'} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, currency_code: e.target.value} : null)}
                         placeholder="INR"
                       />
                       <Input 
-                        label="Currency Symbol" 
+                        label={t('currencySymbol', 'Currency Symbol')} 
                         value={businessSettings?.currency_symbol || '₹'} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, currency_symbol: e.target.value} : null)}
                         placeholder="₹"
                       />
                       <Input 
-                        label="Country" 
+                        label={t('country', 'Country')} 
                         value={businessSettings?.country || 'India'} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, country: e.target.value} : null)}
                         placeholder="India"
                       />
                       <Input 
-                        label="Timezone" 
+                        label={t('timezone', 'Timezone')} 
                         value={businessSettings?.timezone || 'Asia/Kolkata'} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, timezone: e.target.value} : null)}
                         placeholder="Asia/Kolkata"
@@ -493,22 +563,22 @@ export default function SettingsPage() {
 
                   {/* Tax & Invoice Prefixes */}
                   <div className="space-y-3 pt-3 border-t border-[#2A261F]">
-                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Tax Details & Document Prefixes</span>
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">{t('taxDocumentPrefixes', 'Tax Details & Document Prefixes')}</span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       <Input 
-                        label="GSTIN Number" 
+                        label={t('gstinNumber', 'GSTIN Number')} 
                         value={businessSettings?.gst_number || ''} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, gst_number: e.target.value} : null)}
                         placeholder="24AAAAA0000A1Z5"
                       />
                       <Input 
-                        label="Permanent Account Number (PAN)" 
+                        label={t('panNumber', 'Permanent Account Number (PAN)')} 
                         value={businessSettings?.pan_number || ''} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, pan_number: e.target.value} : null)}
                         placeholder="AAAAA0000A"
                       />
                       <Input 
-                        label="Default GST Rate (%)" 
+                        label={t('defaultTaxRate', 'Default GST Rate (%)')} 
                         type="number"
                         step="0.01"
                         value={businessSettings?.default_tax_rate !== undefined ? businessSettings.default_tax_rate : '18.00'} 
@@ -516,17 +586,17 @@ export default function SettingsPage() {
                         placeholder="18.00"
                       />
                       <Input 
-                        label="Sales Invoice Prefix" 
+                        label={t('invoicePrefix', 'Sales Invoice Prefix')} 
                         value={businessSettings?.invoice_prefix || 'INV'} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, invoice_prefix: e.target.value} : null)}
                       />
                       <Input 
-                        label="Repair Ticket Prefix" 
+                        label={t('repairPrefix', 'Repair Ticket Prefix')} 
                         value={businessSettings?.repair_prefix || 'REP'} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, repair_prefix: e.target.value} : null)}
                       />
                       <Input 
-                        label="Purchase Order Prefix" 
+                        label={t('poPrefix', 'Purchase Order Prefix')} 
                         value={businessSettings?.po_prefix || 'PO'} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, po_prefix: e.target.value} : null)}
                       />
@@ -535,28 +605,28 @@ export default function SettingsPage() {
 
                   {/* Hours & WhatsApp */}
                   <div className="space-y-3 pt-3 border-t border-[#2A261F]">
-                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Store Hours & Contact</span>
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">{t('storeHoursContact', 'Store Hours & Contact')}</span>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <Input 
-                        label="Weekday Opening Hours" 
+                        label={t('weekdayOpeningHours', 'Weekday Opening Hours')} 
                         value={businessSettings?.opening_hours_weekdays || ''} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, opening_hours_weekdays: e.target.value} : null)}
                         placeholder="10:00 AM – 9:00 PM (Mon – Sat)"
                       />
                       <Input 
-                        label="Sunday Opening Hours" 
+                        label={t('sundayOpeningHours', 'Sunday Opening Hours')} 
                         value={businessSettings?.opening_hours_sunday || ''} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, opening_hours_sunday: e.target.value} : null)}
                         placeholder="11:00 AM – 8:00 PM (Sun)"
                       />
                       <Input 
-                        label="WhatsApp Support Number" 
+                        label={t('whatsappNumber', 'WhatsApp Support Number')} 
                         value={businessSettings?.whatsapp_number || ''} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, whatsapp_number: e.target.value} : null)}
                         placeholder="919106680191"
                       />
                       <Input 
-                        label="Prominent Landmark" 
+                        label={t('landmark', 'Prominent Landmark')} 
                         value={businessSettings?.landmark || ''} 
                         onChange={(e) => setBusinessSettings(prev => prev ? {...prev, landmark: e.target.value} : null)}
                         placeholder="Near Abhilasha Char Rasta"
@@ -565,7 +635,7 @@ export default function SettingsPage() {
                   </div>
 
                   <Button onClick={handleBusinessSettingsSave} loading={saving} icon={<Save className="w-4 h-4" />} className="shadow-gold">
-                    Save Store Settings
+                    {t('saveStoreSettings', 'Save Store Settings')}
                   </Button>
                 </div>
               )}
@@ -574,27 +644,28 @@ export default function SettingsPage() {
               {activeTab === 'preferences' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">App Preferences</h2>
-                    <p className="text-xs text-[#8D8980] mt-0.5">Theme, language, and receipt printing settings</p>
+                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">{t('appPreferences', 'App Preferences')}</h2>
+                    <p className="text-xs text-[#8D8980] mt-0.5">{t('preferencesSubtitle', 'Theme, language, and receipt printing settings')}</p>
                   </div>
                   
                   {/* Theme */}
                   <div className="space-y-3">
-                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Theme</span>
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">{t('theme', 'Theme')}</span>
                     <div className="grid grid-cols-3 gap-3">
                       {[
-                        { id: 'dark', label: 'Dark Mode (Luxury)', icon: Moon },
-                        { id: 'system', label: 'System Default', icon: Monitor },
-                        { id: 'light', label: 'Light Mode', icon: Sun },
+                        { id: 'dark', label: t('darkMode', 'Dark Mode (Luxury)'), icon: Moon },
+                        { id: 'system', label: t('systemDefault', 'System Default'), icon: Monitor },
+                        { id: 'light', label: t('lightMode', 'Light Mode'), icon: Sun },
                       ].map((th) => (
                         <button
                           key={th.id}
-                          onClick={() => setPreferences(prev => prev ? {...prev, theme: th.id} : null)}
+                          type="button"
+                          onClick={() => setContextTheme(th.id as any)}
                           className={clsx(
-                            'p-4 rounded-xl border text-center transition-all',
-                            preferences?.theme === th.id
-                              ? 'border-[#C9A45C] bg-[#C9A45C]/15 text-[#C9A45C] font-bold shadow-gold'
-                              : 'border-[#2A261F] bg-[#12110F] text-[#8D8980] hover:text-[#F3EFE6]'
+                            'p-4 rounded-xl border text-center transition-all cursor-pointer',
+                            prefTheme === th.id
+                              ? 'border-[#C9A45C] bg-[#C9A45C]/15 text-[#C9A45C] font-bold shadow-gold ring-1 ring-[#C9A45C]'
+                              : 'border-[#2A261F] bg-[#12110F] text-[#8D8980] hover:text-[#F3EFE6] hover:border-[#C9A45C]/40'
                           )}
                         >
                           <th.icon className="w-5 h-5 mx-auto mb-2 text-[#C9A45C]" />
@@ -606,7 +677,7 @@ export default function SettingsPage() {
 
                   {/* Language */}
                   <div className="space-y-3 pt-3 border-t border-[#2A261F]">
-                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Language</span>
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">{t('language', 'Language')}</span>
                     <div className="grid grid-cols-3 gap-3">
                       {[
                         { id: 'en', label: 'English (UK / Global)' },
@@ -615,12 +686,13 @@ export default function SettingsPage() {
                       ].map((lang) => (
                         <button
                           key={lang.id}
-                          onClick={() => setPreferences(prev => prev ? {...prev, language: lang.id} : null)}
+                          type="button"
+                          onClick={() => setContextLang(lang.id as any)}
                           className={clsx(
-                            'p-3.5 rounded-xl border text-center transition-all text-xs',
-                            preferences?.language === lang.id
-                              ? 'border-[#C9A45C] bg-[#C9A45C]/15 text-[#C9A45C] font-bold shadow-gold'
-                              : 'border-[#2A261F] bg-[#12110F] text-[#8D8980] hover:text-[#F3EFE6]'
+                            'p-3.5 rounded-xl border text-center transition-all text-xs cursor-pointer',
+                            prefLang === lang.id
+                              ? 'border-[#C9A45C] bg-[#C9A45C]/15 text-[#C9A45C] font-bold shadow-gold ring-1 ring-[#C9A45C]'
+                              : 'border-[#2A261F] bg-[#12110F] text-[#8D8980] hover:text-[#F3EFE6] hover:border-[#C9A45C]/40'
                           )}
                         >
                           <Globe className="w-4 h-4 mx-auto mb-1 text-[#C9A45C]" />
@@ -632,26 +704,79 @@ export default function SettingsPage() {
 
                   {/* POS Printing */}
                   <div className="space-y-3 pt-3 border-t border-[#2A261F]">
-                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Receipt Printing</span>
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">{t('receiptPrinting', 'Receipt Printing')}</span>
                     <div className="flex items-center justify-between p-4 bg-[#12110F] border border-[#2A261F] rounded-xl">
                       <div className="flex items-center gap-3">
                         <Printer className="w-5 h-5 text-[#C9A45C]" />
                         <div>
-                          <p className="font-semibold text-sm text-[#F3EFE6]">Auto-Print Receipt on Checkout</p>
-                          <p className="text-xs text-[#8D8980]">Automatically open print dialog when a sale is completed</p>
+                          <p className="font-semibold text-sm text-[#F3EFE6]">{t('autoPrintReceipt', 'Auto-Print Receipt on Checkout')}</p>
+                          <p className="text-xs text-[#8D8980]">{t('autoPrintDesc', 'Automatically open print dialog when a sale is completed')}</p>
                         </div>
                       </div>
                       <input 
                         type="checkbox" 
-                        className="w-4 h-4 accent-[#C9A45C]" 
-                        checked={preferences?.auto_print_receipt || false}
-                        onChange={(e) => setPreferences(prev => prev ? {...prev, auto_print_receipt: e.target.checked} : null)}
+                        className="w-4 h-4 accent-[#C9A45C] cursor-pointer" 
+                        checked={prefAutoPrint}
+                        onChange={(e) => setContextAutoPrint(e.target.checked)}
                       />
                     </div>
                   </div>
 
-                  <Button onClick={handlePreferencesSave} loading={saving} icon={<Save className="w-4 h-4" />} className="shadow-gold">
-                    Save Preferences
+                  {/* Payment Mode & Dashboard Period */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-[#2A261F]">
+                    <div>
+                      <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block mb-2">{t('defaultPaymentMode', 'Default Payment Mode')}</span>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { id: 'cash', label: t('cash', 'Cash') },
+                          { id: 'upi', label: t('upi', 'UPI') },
+                          { id: 'card', label: t('card', 'Card') },
+                        ].map((m) => (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => setContextPayMode(m.id as any)}
+                            className={clsx(
+                              'py-2 px-3 rounded-lg border text-xs font-medium transition cursor-pointer',
+                              prefPayMode === m.id
+                                ? 'border-[#C9A45C] bg-[#C9A45C]/20 text-[#C9A45C] font-bold'
+                                : 'border-[#2A261F] bg-[#12110F] text-[#8D8980]'
+                            )}
+                          >
+                            {m.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div>
+                      <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block mb-2">{t('defaultDashboardPeriod', 'Default Dashboard Period')}</span>
+                      <div className="grid grid-cols-3 gap-2">
+                        {[
+                          { id: 'today', label: t('today', 'Today') },
+                          { id: 'week', label: t('thisWeek', 'This Week') },
+                          { id: 'month', label: t('thisMonth', 'This Month') },
+                        ].map((p) => (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => setContextDashPeriod(p.id as any)}
+                            className={clsx(
+                              'py-2 px-3 rounded-lg border text-xs font-medium transition cursor-pointer',
+                              prefDashPeriod === p.id
+                                ? 'border-[#C9A45C] bg-[#C9A45C]/20 text-[#C9A45C] font-bold'
+                                : 'border-[#2A261F] bg-[#12110F] text-[#8D8980]'
+                            )}
+                          >
+                            {p.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button onClick={() => saveContextPrefs()} loading={prefSaving} icon={<Save className="w-4 h-4" />} className="shadow-gold">
+                    {t('savePreferences', 'Save Preferences')}
                   </Button>
                 </div>
               )}
@@ -660,12 +785,12 @@ export default function SettingsPage() {
               {activeTab === 'notifications' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Notification Channels & Alerts</h2>
-                    <p className="text-xs text-[#8D8980] mt-0.5">Configure customer messaging channels and store alert triggers</p>
+                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">{t('notificationChannelsTitle', 'Notification Channels & Alerts')}</h2>
+                    <p className="text-xs text-[#8D8980] mt-0.5">{t('notificationChannelsSubtitle', 'Configure customer messaging channels and store alert triggers')}</p>
                   </div>
                   
                   <div className="space-y-3">
-                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">Customer Message Channels</span>
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">{t('customerMessageChannels', 'Customer Message Channels')}</span>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       {[
                         { key: 'enable_whatsapp', label: 'WhatsApp API' },
@@ -686,12 +811,12 @@ export default function SettingsPage() {
                   </div>
                   
                   <div className="space-y-3 pt-3 border-t border-[#2A261F]">
-                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">In-App Alert Triggers</span>
+                    <span className="text-xs font-semibold text-[#C9A45C] uppercase tracking-wider block">{t('inAppAlertTriggers', 'In-App Alert Triggers')}</span>
                     {[
-                      { key: 'notify_low_stock', label: 'Low Stock Alerts' },
-                      { key: 'notify_new_repair', label: 'New Watch Repair Ticket Logged' },
-                      { key: 'notify_repair_ready', label: 'Watch Ready for Customer Pickup' },
-                      { key: 'notify_daily_summary', label: 'End-of-Day Sales Summary' },
+                      { key: 'notify_low_stock', label: t('lowStock', 'Low Stock Alerts') },
+                      { key: 'notify_new_repair', label: t('newRepairTicket', 'New Watch Repair Ticket Logged') },
+                      { key: 'notify_repair_ready', label: t('readyForCollection', 'Watch Ready for Customer Pickup') },
+                      { key: 'notify_daily_summary', label: t('monthlySalesSummary', 'End-of-Day Sales Summary') },
                     ].map((item) => (
                       <div key={item.key} className="flex items-center justify-between p-3.5 bg-[#12110F] border border-[#2A261F] rounded-xl">
                         <span className="text-xs text-[#F3EFE6] font-medium">{item.label}</span>
@@ -707,10 +832,10 @@ export default function SettingsPage() {
 
                   <div className="flex gap-3 pt-2">
                     <Button onClick={handleBusinessSettingsSave} loading={saving} icon={<Save className="w-4 h-4" />} className="shadow-gold">
-                      Save Channels
+                      {t('saveChannels', 'Save Channels')}
                     </Button>
                     <Button variant="secondary" onClick={handlePreferencesSave} loading={saving}>
-                      Save Triggers
+                      {t('saveTriggers', 'Save Triggers')}
                     </Button>
                   </div>
                 </div>
@@ -720,36 +845,36 @@ export default function SettingsPage() {
               {activeTab === 'security' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Security & Password</h2>
-                    <p className="text-xs text-[#8D8980] mt-0.5">Change your login password</p>
+                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">{t('securityPasswordTitle', 'Security & Password')}</h2>
+                    <p className="text-xs text-[#8D8980] mt-0.5">{t('securityPasswordSubtitle', 'Change your login password')}</p>
                   </div>
                   
                   <div className="p-4 bg-amber-950/20 border border-amber-800/40 rounded-xl text-xs text-amber-300">
-                    <p>Enter your current password followed by your new password.</p>
+                    <p>{t('enterCurrentPasswordDesc', 'Enter your current password followed by your new password.')}</p>
                   </div>
                   
                   <div className="space-y-4 max-w-md">
                     <Input 
-                      label="Current Password" 
+                      label={t('currentPassword', 'Current Password')} 
                       type="password"
                       placeholder="••••••••••••"
                       value={passwordForm.current_password}
                       onChange={(e) => setPasswordForm(prev => ({...prev, current_password: e.target.value}))}
                     />
                     <Input 
-                      label="New Password" 
+                      label={t('newPassword', 'New Password')} 
                       type="password"
                       placeholder="••••••••••••"
                       value={passwordForm.new_password}
                       onChange={(e) => setPasswordForm(prev => ({...prev, new_password: e.target.value}))}
                     />
                     <Input 
-                      label="Confirm New Password" 
+                      label={t('confirmPassword', 'Confirm New Password')} 
                       type="password"
                       placeholder="••••••••••••"
                       value={passwordForm.confirm_password}
                       onChange={(e) => setPasswordForm(prev => ({...prev, confirm_password: e.target.value}))}
-                      error={passwordForm.confirm_password && passwordForm.new_password !== passwordForm.confirm_password ? 'Passwords do not match' : undefined}
+                      error={passwordForm.confirm_password && passwordForm.new_password !== passwordForm.confirm_password ? t('passwordsDoNotMatch', 'Passwords do not match') : undefined}
                     />
                   </div>
 
@@ -760,7 +885,7 @@ export default function SettingsPage() {
                     icon={<Shield className="w-4 h-4" />}
                     className="shadow-gold"
                   >
-                    Change Password
+                    {t('changePassword', 'Change Password')}
                   </Button>
                 </div>
               )}
@@ -769,35 +894,35 @@ export default function SettingsPage() {
               {activeTab === 'backup' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">Database Backups</h2>
-                    <p className="text-xs text-[#8D8980] mt-0.5">Create database backups for safe data storage and recovery</p>
+                    <h2 className="text-lg font-serif font-bold text-[#F3EFE6]">{t('databaseBackupsTitle', 'Database Backups')}</h2>
+                    <p className="text-xs text-[#8D8980] mt-0.5">{t('databaseBackupsSubtitle', 'Create database backups for safe data storage and recovery')}</p>
                   </div>
                   
                   <div className="p-4 bg-sky-950/20 border border-sky-800/40 rounded-xl flex items-start gap-3 text-xs text-sky-300">
                     <Clock className="w-4 h-4 text-sky-400 mt-0.5 flex-shrink-0" />
                     <div>
-                      <p className="font-semibold text-sky-200">Automated Daily Backups Active</p>
-                      <p className="text-[#8D8980] mt-0.5">Database backups are created daily at 02:00 AM IST.</p>
+                      <p className="font-semibold text-sky-200">{t('autoDailyBackupsActive', 'Automated Daily Backups Active')}</p>
+                      <p className="text-[#8D8980] mt-0.5">{t('autoDailyBackupsDesc', 'Database backups are created daily at 02:00 AM IST.')}</p>
                     </div>
                   </div>
 
                   <div className="flex gap-3">
                     <Button onClick={handleBackup} loading={backupLoading} icon={<Database className="w-4 h-4" />} className="shadow-gold">
-                      Create Backup Now
+                      {t('createBackupNow', 'Create Backup Now')}
                     </Button>
                     {backups.length > 0 && (
                       <Button variant="secondary" onClick={() => handleDownloadBackup(backups[0].filename)} icon={<Download className="w-4 h-4 text-[#C9A45C]" />}>
-                        Download Most Recent
+                        {t('downloadMostRecent', 'Download Most Recent')}
                       </Button>
                     )}
                   </div>
 
                   <div className="pt-4 border-t border-[#2A261F]">
-                    <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-3">Stored Backups ({backups.length})</h3>
+                    <h3 className="font-serif font-bold text-base text-[#F3EFE6] mb-3">{t('storedBackups', 'Stored Backups')} ({backups.length})</h3>
                     {backups.length === 0 ? (
                       <div className="text-center py-8 text-[#8D8980] bg-[#12110F] border border-[#2A261F] rounded-xl">
                         <Database className="w-8 h-8 mx-auto mb-2 opacity-30 text-[#C9A45C]" />
-                        <p className="text-xs">No backups created yet.</p>
+                        <p className="text-xs">{t('noBackupsCreated', 'No backups created yet.')}</p>
                       </div>
                     ) : (
                       <div className="space-y-2">
@@ -818,12 +943,12 @@ export default function SettingsPage() {
 
                             <div className="flex items-center gap-2">
                               <Button variant="secondary" size="sm" onClick={() => handleDownloadBackup(backup.filename)} icon={<Download className="w-3.5 h-3.5" />}>
-                                Download
+                                {t('download', 'Download')}
                               </Button>
                               <button 
                                 onClick={() => handleDeleteBackup(backup.filename)}
                                 className="p-2 text-rose-400 hover:bg-rose-950/40 rounded-lg transition"
-                                title="Delete Backup"
+                                title={t('delete', 'Delete Backup')}
                               >
                                 <X className="w-3.5 h-3.5" />
                               </button>

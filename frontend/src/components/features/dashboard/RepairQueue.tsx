@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Wrench, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { api } from '@/services/api'
+import { usePreferences } from '@/context/PreferencesContext'
 import clsx from 'clsx'
 
 interface Repair {
@@ -18,6 +19,7 @@ interface Repair {
 }
 
 export default function RepairQueue() {
+  const { t } = usePreferences()
   const [repairs, setRepairs] = useState<Repair[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -39,15 +41,15 @@ export default function RepairQueue() {
   const getStatusBadge = (status: string) => {
     const s = status?.toLowerCase()
     if (s === 'ready' || s === 'ready_for_pickup') {
-      return { label: 'Ready', pill: 'bg-emerald-950/70 text-emerald-300 border-emerald-800/40' }
+      return { label: t('statusReady', 'Ready'), pill: 'bg-emerald-950/70 text-emerald-300 border-emerald-800/40' }
     }
     if (s === 'in_repair' || s === 'repairing') {
-      return { label: 'In Repair', pill: 'bg-amber-950/70 text-amber-300 border-amber-800/40' }
+      return { label: t('statusInRepair', 'In Repair'), pill: 'bg-amber-950/70 text-amber-300 border-amber-800/40' }
     }
     if (s === 'delivered') {
-      return { label: 'Delivered', pill: 'bg-sky-950/70 text-sky-300 border-sky-800/40' }
+      return { label: t('statusDelivered', 'Delivered'), pill: 'bg-sky-950/70 text-sky-300 border-sky-800/40' }
     }
-    return { label: 'Received', pill: 'bg-[#1F1E1A] text-[#8D8980] border-[#2A261F]' }
+    return { label: t('statusReceived', 'Received'), pill: 'bg-[#1F1E1A] text-[#8D8980] border-[#2A261F]' }
   }
 
   return (
@@ -59,12 +61,12 @@ export default function RepairQueue() {
               <Wrench className="w-4 h-4" />
             </div>
             <div>
-              <h3 className="font-serif font-bold text-sm sm:text-base text-[#F3EFE6]">Watch Repairs</h3>
-              <p className="text-[11px] font-mono text-[#8D8980]">Active watch repairs</p>
+              <h3 className="font-serif font-bold text-sm sm:text-base text-[#F3EFE6]">{t('watchRepairsTitle', 'Watch Repairs')}</h3>
+              <p className="text-[11px] font-mono text-[#8D8980]">{t('activeWatchRepairs', 'Active watch repairs')}</p>
             </div>
           </div>
           <Link href="/repairs" className="text-xs font-semibold text-[#C9A45C] hover:text-[#E8D5A7] flex items-center gap-1 transition-colors">
-            <span>View all repairs</span>
+            <span>{t('viewAllRepairs', 'View all repairs')}</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </Link>
         </div>
@@ -86,7 +88,7 @@ export default function RepairQueue() {
           </div>
         ) : repairs.length === 0 ? (
           <div className="p-6 text-center text-[#8D8980]">
-            <p className="text-xs">No pending watch repairs</p>
+            <p className="text-xs">{t('noPendingRepairs', 'No pending watch repairs')}</p>
           </div>
         ) : (
           repairs.slice(0, 5).map((repair, index) => {
@@ -107,7 +109,7 @@ export default function RepairQueue() {
                     <span className="text-[10px] text-[#8D8980] truncate">• {repair.item}</span>
                   </div>
                   <p className="text-xs text-[#8D8980] truncate mt-0.5">
-                    {repair.customer || 'Walk-in'}
+                    {repair.customer || t('walkInCustomer', 'Walk-in Customer')}
                   </p>
                 </div>
                 <span className={clsx('text-[10px] font-mono px-2 py-0.5 rounded-full border font-semibold flex-shrink-0', badge.pill)}>

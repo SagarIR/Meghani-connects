@@ -15,6 +15,7 @@ import {
 } from 'recharts'
 import { api } from '@/services/api'
 import { useAuth } from '@/context/AuthContext'
+import { usePreferences } from '@/context/PreferencesContext'
 import Button from '@/components/ui/Button'
 import Badge from '@/components/ui/Badge'
 import Modal from '@/components/ui/Modal'
@@ -27,6 +28,7 @@ const LUXURY_PALETTE = ['#C9A45C', '#10b981', '#E8D5A7', '#38bdf8', '#fbbf24', '
 
 export default function AnalyticsSuitePage() {
   const { user } = useAuth()
+  const { t } = usePreferences()
   const isManager = user?.role === 'admin' || user?.role === 'manager'
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('forecasting')
@@ -239,10 +241,10 @@ export default function AnalyticsSuitePage() {
             </span>
           </div>
           <h1 className="font-serif text-2xl sm:text-3xl font-bold text-[#F3EFE6] tracking-wide">
-            Store Analytics & AI Insights
+            {t('aiIntelligence', 'Store Analytics & AI Insights')}
           </h1>
           <p className="text-xs sm:text-sm text-[#8D8980] mt-1 max-w-2xl font-sans">
-            Sales forecasts, restock recommendations, ABC inventory classification, unusual activity alerts, and AI store assistant.
+            {t('stockSalesInsights', 'Sales forecasts, restock recommendations, ABC inventory classification, unusual activity alerts, and AI store assistant.')}
           </p>
         </div>
 

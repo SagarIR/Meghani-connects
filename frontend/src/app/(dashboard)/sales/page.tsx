@@ -15,6 +15,7 @@ import BarcodeScanner from '@/components/features/BarcodeScanner'
 import Invoice from '@/components/features/Invoice'
 import toast from 'react-hot-toast'
 import clsx from 'clsx'
+import { usePreferences } from '@/context/PreferencesContext'
 
 const defaultCategories = [
   { value: '', label: 'All Collections' },
@@ -35,7 +36,29 @@ const defaultCategories = [
 ]
 
 export default function POSPage() {
+  const { autoPrintReceipt, defaultPaymentMode, t } = usePreferences()
   const [products, setProducts] = useState<Product[]>([])
+
+  const getCategoryLabel = (val: string, label: string) => {
+    switch (val) {
+      case '': return t('allCollections', label)
+      case 'analog': return t('analogWatches', label)
+      case 'digital': return t('digitalWatches', label)
+      case 'smart': return t('smartwatches', label)
+      case 'luxury': return t('luxuryWatches', label)
+      case 'sports': return t('sportsWatches', label)
+      case 'kids': return t('kidsWatches', label)
+      case 'wall': return t('wallClocks', label)
+      case 'table-clocks': return t('tableClocks', label)
+      case 'alarm-clocks': return t('alarmClocks', label)
+      case 'pocket-watches': return t('pocketWatches', label)
+      case 'accessory': return t('accessories', label)
+      case 'spare-parts': return t('spareParts', label)
+      case 'straps': return t('straps', label)
+      case 'gift-sets': return t('giftSets', label)
+      default: return label
+    }
+  }
   const [initialProducts, setInitialProducts] = useState<Product[]>([])
   const [categoriesList, setCategoriesList] = useState<{ value: string; label: string }[]>(defaultCategories)
   const [selectedCategory, setSelectedCategory] = useState('')
@@ -60,7 +83,7 @@ export default function POSPage() {
   })
   const [discount, setDiscount] = useState(0)
   const [showPaymentModal, setShowPaymentModal] = useState(false)
-  const [paymentMode, setPaymentMode] = useState<'cash' | 'upi' | 'card' | 'mixed'>('cash')
+  const [paymentMode, setPaymentMode] = useState<'cash' | 'upi' | 'card' | 'mixed'>(defaultPaymentMode || 'cash')
   const [splitPayments, setSplitPayments] = useState<{ cash: number; upi: number; card: number }>({
     cash: 0,
     upi: 0,
@@ -392,6 +415,12 @@ export default function POSPage() {
       setInvoiceData(invoice)
       setShowInvoice(true)
       toast.success(`Sale completed! Invoice: ${response.data.invoice_number}`, { duration: 3500 })
+
+      if (autoPrintReceipt) {
+        setTimeout(() => {
+          window.print()
+        }, 750)
+      }
       
       setCart([])
       setCustomer(null)
@@ -427,17 +456,17 @@ export default function POSPage() {
         : initialProducts)
 
   return (
-    <div className="h-[calc(100vh-5.5rem)] lg:h-[calc(100vh-7rem)] flex flex-col lg:flex-row gap-4 lg:gap-6 text-[#F3EFE6]">
+    <div className="w-full max-w-full min-w-0 flex flex-col lg:flex-row gap-4 lg:gap-5 text-[#F3EFE6] h-auto lg:h-[calc(100vh-7.5rem)] xl:h-[calc(100vh-8rem)]">
       {/* Left Workspace: Search, Inventory Gallery & Quick Selection */}
-      <div className="flex-1 flex flex-col gap-3 lg:gap-4 min-h-0">
+      <div className="flex-1 min-w-0 flex flex-col gap-3 lg:gap-3.5 min-h-0 overflow-hidden">
         {/* Top Search & Barcode Wedge Bar */}
-        <div className="bg-[#171613] border border-[#2A261F] rounded-2xl p-3 sm:p-4 shadow-xl">
+        <div className="bg-[#171613] border border-[#2A261F] rounded-2xl p-3 sm:p-4 shadow-xl shrink-0">
           <div className="relative">
             <Search className="absolute left-3.5 sm:left-4 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-[#C9A45C]" />
             <input
               ref={searchInputRef}
               type="text"
-              placeholder="Search by watch name, brand, or scan barcode (Enter)..."
+              placeholder={t('posSearchPlaceholder', 'Search by watch name, brand, or scan barcode (Enter)...')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={async (e) => {
@@ -481,26 +510,26 @@ export default function POSPage() {
           </div>
 
           {/* Quick Filter Categories */}
-          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pt-3 scrollbar-hide">
+          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pt-3 scrollbar-hide w-full min-w-0">
             {categoriesList.map((cat) => (
               <button
                 key={cat.value}
                 onClick={() => setSelectedCategory(cat.value)}
                 className={clsx(
-                  'px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all border',
+                  'px-3 py-1 rounded-lg text-xs font-medium whitespace-nowrap transition-all border shrink-0',
                   selectedCategory === cat.value
                     ? 'bg-[#C9A45C] text-[#0B0B0A] font-bold border-[#C9A45C] shadow-sm shadow-[#C9A45C]/20'
                     : 'bg-[#12110F] text-[#8D8980] border-[#2A261F] hover:border-[#C9A45C]/40 hover:text-[#F3EFE6]'
                 )}
               >
-                {cat.label}
+                {getCategoryLabel(cat.value, cat.label)}
               </button>
             ))}
           </div>
         </div>
 
         {/* Customer Attachment Card */}
-        <div className="bg-[#171613] border border-[#2A261F] rounded-2xl p-3 sm:p-3.5 shadow-xl">
+        <div className="bg-[#171613] border border-[#2A261F] rounded-2xl p-3 sm:p-3.5 shadow-xl shrink-0">
           {customer ? (
             <div className="space-y-2.5">
               <div className="flex items-center justify-between gap-3">
@@ -519,7 +548,7 @@ export default function POSPage() {
                   </div>
                 </div>
                 <Button variant="ghost" size="sm" onClick={() => { setCustomer(null); setPointsToRedeem(0); }} className="flex-shrink-0">
-                  <X className="w-4 h-4 mr-1" /> Remove
+                  <X className="w-4 h-4 mr-1" /> {t('remove', 'Remove')}
                 </Button>
               </div>
 
@@ -529,19 +558,19 @@ export default function POSPage() {
                   <div className="flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-[#C9A45C]" />
                     <span className="text-xs text-[#F3EFE6]">
-                      Redeem Points ({customer.loyalty_points} pts = ₹{(customer.loyalty_points * 0.5).toFixed(0)})
+                      {t('redeemPointsLabel', 'Redeem Points')} ({customer.loyalty_points} {t('pts', 'pts')} = ₹{(customer.loyalty_points * 0.5).toFixed(0)})
                     </span>
                   </div>
                   {pointsToRedeem > 0 ? (
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-mono font-bold text-emerald-400">
-                        -{formatCurrency(loyaltyDiscount)} ({pointsToRedeem} pts)
+                        -{formatCurrency(loyaltyDiscount)} ({pointsToRedeem} {t('pts', 'pts')})
                       </span>
                       <button
                         onClick={() => setPointsToRedeem(0)}
                         className="text-[10px] px-2 py-0.5 rounded bg-[#1F1E1A] hover:bg-[#2A261F] text-[#8D8980] hover:text-[#F3EFE6] border border-[#2A261F]"
                       >
-                        Cancel
+                        {t('cancel', 'Cancel')}
                       </button>
                     </div>
                   ) : (
@@ -558,7 +587,7 @@ export default function POSPage() {
                       }}
                       className="text-xs px-2.5 py-1 rounded-lg bg-[#C9A45C] hover:bg-[#E8D5A7] text-[#0B0B0A] font-semibold transition-colors"
                     >
-                      Redeem Points
+                      {t('redeemPoints', 'Redeem Points')}
                     </button>
                   )}
                 </div>
@@ -574,8 +603,8 @@ export default function POSPage() {
                   <User className="w-4 h-4" />
                 </div>
                 <div className="text-left">
-                  <p className="text-xs sm:text-sm font-semibold text-[#F3EFE6]">Select Customer</p>
-                  <p className="text-[11px] text-[#8D8980]">Earn loyalty points and link invoice to warranty</p>
+                  <p className="text-xs sm:text-sm font-semibold text-[#F3EFE6]">{t('selectCustomer', 'Select Customer')}</p>
+                  <p className="text-[11px] text-[#8D8980]">{t('selectCustomerDesc', 'Earn loyalty points and link invoice to warranty')}</p>
                 </div>
               </div>
               <ChevronRight className="w-4 h-4 text-[#8D8980] group-hover:text-[#C9A45C] group-hover:translate-x-0.5 transition-all" />
@@ -587,21 +616,21 @@ export default function POSPage() {
         <div className="flex-1 overflow-y-auto bg-[#171613] border border-[#2A261F] rounded-2xl p-3 sm:p-4 shadow-xl min-h-0">
           <div className="flex items-center justify-between mb-3 px-1">
             <span className="text-xs font-semibold uppercase tracking-wider text-[#8D8980]">
-              {search.length >= 2 ? `Search Results (${products.length})` : 'Watch Catalog'}
+              {search.length >= 2 ? `${t('searchResults', 'Search Results')} (${products.length})` : t('watchCatalog', 'Watch Catalog')}
             </span>
             <span className="text-[11px] font-mono text-[#8D8980]/70">
-              Scanner ready
+              {t('scannerReady', 'Scanner ready')}
             </span>
           </div>
 
           {displayedProducts.length === 0 ? (
             <div className="h-64 flex flex-col items-center justify-center text-center p-6 text-[#8D8980]">
               <Barcode className="w-12 h-12 text-[#2A261F] mb-3" />
-              <p className="text-sm font-medium text-[#F3EFE6]">No matching watches found</p>
-              <p className="text-xs mt-1">Try another brand name or scan with the barcode scanner</p>
+              <p className="text-sm font-medium text-[#F3EFE6]">{t('noWatchesFound', 'No matching watches found')}</p>
+              <p className="text-xs mt-1">{t('noWatchesFoundDesc', 'Try another brand name or scan with the barcode scanner')}</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2.5 sm:gap-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-2.5 sm:gap-3">
               {displayedProducts.map((product) => {
                 const inCart = cart.find(c => c.product.id === product.id)
                 const isOutOfStock = product.stock <= 0
@@ -612,7 +641,7 @@ export default function POSPage() {
                     onClick={() => !isOutOfStock && addToCart(product)}
                     disabled={isOutOfStock}
                     className={clsx(
-                      'relative text-left p-3 rounded-xl border transition-all duration-200 flex flex-col justify-between group',
+                      'relative text-left p-3 rounded-xl border transition-all duration-200 flex flex-col justify-between group min-w-0',
                       isOutOfStock
                         ? 'opacity-40 bg-[#12110F] border-[#2A261F] cursor-not-allowed'
                         : inCart
@@ -620,43 +649,43 @@ export default function POSPage() {
                           : 'bg-[#12110F] border-[#2A261F] hover:border-[#C9A45C]/50 hover:bg-[#1A1916]'
                     )}
                   >
-                    <div>
+                    <div className="min-w-0 w-full">
                       <div className="flex items-start justify-between gap-2 mb-1.5">
-                        <span className="text-[10px] font-mono font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#1F1E1A] text-[#8D8980] border border-[#2A261F]">
+                        <span className="text-[10px] font-mono font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded bg-[#1F1E1A] text-[#8D8980] border border-[#2A261F] truncate max-w-[120px]">
                           {product.brand || 'Meghani'}
                         </span>
                         <span className={clsx(
-                          'text-[10px] font-mono px-1.5 py-0.5 rounded-full font-medium',
+                          'text-[10px] font-mono px-1.5 py-0.5 rounded-full font-medium shrink-0',
                           product.stock > 3 
                             ? 'bg-emerald-950/60 text-emerald-300 border border-emerald-800/40' 
                             : product.stock > 0 
                               ? 'bg-amber-950/60 text-amber-300 border border-amber-800/40'
                               : 'bg-red-950/60 text-red-300 border border-red-800/40'
                         )}>
-                          {product.stock > 0 ? `Stock: ${product.stock}` : 'Sold Out'}
+                          {product.stock > 0 ? `${t('stockLeft', 'Stock:')} ${product.stock}` : t('soldOut', 'Sold Out')}
                         </span>
                       </div>
                       <p className="font-serif font-bold text-sm text-[#F3EFE6] line-clamp-1 group-hover:text-[#C9A45C] transition-colors">
                         {product.name}
                       </p>
                       {product.barcode && (
-                        <p className="text-[10px] font-mono text-[#8D8980]/80 mt-0.5">
+                        <p className="text-[10px] font-mono text-[#8D8980]/80 mt-0.5 truncate">
                           {product.barcode}
                         </p>
                       )}
                     </div>
 
-                    <div className="flex items-baseline justify-between pt-2.5 mt-2 border-t border-[#2A261F]/60">
+                    <div className="flex items-baseline justify-between pt-2.5 mt-2 border-t border-[#2A261F]/60 w-full">
                       <span className="font-mono text-sm sm:text-base font-bold text-[#C9A45C]">
                         {formatCurrency(product.selling_price)}
                       </span>
                       {inCart ? (
-                        <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 px-2 py-0.5 rounded-full">
-                          In Cart: {inCart.quantity}
+                        <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/50 px-2 py-0.5 rounded-full shrink-0">
+                          {t('inCartLabel', 'In Cart:')} {inCart.quantity}
                         </span>
                       ) : (
-                        <span className="text-xs text-[#8D8980] group-hover:text-[#F3EFE6] flex items-center gap-1">
-                          <Plus className="w-3.5 h-3.5 text-[#C9A45C]" /> Add
+                        <span className="text-xs text-[#8D8980] group-hover:text-[#F3EFE6] flex items-center gap-1 shrink-0">
+                          <Plus className="w-3.5 h-3.5 text-[#C9A45C]" /> {t('add', '+ Add')}
                         </span>
                       )}
                     </div>
@@ -669,16 +698,16 @@ export default function POSPage() {
       </div>
 
       {/* Right Workspace: Register Cart & Live Tender (Desktop) */}
-      <div className="hidden lg:flex w-[390px] xl:w-[430px] bg-[#171613] border border-[#2A261F] rounded-2xl shadow-2xl flex-col">
+      <div className="hidden lg:flex w-[340px] xl:w-[380px] shrink-0 bg-[#171613] border border-[#2A261F] rounded-2xl shadow-2xl flex-col min-h-0 overflow-hidden">
         {/* Cart Header */}
-        <div className="p-4 border-b border-[#2A261F] bg-[#12110F]/70 flex items-center justify-between">
+        <div className="p-4 border-b border-[#2A261F] bg-[#12110F]/70 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-lg bg-[#1F1E1A] border border-[#C9A45C]/40 flex items-center justify-center text-[#C9A45C]">
               <Receipt className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="font-serif font-bold text-base text-[#F3EFE6]">Current Sale</h2>
-              <p className="text-[11px] font-mono text-[#8D8980]">{cart.length} item(s) in cart</p>
+              <h2 className="font-serif font-bold text-base text-[#F3EFE6]">{t('currentSale', 'Current Sale')}</h2>
+              <p className="text-[11px] font-mono text-[#8D8980]">{cart.length} {t('itemsInCart', 'item(s) in cart')}</p>
             </div>
           </div>
           {cart.length > 0 && (
@@ -686,18 +715,18 @@ export default function POSPage() {
               onClick={clearCart} 
               className="text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30 px-2 py-1 rounded-lg border border-transparent hover:border-red-800/40 transition-colors flex items-center gap-1"
             >
-              <Trash2 className="w-3.5 h-3.5" /> Clear
+              <Trash2 className="w-3.5 h-3.5" /> {t('clear', 'Clear')}
             </button>
           )}
         </div>
 
         {/* Cart Line Items */}
-        <div className="flex-1 overflow-y-auto p-3.5 space-y-2">
+        <div className="flex-1 overflow-y-auto p-3.5 space-y-2 min-h-0">
           {cart.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center p-6 text-[#8D8980]">
               <ShoppingCart className="w-10 h-10 text-[#2A261F] mb-3" />
-              <p className="text-sm font-semibold text-[#F3EFE6]">Cart is Empty</p>
-              <p className="text-xs text-[#8D8980] mt-1">Scan a barcode or select a watch to start sale</p>
+              <p className="text-sm font-semibold text-[#F3EFE6]">{t('cartEmpty', 'Cart is Empty')}</p>
+              <p className="text-xs text-[#8D8980] mt-1">{t('cartEmptyDesc', 'Scan a barcode or select a watch to start sale')}</p>
             </div>
           ) : (
             cart.map((item) => (
@@ -711,13 +740,13 @@ export default function POSPage() {
                       {item.product.name}
                     </p>
                     <p className="text-xs font-mono text-[#8D8980]">
-                      {formatCurrency(item.unit_price)} each
+                      {formatCurrency(item.unit_price)} {t('each', 'each')}
                     </p>
                   </div>
                   <button
                     onClick={() => removeFromCart(item.product.id)}
                     className="p-1 text-[#8D8980] hover:text-red-400 rounded-lg transition-colors flex-shrink-0"
-                    title="Remove item"
+                    title={t('remove', 'Remove item')}
                   >
                     <X className="w-4 h-4" />
                   </button>
@@ -751,14 +780,14 @@ export default function POSPage() {
         </div>
 
         {/* Cart Totals & Checkout Trigger */}
-        <div className="p-4 border-t border-[#2A261F] bg-[#12110F]/90 space-y-3">
+        <div className="p-4 border-t border-[#2A261F] bg-[#12110F]/90 space-y-3 shrink-0">
           <div className="space-y-2 text-xs">
             <div className="flex justify-between text-[#8D8980]">
-              <span>Subtotal</span>
+              <span>{t('subtotal', 'Subtotal')}</span>
               <span className="font-mono text-[#F3EFE6]">{formatCurrency(subtotal)}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-[#8D8980]">Discount</span>
+              <span className="text-[#8D8980]">{t('discount', 'Discount')}</span>
               <div className="relative">
                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#8D8980] text-xs font-semibold">₹</span>
                 <input
@@ -774,13 +803,13 @@ export default function POSPage() {
             {loyaltyDiscount > 0 && (
               <div className="flex justify-between text-emerald-400 font-medium">
                 <span className="flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-[#C9A45C]" /> Loyalty Points Discount ({pointsToRedeem} pts)
+                  <Sparkles className="w-3 h-3 text-[#C9A45C]" /> {t('loyaltyPointsLabel', 'Loyalty Points Discount')} ({pointsToRedeem} {t('pts', 'pts')})
                 </span>
                 <span className="font-mono font-semibold">-{formatCurrency(loyaltyDiscount)}</span>
               </div>
             )}
             <div className="flex justify-between items-baseline pt-2.5 border-t border-[#2A261F]">
-              <span className="font-serif text-sm font-semibold text-[#F3EFE6]">Total Amount</span>
+              <span className="font-serif text-sm font-semibold text-[#F3EFE6]">{t('totalAmount', 'Total Amount')}</span>
               <span className="font-serif text-2xl font-bold text-[#C9A45C] tracking-tight">
                 {formatCurrency(total)}
               </span>
@@ -793,10 +822,15 @@ export default function POSPage() {
             size="lg"
             disabled={cart.length === 0}
             onClick={() => setShowPaymentModal(true)}
-            className="py-3.5"
+            className={clsx(
+              "py-3.5 font-bold text-sm tracking-wide transition-all",
+              cart.length > 0 ? "shadow-gold hover:brightness-105" : "opacity-40 cursor-not-allowed bg-[#1F1E1A] text-[#8D8980] border-[#2A261F]"
+            )}
           >
-            <CreditCard className="w-4 h-4 mr-1.5" />
-            Proceed to Payment (F4)
+            <CreditCard className="w-4 h-4 mr-1.5 shrink-0" />
+            <span className="whitespace-nowrap">
+              {cart.length === 0 ? t('addItemsToPay', 'Add Items to Pay') : t('proceedToPayment', 'Proceed to Payment (F4)')}
+            </span>
           </Button>
         </div>
       </div>
@@ -812,7 +846,7 @@ export default function POSPage() {
               <div className="w-8 h-8 rounded-lg bg-[#0B0B0A]/15 flex items-center justify-center">
                 <ShoppingCart className="w-4 h-4" />
               </div>
-              <span className="text-sm">{cart.length} item(s) in cart</span>
+              <span className="text-sm">{cart.length} {t('itemsInCart', 'item(s) in cart')}</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-base font-serif font-extrabold">{formatCurrency(total)}</span>
@@ -843,11 +877,11 @@ export default function POSPage() {
               <div className="p-4 border-b border-[#2A261F] flex items-center justify-between bg-[#12110F]">
                 <div className="flex items-center gap-2">
                   <Receipt className="w-4 h-4 text-[#C9A45C]" />
-                  <span className="font-serif font-bold text-base">Cart Review ({cart.length})</span>
+                  <span className="font-serif font-bold text-base">{t('cartReview', 'Cart Review')} ({cart.length})</span>
                 </div>
                 <div className="flex items-center gap-2">
                   {cart.length > 0 && (
-                    <button onClick={clearCart} className="text-xs text-red-400 font-medium">Clear</button>
+                    <button onClick={clearCart} className="text-xs text-red-400 font-medium">{t('clear', 'Clear')}</button>
                   )}
                   <button onClick={() => setShowMobileCart(false)} className="p-1.5 text-[#8D8980]">
                     <X className="w-5 h-5" />
@@ -861,7 +895,7 @@ export default function POSPage() {
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <p className="font-bold text-sm text-[#F3EFE6]">{item.product.name}</p>
-                        <p className="text-xs font-mono text-[#8D8980]">{formatCurrency(item.unit_price)} each</p>
+                        <p className="text-xs font-mono text-[#8D8980]">{formatCurrency(item.unit_price)} {t('each', 'each')}</p>
                       </div>
                       <button onClick={() => removeFromCart(item.product.id)} className="p-1 text-[#8D8980]">
                         <X className="w-4 h-4" />
@@ -887,7 +921,7 @@ export default function POSPage() {
 
               <div className="p-4 border-t border-[#2A261F] bg-[#12110F] space-y-3">
                 <div className="flex justify-between items-baseline">
-                  <span className="text-sm font-semibold">Total Amount</span>
+                  <span className="text-sm font-semibold">{t('totalAmount', 'Total Amount')}</span>
                   <span className="text-xl font-bold font-serif text-[#C9A45C]">{formatCurrency(total)}</span>
                 </div>
                 <Button
@@ -899,7 +933,7 @@ export default function POSPage() {
                     setShowPaymentModal(true)
                   }}
                 >
-                  Pay Now
+                  {t('payNow', 'Pay Now')}
                 </Button>
               </div>
             </motion.div>
@@ -914,8 +948,8 @@ export default function POSPage() {
           setShowCustomerSearch(false)
           setIsRegisteringCustomer(false)
         }}
-        title={isRegisteringCustomer ? "Add New Customer" : "Select Customer"}
-        description={isRegisteringCustomer ? "Enter customer contact details to add immediately" : "Search customer by name or phone number"}
+        title={isRegisteringCustomer ? t('addNewCustomer', 'Add New Customer') : t('selectCustomer', 'Select Customer')}
+        description={isRegisteringCustomer ? t('addNewCustomerSubtitle', 'Enter customer contact details to add immediately') : t('searchCustomerSubtitle', 'Search customer by name or phone number')}
       >
         <div className="space-y-4">
           <div className="flex items-center gap-2 border-b border-[#2A261F] pb-2">
@@ -927,7 +961,7 @@ export default function POSPage() {
                 !isRegisteringCustomer ? "bg-[#C9A45C] text-[#0B0B0A]" : "text-[#8D8980] hover:text-[#F3EFE6]"
               )}
             >
-              Search Customer
+              {t('searchCustomer', 'Search Customer')}
             </button>
             <button
               type="button"
@@ -946,7 +980,7 @@ export default function POSPage() {
                 isRegisteringCustomer ? "bg-[#C9A45C] text-[#0B0B0A]" : "text-[#8D8980] hover:text-[#F3EFE6]"
               )}
             >
-              <Plus className="w-3.5 h-3.5" /> Add Customer
+              <Plus className="w-3.5 h-3.5" /> {t('addCustomer', 'Add Customer')}
             </button>
           </div>
 
@@ -956,7 +990,7 @@ export default function POSPage() {
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#C9A45C]" />
                 <input
                   type="text"
-                  placeholder="Search by customer name or phone..."
+                  placeholder={t('searchCustomerPlaceholder', 'Search by customer name or phone...')}
                   value={customerSearch}
                   onChange={(e) => setCustomerSearch(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl text-sm text-[#F3EFE6] placeholder-[#8D8980] focus:border-[#C9A45C] outline-none"
@@ -981,14 +1015,14 @@ export default function POSPage() {
                       </div>
                     </div>
                     <span className="text-xs font-mono px-2 py-0.5 rounded-full bg-amber-950/60 border border-amber-800/40 text-amber-300">
-                      {c.loyalty_points} pts
+                      {c.loyalty_points} {t('pts', 'pts')}
                     </span>
                   </button>
                 ))}
                 {customerSearch.length >= 2 && customerResults.length === 0 && (
                   <div className="text-center py-6 text-[#8D8980] space-y-3">
                     <User className="w-8 h-8 mx-auto text-[#2A261F]" />
-                    <p className="text-sm">No customer found matching &ldquo;{customerSearch}&rdquo;</p>
+                    <p className="text-sm">{t('noCustomerFoundMatching', 'No customer found matching')} &ldquo;{customerSearch}&rdquo;</p>
                     <button
                       type="button"
                       onClick={() => {
@@ -1001,7 +1035,7 @@ export default function POSPage() {
                       }}
                       className="px-3 py-1.5 bg-[#C9A45C] text-[#0B0B0A] text-xs font-bold rounded-lg hover:bg-[#E8D5A7] transition-colors"
                     >
-                      + Add New Customer
+                      + {t('addNewCustomer', 'Add New Customer')}
                     </button>
                   </div>
                 )}
@@ -1010,7 +1044,7 @@ export default function POSPage() {
           ) : (
             <form onSubmit={handleCreateCustomer} className="space-y-3">
               <div>
-                <label className="text-xs font-semibold text-[#8D8980] block mb-1">Full Name *</label>
+                <label className="text-xs font-semibold text-[#8D8980] block mb-1">{t('fullNameRequired', 'Full Name *')}</label>
                 <input
                   type="text"
                   required
@@ -1022,7 +1056,7 @@ export default function POSPage() {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-[#8D8980] block mb-1">Phone Number *</label>
+                <label className="text-xs font-semibold text-[#8D8980] block mb-1">{t('phoneRequired', 'Phone Number *')}</label>
                 <input
                   type="tel"
                   required
@@ -1033,7 +1067,7 @@ export default function POSPage() {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-[#8D8980] block mb-1">Email (Optional)</label>
+                <label className="text-xs font-semibold text-[#8D8980] block mb-1">{t('emailOptional', 'Email (Optional)')}</label>
                 <input
                   type="email"
                   placeholder="e.g. customer@example.com"
@@ -1049,7 +1083,7 @@ export default function POSPage() {
                   size="sm"
                   onClick={() => setIsRegisteringCustomer(false)}
                 >
-                  Cancel
+                  {t('cancel', 'Cancel')}
                 </Button>
                 <Button
                   type="submit"
@@ -1057,7 +1091,7 @@ export default function POSPage() {
                   size="sm"
                   disabled={isCreatingCustomer}
                 >
-                  {isCreatingCustomer ? 'Adding...' : 'Add & Select Customer'}
+                  {isCreatingCustomer ? t('addingCustomer', 'Adding...') : t('addAndSelectCustomer', 'Add & Select Customer')}
                 </Button>
               </div>
             </form>
@@ -1069,22 +1103,22 @@ export default function POSPage() {
       <Modal
         isOpen={showPaymentModal}
         onClose={() => setShowPaymentModal(false)}
-        title="Complete Payment"
-        description="Select payment method and confirm amounts"
+        title={t('completePayment', 'Complete Payment')}
+        description={t('confirmPaymentAmounts', 'Select payment method and confirm amounts')}
         size="lg"
       >
         <div className="space-y-5">
           {/* Payment Method Selector */}
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-[#8D8980] mb-2">
-              Payment Method
+              {t('paymentMethod', 'Payment Method')}
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {[
-                { mode: 'cash', label: 'Cash', icon: Wallet },
-                { mode: 'upi', label: 'UPI / QR', icon: Smartphone },
-                { mode: 'card', label: 'Credit / Debit', icon: CreditCard },
-                { mode: 'mixed', label: 'Split Payment', icon: Split },
+                { mode: 'cash', label: t('cashPayment', 'Cash'), icon: Wallet },
+                { mode: 'upi', label: t('upiPayment', 'UPI / QR'), icon: Smartphone },
+                { mode: 'card', label: t('cardPayment', 'Credit / Debit'), icon: CreditCard },
+                { mode: 'mixed', label: t('splitPayment', 'Split Payment'), icon: Split },
               ].map(({ mode, label, icon: Icon }) => (
                 <button
                   key={mode}
@@ -1121,21 +1155,21 @@ export default function POSPage() {
             <div className="bg-[#12110F] border border-[#2A261F] rounded-xl p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold text-[#C9A45C] uppercase tracking-wider flex items-center gap-1.5">
-                  <Split className="w-4 h-4" /> Split Payment Breakdown
+                  <Split className="w-4 h-4" /> {t('splitBreakdown', 'Split Payment Breakdown')}
                 </span>
                 <button
                   type="button"
                   onClick={() => setSplitPayments({ cash: 0, upi: 0, card: 0 })}
                   className="text-xs text-[#8D8980] hover:text-[#F3EFE6] underline"
                 >
-                  Clear Amounts
+                  {t('clearAmounts', 'Clear Amounts')}
                 </button>
               </div>
 
               {/* Cash Input */}
               <div className="flex items-center gap-2">
                 <div className="w-24 text-xs font-semibold text-[#8D8980] flex items-center gap-1.5">
-                  <Wallet className="w-3.5 h-3.5 text-emerald-400" /> Cash:
+                  <Wallet className="w-3.5 h-3.5 text-emerald-400" /> {t('cashPayment', 'Cash')}:
                 </div>
                 <div className="relative flex-1">
                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-[#8D8980]">₹</span>
@@ -1163,7 +1197,7 @@ export default function POSPage() {
               {/* UPI Input */}
               <div className="flex items-center gap-2">
                 <div className="w-24 text-xs font-semibold text-[#8D8980] flex items-center gap-1.5">
-                  <Smartphone className="w-3.5 h-3.5 text-sky-400" /> UPI / QR:
+                  <Smartphone className="w-3.5 h-3.5 text-sky-400" /> {t('upiPayment', 'UPI / QR')}:
                 </div>
                 <div className="relative flex-1">
                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-[#8D8980]">₹</span>
@@ -1191,7 +1225,7 @@ export default function POSPage() {
               {/* Card Input */}
               <div className="flex items-center gap-2">
                 <div className="w-24 text-xs font-semibold text-[#8D8980] flex items-center gap-1.5">
-                  <CreditCard className="w-3.5 h-3.5 text-amber-400" /> Card:
+                  <CreditCard className="w-3.5 h-3.5 text-amber-400" /> {t('cardPayment', 'Card')}:
                 </div>
                 <div className="relative flex-1">
                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-[#8D8980]">₹</span>
@@ -1219,19 +1253,19 @@ export default function POSPage() {
               {/* Tender Allocation Balance Indicator */}
               <div className="pt-2.5 border-t border-[#2A261F] flex items-center justify-between text-xs">
                 <span className="text-[#8D8980]">
-                  Allocated: <b className="text-[#F3EFE6] font-mono">{formatCurrency(splitTotal)}</b>
+                  {t('allocated', 'Allocated:')} <b className="text-[#F3EFE6] font-mono">{formatCurrency(splitTotal)}</b>
                 </span>
                 {remainingToPay === 0 ? (
                   <span className="text-emerald-300 font-bold flex items-center gap-1 bg-emerald-950/70 border border-emerald-800/50 px-2 py-0.5 rounded">
-                    <Check className="w-3 h-3 text-emerald-400" /> Exact Match (₹0.00 Remaining)
+                    <Check className="w-3 h-3 text-emerald-400" /> {t('exactMatchNotice', 'Exact Match (₹0.00 Remaining)')}
                   </span>
                 ) : remainingToPay > 0 ? (
                   <span className="text-amber-300 font-bold bg-amber-950/70 border border-amber-800/50 px-2 py-0.5 rounded">
-                    Remaining: {formatCurrency(remainingToPay)}
+                    {t('remainingNotice', 'Remaining:')} {formatCurrency(remainingToPay)}
                   </span>
                 ) : (
                   <span className="text-red-300 font-bold bg-red-950/70 border border-red-800/50 px-2 py-0.5 rounded">
-                    Overpaid: +{formatCurrency(Math.abs(remainingToPay))}
+                    {t('overpaidNotice', 'Overpaid:')} +{formatCurrency(Math.abs(remainingToPay))}
                   </span>
                 )}
               </div>
@@ -1241,31 +1275,31 @@ export default function POSPage() {
           {/* Tender Summary Box */}
           <div className="p-4 bg-[#12110F] border border-[#2A261F] rounded-xl space-y-2 text-xs">
             <div className="flex justify-between text-[#8D8980]">
-              <span>Watches ({cart.length})</span>
+              <span>{t('watchCatalog', 'Watches')} ({cart.length})</span>
               <span className="font-mono text-[#F3EFE6]">{formatCurrency(subtotal)}</span>
             </div>
             {discount > 0 && (
               <div className="flex justify-between text-emerald-400">
-                <span>Discount Applied</span>
+                <span>{t('discountApplied', 'Discount Applied')}</span>
                 <span className="font-mono">-{formatCurrency(discount)}</span>
               </div>
             )}
             {loyaltyDiscount > 0 && (
               <div className="flex justify-between text-emerald-400 font-medium">
                 <span className="flex items-center gap-1">
-                  <Sparkles className="w-3 h-3 text-[#C9A45C]" /> Loyalty Points ({pointsToRedeem} pts)
+                  <Sparkles className="w-3 h-3 text-[#C9A45C]" /> {t('loyaltyPointsLabel', 'Loyalty Points')} ({pointsToRedeem} {t('pts', 'pts')})
                 </span>
                 <span className="font-mono font-semibold">-{formatCurrency(loyaltyDiscount)}</span>
               </div>
             )}
             {customer && (
               <div className="flex justify-between text-[#8D8980]">
-                <span>Customer</span>
+                <span>{t('customer', 'Customer')}</span>
                 <span className="text-[#F3EFE6] font-semibold">{customer.name}</span>
               </div>
             )}
             <div className="pt-2.5 border-t border-[#2A261F] flex justify-between items-baseline">
-              <span className="text-sm font-semibold text-[#F3EFE6]">Total Amount</span>
+              <span className="text-sm font-semibold text-[#F3EFE6]">{t('totalAmount', 'Total Amount')}</span>
               <span className="font-serif text-2xl font-bold text-[#C9A45C]">{formatCurrency(total)}</span>
             </div>
           </div>
@@ -1280,16 +1314,16 @@ export default function POSPage() {
               disabled={paymentMode === 'mixed' && (remainingToPay !== 0 || Object.values(splitPayments).filter(v => Number(v) > 0).length < 2)}
             >
               <Check className="w-4 h-4 mr-1.5" />
-              Complete Sale
+              {t('completeSale', 'Complete Sale')}
             </Button>
             {paymentMode === 'mixed' && remainingToPay !== 0 && (
               <p className="text-[11px] text-center text-amber-300">
-                Split payment amounts must equal the total amount before completing the sale.
+                {t('splitWarningMatch', 'Split payment amounts must equal the total amount before completing the sale.')}
               </p>
             )}
             {paymentMode === 'mixed' && remainingToPay === 0 && Object.values(splitPayments).filter(v => Number(v) > 0).length < 2 && (
               <p className="text-[11px] text-center text-amber-300">
-                Please enter amounts for at least two payment methods.
+                {t('splitWarningTwo', 'Please enter amounts for at least two payment methods.')}
               </p>
             )}
           </div>

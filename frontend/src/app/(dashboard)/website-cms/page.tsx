@@ -9,6 +9,7 @@ import {
   Send, Sparkles
 } from 'lucide-react'
 import api from '@/services/api'
+import { usePreferences } from '@/context/PreferencesContext'
 import Button from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import Modal, { ConfirmModal } from '@/components/ui/Modal'
@@ -94,6 +95,7 @@ interface MilestoneItem {
 }
 
 export default function WebsiteCMSPage() {
+  const { t } = usePreferences()
   const [activeTab, setActiveTab] = useState<'enquiries' | 'brands' | 'categories' | 'offers' | 'gallery' | 'milestones'>('enquiries')
   const [loading, setLoading] = useState(false)
   const [search, setSearch] = useState('')
@@ -284,12 +286,12 @@ export default function WebsiteCMSPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Website CMS & Content</h1>
+              <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">{t('routeWebsiteCMSTitle', 'Website CMS & Content')}</h1>
               <span className="text-xs px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F] font-mono">
                 Storefront
               </span>
             </div>
-            <p className="text-xs sm:text-sm text-[#8D8980]">Manage brands, watch categories, offers, photo gallery, and website customer enquiries</p>
+            <p className="text-xs sm:text-sm text-[#8D8980]">{t('websiteCMS', 'Manage brands, watch categories, offers, photo gallery, and website customer enquiries')}</p>
           </div>
         </div>
 
@@ -299,7 +301,7 @@ export default function WebsiteCMSPage() {
             onClick={fetchData} 
             icon={<RefreshCw className={clsx('w-4 h-4 text-[#C9A45C]', loading && 'animate-spin')} />}
           >
-            Refresh
+            {t('reload', 'Refresh')}
           </Button>
           {activeTab !== 'enquiries' && (
             <Button

@@ -14,6 +14,7 @@ import {
 import { api } from '@/services/api'
 import { Product } from '@/types'
 import { useAuth } from '@/context/AuthContext'
+import { usePreferences } from '@/context/PreferencesContext'
 import Button from '@/components/ui/Button'
 import Badge, { StatusBadge } from '@/components/ui/Badge'
 import Input from '@/components/ui/Input'
@@ -79,6 +80,7 @@ const defaultCategories = [
 
 export default function ProductsPage() {
   const { user } = useAuth()
+  const { t } = usePreferences()
   const isManagement = user?.role === 'admin' || user?.role === 'manager'
 
   const [products, setProducts] = useState<Product[]>([])
@@ -442,12 +444,12 @@ export default function ProductsPage() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">Watch Catalog & Inventory</h1>
+                <h1 className="text-2xl font-serif font-bold text-[#F3EFE6] tracking-tight">{t('productsTitle', 'Watch Catalog & Inventory')}</h1>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F] font-mono">
-                  {totalItems} items
+                  {totalItems} {t('totalItemsLabel', 'items')}
                 </span>
               </div>
-              <p className="text-xs sm:text-sm text-[#8D8980]">Manage watches, clocks, accessories & stock inventory</p>
+              <p className="text-xs sm:text-sm text-[#8D8980]">{t('manageWatchesStock', 'Manage watches, clocks, accessories & stock inventory')}</p>
             </div>
           </div>
         </div>
@@ -464,14 +466,14 @@ export default function ProductsPage() {
             icon={<Upload className="w-4 h-4 text-[#C9A45C]" />}
             className="hidden sm:inline-flex"
           >
-            Import CSV
+            {t('importCSV', 'Import CSV')}
           </Button>
           <Button 
             onClick={openAddModal} 
             icon={<Plus className="w-4 h-4" />} 
             className="flex-1 sm:flex-none shadow-gold"
           >
-            <span>Add Watch</span>
+            <span>{t('addWatch', 'Add Watch')}</span>
           </Button>
         </div>
       </div>
@@ -484,7 +486,7 @@ export default function ProductsPage() {
             <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8D8980] group-focus-within:text-[#C9A45C] transition-colors" />
             <input
               type="text"
-              placeholder="Search by watch name, brand, model, or barcode..."
+              placeholder={t('searchProductsPlaceholder', 'Search by watch name, brand, model, or barcode...')}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="w-full pl-10 pr-4 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl 
@@ -504,7 +506,7 @@ export default function ProductsPage() {
                          text-[#F3EFE6] text-sm focus:border-[#C9A45C] focus:ring-1 focus:ring-[#C9A45C]
                          outline-none cursor-pointer"
               >
-                <option value="">All Categories</option>
+                <option value="">{t('allCategories', 'All Categories')}</option>
                 {categoriesList.map((cat) => (
                   <option key={cat.value} value={cat.value} className="bg-[#171613] text-[#F3EFE6]">{cat.label}</option>
                 ))}
@@ -741,23 +743,23 @@ export default function ProductsPage() {
               <thead className="bg-[#12110F] border-b border-[#2A261F]">
                 <tr>
                   <th className="px-5 py-3.5 text-left">
-                    <SortableHeader label="Watch & Brand" field="name" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                    <SortableHeader label={t('productDetails', 'Watch & Brand')} field="name" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
                   <th className="px-4 py-3.5 text-left">
-                    <SortableHeader label="Category" field="category" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                    <SortableHeader label={t('category', 'Category')} field="category" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
                   <th className="px-4 py-3.5 text-right">
-                    <SortableHeader label="Selling Price" field="selling_price" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                    <SortableHeader label={t('sellingPrice', 'Selling Price')} field="selling_price" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
                   <th className="px-4 py-3.5 text-right">
                     <span className="text-xs font-semibold text-[#8D8980] uppercase tracking-wider">
-                      {isManagement ? 'Cost / Profit' : 'Profit Access'}
+                      {isManagement ? `${t('costPrice', 'Cost')} / ${t('grossProfit', 'Profit')}` : t('confidential', 'Confidential')}
                     </span>
                   </th>
                   <th className="px-4 py-3.5 text-center">
-                    <SortableHeader label="Stock" field="stock" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
+                    <SortableHeader label={t('stock', 'Stock')} field="stock" currentSort={sortField} currentDirection={sortDirection} onSort={handleSort} />
                   </th>
-                  <th className="px-5 py-3.5 text-right text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Actions</th>
+                  <th className="px-5 py-3.5 text-right text-xs font-semibold text-[#8D8980] uppercase tracking-wider">{t('actions', 'Actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#2A261F]">
