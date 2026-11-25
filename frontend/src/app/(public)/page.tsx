@@ -28,7 +28,7 @@ export const metadata = {
     type: 'website',
     images: [
       {
-        url: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80',
+        url: 'https://images.pexels.com/photos/190819/pexels-photo-190819.jpeg?auto=compress&cs=tinysrgb&w=1200',
         width: 1200,
         height: 630,
         alt: 'Meghani Watch Co. Watch Showroom in Vadodara',
@@ -40,9 +40,12 @@ export const metadata = {
     title: 'Meghani Watch Co. — Watch Shop & Showroom in Vadodara',
     description:
       'Authorized watch retailer in Vadodara since 1984. Titan, Casio, Timex, Citizen, and more.',
-    images: ['https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80'],
+    images: ['https://images.pexels.com/photos/190819/pexels-photo-190819.jpeg?auto=compress&cs=tinysrgb&w=1200'],
   },
 };
+
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
 
 export default async function HomePage() {
   const [productsResult, brands, categories, storeInfo] = await Promise.all([
@@ -52,9 +55,24 @@ export default async function HomePage() {
     getStoreInfo()
   ]);
 
-  const featuredProducts = productsResult.results && productsResult.results.length > 0
-    ? productsResult.results
-    : SEED_PUBLIC_PRODUCTS.slice(0, 6);
+  let featuredProducts = productsResult.results || [];
+  // If featured flag had fewer than 6 items in DB, fetch general latest catalog items to fill 6 slots
+  if (featuredProducts.length < 6) {
+    try {
+      const moreProducts = await getPublicProducts({ pageSize: 6 });
+      if (moreProducts.results && moreProducts.results.length > 0) {
+        const existingIds = new Set(featuredProducts.map((p) => p.id));
+        const additional = moreProducts.results.filter((p) => !existingIds.has(p.id));
+        featuredProducts = [...featuredProducts, ...additional].slice(0, 6);
+      }
+    } catch {
+      // Keep existing
+    }
+  }
+
+  if (featuredProducts.length === 0) {
+    featuredProducts = SEED_PUBLIC_PRODUCTS.slice(0, 6);
+  }
 
   const generalWhatsAppUrl = buildWhatsAppEnquiryUrl();
 

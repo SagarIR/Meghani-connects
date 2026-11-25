@@ -15,7 +15,7 @@ export const metadata: Metadata = buildPageMetadata({
     'Titan watch photos',
     'Casio watch pictures Vadodara'
   ],
-  ogImage: 'https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=1200&q=80',
+  ogImage: 'https://images.pexels.com/photos/277319/pexels-photo-277319.jpeg?auto=compress&cs=tinysrgb&w=1200',
 });
 
 export default async function GalleryPage() {

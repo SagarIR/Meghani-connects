@@ -4,7 +4,7 @@ import { PublicProduct, BrandItem, CategoryItem } from '@/types/public';
 
 export const SITE_URL = 'https://meghaniwatch.com';
 export const SITE_NAME = 'Meghani Watch Co.';
-export const DEFAULT_OG_IMAGE = 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80';
+export const DEFAULT_OG_IMAGE = 'https://images.pexels.com/photos/190819/pexels-photo-190819.jpeg?auto=compress&cs=tinysrgb&w=1200';
 
 export interface SeoProps {
   title: string;
@@ -173,8 +173,8 @@ export function getLocalBusinessSchema() {
     name: 'Meghani Watch Co.',
     image: [
       `${SITE_URL}/images/gold-m-emblem.png`,
-      'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=1200&q=80',
-      'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80'
+      'https://images.pexels.com/photos/190819/pexels-photo-190819.jpeg?auto=compress&cs=tinysrgb&w=1200',
+      'https://images.pexels.com/photos/277319/pexels-photo-277319.jpeg?auto=compress&cs=tinysrgb&w=1200'
     ],
     telephone: MEGHANI_STORE_INFO.phone,
     email: MEGHANI_STORE_INFO.email,

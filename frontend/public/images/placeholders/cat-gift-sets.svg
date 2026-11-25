@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="GIFT SETS">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="42%" r="65%">
+      <stop offset="0%" stop-color="#221E17"/>
+      <stop offset="55%" stop-color="#13120F"/>
+      <stop offset="100%" stop-color="#090908"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F2DFB0"/>
+      <stop offset="45%" stop-color="#C9A45C"/>
+      <stop offset="100%" stop-color="#8E6C2E"/>
+    </linearGradient>
+    <linearGradient id="goldSoft" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#E8D5A7" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#C9A45C" stop-opacity="0.06"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#bgGrad)"/>
+
+  <!-- Subtle guilloche horological background rings -->
+  <g fill="none" stroke="#C9A45C" stroke-opacity="0.10">
+    <circle cx="400" cy="245" r="190" stroke-width="1"/>
+    <circle cx="400" cy="245" r="159" stroke-width="1" stroke-dasharray="4 8"/>
+    <circle cx="400" cy="245" r="132" stroke-width="1"/>
+  </g>
+
+  <!-- Subtle framing border -->
+  <rect x="24" y="24" width="752" height="552" rx="18" fill="none" stroke="#2A261F" stroke-width="1.5"/>
+
+  <!-- Top Heritage Mark -->
+  <text x="400" y="68" text-anchor="middle" fill="#8D8980" font-family="Georgia, 'Times New Roman', serif" font-size="14" letter-spacing="6">MEGHANI WATCH CO.</text>
+  <line x1="345" y1="84" x2="455" y2="84" stroke="#C9A45C" stroke-opacity="0.4" stroke-width="1"/>
+
+  <!-- Main Horological Vector -->
+  <g transform="translate(400, 245) scale(0.68)">
+    
+    <rect x="-140" y="-76" width="280" height="196" rx="16" fill="#171613" stroke="url(#goldGrad)" stroke-width="4"/>
+    <rect x="-152" y="-108" width="304" height="44" rx="10" fill="#1B1914" stroke="url(#goldGrad)" stroke-width="3.5"/>
+    <line x1="0" y1="-108" x2="0" y2="120" stroke="#C9A45C" stroke-opacity="0.45" stroke-width="10"/>
+    <path d="M0,-108 C-48,-160 -86,-116 0,-108 C86,-116 48,-160 0,-108 Z" fill="none" stroke="url(#goldGrad)" stroke-width="3.5"/>
+    <circle cx="0" cy="28" r="50" fill="#0B0B0A" stroke="url(#goldGrad)" stroke-width="3"/>
+    <line x1="0" y1="28" x2="-18" y2="12" stroke="url(#goldGrad)" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="0" y1="28" x2="26" y2="6" stroke="#F3EFE6" stroke-width="2.5" stroke-linecap="round"/>
+    
+  </g>
+
+  <!-- Subtle Category Mark (kept upper-center so HTML card footer never overlaps) -->
+  <text x="400" y="460" text-anchor="middle" fill="#C9A45C" fill-opacity="0.7" font-family="Arial, Helvetica, sans-serif" font-size="11" letter-spacing="3.5">COUPLE &amp; CELEBRATION BOXES</text>
+</svg>

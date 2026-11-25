@@ -34,7 +34,7 @@ class PublicCoreApiTests(TestCase):
         self.gallery = GalleryItem.objects.create(
             title='VIP Lounge',
             category='Storefront',
-            image_url='https://images.unsplash.com/photo-1547996160-71dfabb19283?w=800',
+            image_url='https://images.pexels.com/photos/190819/pexels-photo-190819.jpeg?auto=compress&cs=tinysrgb&w=800',
             is_active=True,
             display_order=1
         )

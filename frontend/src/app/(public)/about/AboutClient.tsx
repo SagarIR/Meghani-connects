@@ -112,7 +112,7 @@ export default function AboutClient({ initialMilestones = milestones }: AboutCli
           className="lg:col-span-5 relative aspect-[4/3] rounded-2xl overflow-hidden border border-[#2A261F] shadow-2xl group"
         >
           <Image
-            src="https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=1200&q=80"
+            src="https://images.pexels.com/photos/277319/pexels-photo-277319.jpeg?auto=compress&cs=tinysrgb&w=1200"
             alt="Meghani Watch Co. Watch Repair Workshop and Showroom in Vadodara"
             fill
             priority

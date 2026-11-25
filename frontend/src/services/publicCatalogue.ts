@@ -57,7 +57,7 @@ export const PUBLIC_BRANDS: BrandItem[] = [
     established: '1946',
     tagline: 'Tough, Reliable Digital & Sports Watches',
     description: 'Renowned Japanese precision engineering featuring iconic G-Shock durability, Edifice chronographs, and vintage gold and silver digital watches.',
-    heroImage: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80',
+    heroImage: 'https://images.pexels.com/photos/280250/pexels-photo-280250.jpeg?auto=compress&cs=tinysrgb&w=1200',
     is_featured: true,
   },
   {
@@ -79,7 +79,7 @@ export const PUBLIC_BRANDS: BrandItem[] = [
     established: '1918',
     tagline: 'Eco-Drive Light-Powered Innovation',
     description: 'Global leader in light-powered Eco-Drive watches that never need a battery change, featuring durable stainless steel, titanium cases, and water resistance.',
-    heroImage: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1200&q=80',
+    heroImage: 'https://images.unsplash.com/photo-1619134778706-7015533a6150?auto=format&fit=crop&w=1200&q=80',
     is_featured: true,
   },
   {
@@ -90,7 +90,7 @@ export const PUBLIC_BRANDS: BrandItem[] = [
     established: '1998',
     tagline: 'Youthful, Sporty & Trendy Watches',
     description: 'Energetic watches designed for young professionals and students, featuring sporty dials, comfortable silicone straps, and trendy everyday styles.',
-    heroImage: 'https://images.unsplash.com/photo-1533139502658-0198f920d8e8?auto=format&fit=crop&w=1200&q=80',
+    heroImage: 'https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&w=1200&q=80',
     is_featured: false,
   },
   {
@@ -101,7 +101,7 @@ export const PUBLIC_BRANDS: BrandItem[] = [
     established: '1997',
     tagline: 'Great Value Everyday Watches',
     description: 'Classic analog watches with gold accents and genuine leather straps, offering great value and reliable performance for daily wear and festive occasions.',
-    heroImage: 'https://images.unsplash.com/photo-1547996160-71dfabbce5ed?auto=format&fit=crop&w=1200&q=80',
+    heroImage: 'https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?auto=format&fit=crop&w=1200&q=80',
     is_featured: false,
   },
   {
@@ -134,7 +134,7 @@ export const PUBLIC_CATEGORIES: CategoryItem[] = [
     slug: 'digital',
     tagline: 'Durable, Shock-Resistant & Sporty',
     description: 'High-precision digital displays with stopwatches, alarms, world time, backlight illumination, and durable water-resistant cases.',
-    imageUrl: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/placeholders/cat-digital.svg',
     count: 6,
     features: ['Shock & Water Resistance', 'Stopwatch & Multi-Alarms', 'Bright Backlight & Solar Power', '100m – 200m Water Resistance']
   },
@@ -144,7 +144,7 @@ export const PUBLIC_CATEGORIES: CategoryItem[] = [
     slug: 'smart',
     tagline: 'Connected Style & Everyday Health Tracking',
     description: 'Modern smartwatches featuring clear AMOLED displays, heart rate monitoring, step tracking, Bluetooth calling, and long battery life.',
-    imageUrl: 'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=800&q=80',
+    imageUrl: 'https://images.pexels.com/photos/437037/pexels-photo-437037.jpeg?auto=compress&cs=tinysrgb&w=800',
     count: 5,
     features: ['Vibrant AMOLED Displays', 'Heart Rate & Fitness Tracking', 'Bluetooth Calling & Alerts', 'Up to 7 Days Battery Life']
   },
@@ -164,7 +164,7 @@ export const PUBLIC_CATEGORIES: CategoryItem[] = [
     slug: 'accessory',
     tagline: 'Replacement Straps & Watch Care',
     description: 'High-quality leather and metal replacement straps, travel cases, and watch care accessories fitted directly in our Vadodara showroom.',
-    imageUrl: 'https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&w=800&q=80',
+    imageUrl: '/images/placeholders/cat-accessory.svg',
     count: 7,
     features: ['Genuine Leather Replacement Straps', 'Stainless Steel Mesh & Link Straps', 'Tool-Free Quick Release Fitting', 'Travel Cases & Cleaning Care']
   }
@@ -180,7 +180,7 @@ export const PUBLIC_OFFERS: OfferItem[] = [
     code: 'FESTIVE-HERITAGE',
     validity: 'Valid through this season',
     terms: 'Applicable on select models in our Vadodara showroom. Free strap adjustment included.',
-    bannerImage: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80',
+    bannerImage: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=1200&q=80',
     targetCategory: 'analog'
   },
   {
@@ -191,7 +191,7 @@ export const PUBLIC_OFFERS: OfferItem[] = [
     description: 'Buy matching his & hers watches from Titan, Citizen, or Timex and receive a complimentary watch presentation box and warranty coverage.',
     validity: 'Ongoing Wedding Season',
     terms: 'Valid on paired watch purchases above ₹10,000 at our Vadodara showroom.',
-    bannerImage: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=1200&q=80',
+    bannerImage: 'https://images.pexels.com/photos/125779/pexels-photo-125779.jpeg?auto=compress&cs=tinysrgb&w=1200',
   },
   {
     id: 'offer-3',
@@ -201,58 +201,58 @@ export const PUBLIC_OFFERS: OfferItem[] = [
     description: 'Bring any watch into our Vadodara showroom for a free battery check, strap fitting, and timekeeping accuracy inspection.',
     validity: 'Walk-in or Booked Appointment',
     terms: 'Available at our New Sama Road showroom. One watch per customer per visit.',
-    bannerImage: 'https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=1200&q=80',
+    bannerImage: 'https://images.pexels.com/photos/277319/pexels-photo-277319.jpeg?auto=compress&cs=tinysrgb&w=1200',
   }
 ];
 
 export const PUBLIC_GALLERY: GalleryItem[] = [
   {
     id: 'gal-1',
-    title: 'Expert Watchmaker at Work',
+    title: 'Mechanical Movement Inspection',
     category: 'craftsmanship',
-    imageUrl: 'https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=1000&q=80',
-    caption: 'Precision assembly and watch inspection under high magnification.',
+    imageUrl: 'https://images.pexels.com/photos/277319/pexels-photo-277319.jpeg?auto=compress&cs=tinysrgb&w=1000',
+    caption: 'Precision assembly and watch movement calibration under high magnification.',
     details: 'Every watch serviced at Meghani Watch Co. undergoes strict accuracy and balance testing.'
   },
   {
     id: 'gal-2',
-    title: 'Titan Regalia Executive Watch',
+    title: 'Classic Open-Heart Dress Horology',
     category: 'timepieces',
     imageUrl: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=1000&q=80',
-    caption: 'Classic champagne dial with gold accents and solid stainless steel case.',
-    details: 'One of the most popular dress watches in our Vadodara collection.'
+    caption: 'Exhibition dial detailing paired with hand-stitched leather strapping.',
+    details: 'Representative horological study from our dress timepiece curation.'
   },
   {
     id: 'gal-3',
-    title: 'Our Vadodara Watch Showroom',
-    category: 'boutique',
-    imageUrl: 'https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?auto=format&fit=crop&w=1000&q=80',
-    caption: 'Our showroom at Cactus Park, New Sama Road, Vadodara.',
-    details: 'Welcoming space with a friendly team to help you choose the right watch.'
+    title: 'Precision Steel Chronograph Craft',
+    category: 'timepieces',
+    imageUrl: 'https://images.pexels.com/photos/190819/pexels-photo-190819.jpeg?auto=compress&cs=tinysrgb&w=1000',
+    caption: 'Brushed stainless steel casework with multi-register chronograph dial.',
+    details: 'Available for viewing and wrist sizing at our New Sama Road showroom.'
   },
   {
     id: 'gal-4',
-    title: 'Watch Servicing & Repair',
+    title: 'Minimalist Everyday Wristwear',
     category: 'heritage',
-    imageUrl: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=1000&q=80',
-    caption: 'Ultrasonic cleaning, battery replacement, and mechanical watch servicing.',
-    details: 'Restoring family heirloom watches and daily wear timepieces to smooth working order.'
+    imageUrl: 'https://images.pexels.com/photos/1697214/pexels-photo-1697214.jpeg?auto=compress&cs=tinysrgb&w=1000',
+    caption: 'Clean legible dials built for comfortable daily wear and timeless appeal.',
+    details: 'Complimentary strap adjustment and battery servicing available in-store.'
   },
   {
     id: 'gal-5',
-    title: 'Citizen Eco-Drive Solar Watch',
-    category: 'timepieces',
-    imageUrl: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1000&q=80',
-    caption: 'Light-powered solar watch that never requires a battery change.',
-    details: 'Charges from indoor light or sunlight with months of continuous power.'
+    title: 'Chronograph Leather Strap Edition',
+    category: 'craftsmanship',
+    imageUrl: 'https://images.unsplash.com/photo-1542496658-e33a6d0d50f6?auto=format&fit=crop&w=1000&q=80',
+    caption: 'Precision chronograph sub-registers paired with genuine leather straps.',
+    details: 'Genuine leather replacement straps fitted to size in our Vadodara showroom.'
   },
   {
     id: 'gal-6',
-    title: 'Genuine Leather Watch Straps',
-    category: 'craftsmanship',
-    imageUrl: 'https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&w=1000&q=80',
-    caption: 'Handpicked genuine leather straps fitted to size in our showroom.',
-    details: 'Available in black, brown, and tan with quick-release pins for easy replacement.'
+    title: 'Architectural Wall Clocks',
+    category: 'boutique',
+    imageUrl: 'https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?auto=format&fit=crop&w=1000&q=80',
+    caption: 'Silent-sweep quartz wall clocks designed for contemporary homes and offices.',
+    details: 'Curated wall and pendulum clocks inspected and backed by store support.'
   }
 ];
 
@@ -267,11 +267,9 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
     availability: 'in_stock',
     stock: 25,
     barcode: 'TITAN-CLS-01',
-    image: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=900&q=80',
+    image: '/images/placeholders/analog-watch.svg',
     galleryImages: [
-      'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=900&q=80',
-      'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=900&q=80',
-      'https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&w=900&q=80'
+      '/images/placeholders/analog-watch.svg'
     ],
     description: 'A classic men’s analog dress watch featuring an ivory dial, polished stainless steel case, rose gold hands, date display at 3 o’clock, and a genuine brown leather strap with 2 years Titan brand warranty.',
     warranty_months: 24,
@@ -300,10 +298,9 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
     availability: 'in_stock',
     stock: 15,
     barcode: 'TITAN-EXEC-GOLD',
-    image: 'https://images.unsplash.com/photo-1547996160-71dfabbce5ed?auto=format&fit=crop&w=900&q=80',
+    image: '/images/placeholders/analog-watch.svg',
     galleryImages: [
-      'https://images.unsplash.com/photo-1547996160-71dfabbce5ed?auto=format&fit=crop&w=900&q=80',
-      'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=900&q=80'
+      '/images/placeholders/analog-watch.svg'
     ],
     description: 'A distinguished executive gold watch with a rich champagne dial, polished gold Roman numerals, durable gold PVD finish, and a solid multi-link stainless steel bracelet.',
     warranty_months: 24,
@@ -332,9 +329,9 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
     availability: 'in_stock',
     stock: 30,
     barcode: 'FST-CHRONO-01',
-    image: 'https://images.unsplash.com/photo-1533139502658-0198f920d8e8?auto=format&fit=crop&w=900&q=80',
+    image: '/images/placeholders/luxury-watch.svg',
     galleryImages: [
-      'https://images.unsplash.com/photo-1533139502658-0198f920d8e8?auto=format&fit=crop&w=900&q=80'
+      '/images/placeholders/luxury-watch.svg'
     ],
     description: 'A dynamic sports chronograph watch featuring a matte black dial, tachymeter scale, bright orange accent hands, and a comfortable sweat-resistant silicone strap for active daily wear.',
     warranty_months: 12,
@@ -363,10 +360,9 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
     availability: 'in_stock',
     stock: 12,
     barcode: 'TMX-MARLIN-01',
-    image: 'https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=900&q=80',
+    image: '/images/placeholders/analog-watch.svg',
     galleryImages: [
-      'https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=900&q=80',
-      'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=900&q=80'
+      '/images/placeholders/analog-watch.svg'
     ],
     description: 'A classic 1960s vintage-style self-winding automatic watch with a domed crystal, clean black sunray dial, exhibition caseback showing the mechanical movement, and a genuine leather strap.',
     warranty_months: 24,
@@ -395,7 +391,7 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
     availability: 'in_stock',
     stock: 40,
     barcode: 'SONATA-SLIM-01',
-    image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=900&q=80',
+    image: '/images/placeholders/analog-watch.svg',
     description: 'A clean, slim analog watch designed for dependable everyday wear. Features an easy-to-read white dial, lightweight polished case, and genuine black leather strap.',
     warranty_months: 12,
     specifications: {
@@ -423,10 +419,9 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
     availability: 'on_request',
     stock: 2,
     barcode: 'MGH-TOURB-EXCLUSIVE',
-    image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=900&q=80',
+    image: '/images/placeholders/luxury-watch.svg',
     galleryImages: [
-      'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=900&q=80',
-      'https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=900&q=80'
+      '/images/placeholders/luxury-watch.svg'
     ],
     description: 'An exclusive handcrafted mechanical watch featuring an open-heart 60-second flying tourbillon movement, hand-guilloché slate dial, and titanium-gold case. Available on request by showroom appointment.',
     warranty_months: 60,
@@ -455,7 +450,7 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
     availability: 'in_stock',
     stock: 20,
     barcode: 'CASIO-A168WG',
-    image: 'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=900&q=80',
+    image: '/images/placeholders/digital-watch.svg',
     description: 'The iconic retro digital watch from Casio. Features a bright electro-luminescent backlight, gold-tone adjustable stainless steel bracelet, stopwatch, daily alarm, and auto-calendar.',
     warranty_months: 24,
     specifications: {
@@ -483,7 +478,7 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
     availability: 'in_stock',
     stock: 14,
     barcode: 'CASIO-GA2100-SOLAR',
-    image: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=900&q=80',
+    image: '/images/placeholders/digital-watch.svg',
     description: 'The famous "CasiOak" G-Shock watch with Carbon Core Guard shock resistance, Tough Solar charging, Bluetooth smartphone connection, and 200m water resistance.',
     warranty_months: 24,
     specifications: {
@@ -511,7 +506,7 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
     availability: 'in_stock',
     stock: 8,
     barcode: 'CITIZEN-ECO-PRO',
-    image: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=900&q=80',
+    image: '/images/placeholders/luxury-watch.svg',
     description: 'An ISO-certified 200-meter diver watch powered continuously by light with Citizen Eco-Drive technology. Features a unidirectional rotating bezel and high-visibility luminous hands.',
     warranty_months: 36,
     specifications: {
@@ -539,7 +534,7 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
     availability: 'in_stock',
     stock: 18,
     barcode: 'NOISE-CFP-LUX',
-    image: 'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=900&q=80',
+    image: '/images/placeholders/smartwatch.svg',
     description: 'A stylish smartwatch with a vibrant 1.85-inch AMOLED display, stainless steel case, magnetic Milanese strap, Bluetooth calling, and 24/7 heart rate and fitness tracking.',
     warranty_months: 12,
     specifications: {
@@ -567,7 +562,7 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
     availability: 'in_stock',
     stock: 10,
     barcode: 'AJANTA-PEND-WOOD',
-    image: 'https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?auto=format&fit=crop&w=900&q=80',
+    image: '/images/placeholders/wall-clock.svg',
     description: 'A classic wooden pendulum wall clock with a rich mahogany finish, clear Roman numerals, glass front panel, and a smooth silent-sweep quartz movement with synchronized pendulum.',
     warranty_months: 18,
     specifications: {
@@ -595,7 +590,7 @@ export const SEED_PUBLIC_PRODUCTS: PublicProduct[] = [
     availability: 'in_stock',
     stock: 22,
     barcode: 'MGH-STRAP-ITL-20',
-    image: 'https://images.unsplash.com/photo-1614164185128-e4ec99c436d7?auto=format&fit=crop&w=900&q=80',
+    image: '/images/placeholders/watch-strap.svg',
     description: 'Premium replacement watch strap crafted from genuine leather. Features tool-free quick-release pins and a stainless steel buckle. Available in 20mm and 22mm widths.',
     warranty_months: 12,
     specifications: {
@@ -635,15 +630,158 @@ export interface PaginatedResult<T> {
   currentPage: number;
 }
 
+/**
+ * Returns a clean, category-accurate neutral horological placeholder image.
+ * Never returns unrelated stock imagery or misleading brand/model photography.
+ */
+export function getCategoryFallbackImage(category?: string, name?: string): string {
+  const c = (category || '').toLowerCase();
+  const n = (name || '').toLowerCase();
+
+  if (n.includes('battery') || n.includes('cr2032') || c.includes('spare')) {
+    return '/images/placeholders/watch-battery.svg';
+  }
+  if (n.includes('cleaning') || n.includes('kit') || n.includes('care')) {
+    return '/images/placeholders/watch-care.svg';
+  }
+  if (n.includes('box') || n.includes('case') || n.includes('winder')) {
+    return '/images/placeholders/watch-box.svg';
+  }
+  if (c.includes('strap') || n.includes('strap') || n.includes('chain') || n.includes('band 20') || n.includes('band 22')) {
+    return '/images/placeholders/watch-strap.svg';
+  }
+  if (c.includes('accessory')) {
+    return '/images/placeholders/watch-box.svg';
+  }
+  if (c.includes('wall') || c.includes('clock') || n.includes('clock') || n.includes('pendulum') || n.includes('antique') || n.includes('office')) {
+    return '/images/placeholders/wall-clock.svg';
+  }
+  if (c.includes('smart') || n.includes('smart') || n.includes('colorfit') || n.includes('gtr') || n.includes('active') || n.includes('fitness') || n.includes('band 7')) {
+    return '/images/placeholders/smartwatch.svg';
+  }
+  if (c.includes('digital') || n.includes('g-shock') || n.includes('shock') || n.includes('digital') || n.includes('runner')) {
+    return '/images/placeholders/digital-watch.svg';
+  }
+  if (c.includes('luxury') || n.includes('submariner') || n.includes('rolex') || n.includes('speedmaster') || n.includes('omega') || n.includes('prx') || n.includes('tissot') || n.includes('chronograph') || n.includes('tourbillon')) {
+    return '/images/placeholders/luxury-watch.svg';
+  }
+  if (c.includes('analog')) {
+    return '/images/placeholders/analog-watch.svg';
+  }
+  return '/images/placeholders/default-watch.svg';
+}
+
+/**
+ * Returns an appropriate category banner/card image when a DB Category record has no image_url.
+ */
+export function getCategoryBannerFallback(slug?: string): string {
+  const s = (slug || '').toLowerCase();
+  const map: Record<string, string> = {
+    analog: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=800&q=80',
+    digital: '/images/placeholders/cat-digital.svg',
+    smart: 'https://images.pexels.com/photos/437037/pexels-photo-437037.jpeg?auto=compress&cs=tinysrgb&w=800',
+    luxury: 'https://images.pexels.com/photos/190819/pexels-photo-190819.jpeg?auto=compress&cs=tinysrgb&w=800',
+    sports: 'https://images.pexels.com/photos/280250/pexels-photo-280250.jpeg?auto=compress&cs=tinysrgb&w=800',
+    kids: '/images/placeholders/cat-kids.svg',
+    wall: 'https://images.unsplash.com/photo-1563861826100-9cb868fdbe1c?auto=format&fit=crop&w=800&q=80',
+    'table-clocks': '/images/placeholders/cat-table-clocks.svg',
+    'alarm-clocks': '/images/placeholders/cat-alarm-clocks.svg',
+    'pocket-watches': '/images/placeholders/cat-pocket-watches.svg',
+    accessory: '/images/placeholders/cat-accessory.svg',
+    'spare-parts': '/images/placeholders/cat-spare-parts.svg',
+    straps: '/images/placeholders/cat-straps.svg',
+    'gift-sets': '/images/placeholders/cat-gift-sets.svg',
+  };
+  return map[s] || '/images/placeholders/cat-digital.svg';
+}
+
+/**
+ * Resolves the API base URL with full environment intelligence:
+ * - In Browser: returns same-origin '/api' (or NEXT_PUBLIC_API_URL).
+ * - On Server (Node.js SSR): constructs a valid absolute URL so Node.js HTTP clients never throw "Invalid URL" errors.
+ */
 export function getPublicApiBase(): string {
-  if (typeof window === 'undefined' && process.env.BACKEND_URL) {
+  // 1. Client-side browser runtime:
+  if (typeof window !== 'undefined') {
+    return process.env.NEXT_PUBLIC_API_URL || '/api';
+  }
+
+  // 2. Server-side runtime (Node.js SSR / API Route Handlers):
+  if (process.env.BACKEND_URL) {
     try {
       return new URL('/api', process.env.BACKEND_URL).toString().replace(/\/+$/, '');
     } catch {
       return `${process.env.BACKEND_URL.replace(/\/+$/, '')}/api`;
     }
   }
-  return process.env.NEXT_PUBLIC_API_URL || '/api';
+
+  // If NEXT_PUBLIC_API_URL is already an absolute URL (e.g. http://127.0.0.1:8000/api in local dev)
+  if (process.env.NEXT_PUBLIC_API_URL && /^https?:\/\//i.test(process.env.NEXT_PUBLIC_API_URL)) {
+    return process.env.NEXT_PUBLIC_API_URL.replace(/\/+$/, '');
+  }
+
+  // On Vercel deployments, VERCEL_URL is automatically populated by Vercel
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL.replace(/\/+$/, '')}/api`;
+  }
+
+  // If public site URL is configured
+  if (process.env.NEXT_PUBLIC_SITE_URL && /^https?:\/\//i.test(process.env.NEXT_PUBLIC_SITE_URL)) {
+    return `${process.env.NEXT_PUBLIC_SITE_URL.replace(/\/+$/, '')}/api`;
+  }
+
+  // In production environments, use the live production domain
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://meghani-connects.vercel.app/api';
+  }
+
+  // Local development Node.js fallback
+  return 'http://127.0.0.1:8000/api';
+}
+
+/**
+ * Sanitizes and cleans image URLs.
+ * Strips accidental media prefix wrapping such as:
+ * /media/https%3A/... or https://meghani-connects.vercel.app/media/https%3A/...
+ * which can occur when external image URLs are stored in Django's ImageField
+ * before a backend deployment is triggered.
+ */
+export function cleanImageUrl(url?: string | null): string | null {
+  if (!url || typeof url !== 'string') return null;
+  const trimmed = url.trim();
+  if (!trimmed) return null;
+
+  // Handle URL-encoded media wrappers (e.g. from DRF ImageField default serialization)
+  if (trimmed.includes('/media/')) {
+    const parts = trimmed.split('/media/');
+    const candidate = parts[parts.length - 1];
+    const candidateDecoded = decodeURIComponent(candidate);
+    if (/^https?:\//i.test(candidateDecoded)) {
+      let clean = candidateDecoded;
+      if (clean.startsWith('https:/') && !clean.startsWith('https://')) {
+        clean = clean.replace(/^https:\/+/, 'https://');
+      } else if (clean.startsWith('http:/') && !clean.startsWith('http://')) {
+        clean = clean.replace(/^http:\/+/, 'http://');
+      }
+      return clean;
+    }
+  }
+
+  // Handle standard decode check if it contains /media/http
+  const decoded = decodeURIComponent(trimmed);
+  const mediaIdx = decoded.indexOf('/media/http');
+  if (mediaIdx !== -1) {
+    const rawInner = decoded.substring(mediaIdx + 7);
+    let clean = rawInner;
+    if (clean.startsWith('https:/') && !clean.startsWith('https://')) {
+      clean = clean.replace(/^https:\/+/, 'https://');
+    } else if (clean.startsWith('http:/') && !clean.startsWith('http://')) {
+      clean = clean.replace(/^http:\/+/, 'http://');
+    }
+    return clean;
+  }
+
+  return trimmed;
 }
 
 /**
@@ -673,7 +811,7 @@ export async function getPublicProducts(
     query.append('page', page.toString());
     query.append('page_size', pageSize.toString());
 
-    // Try fetching from Django public endpoint with 2.5s timeout
+    // Try fetching from Django public endpoint
     const res = await axios.get(`${getPublicApiBase()}/products/public/?${query.toString()}`, {
       timeout: 10000,
     });
@@ -682,27 +820,35 @@ export async function getPublicProducts(
       const rawList = res.data.results || res.data;
       const count = res.data.count || rawList.length;
       
-      const mappedResults: PublicProduct[] = rawList.map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        brand: item.brand || 'Meghani',
-        category: (item.category as ProductCategory) || 'analog',
-        price: item.price_visible === false || item.availability === 'on_request' ? null : (item.price ?? item.selling_price ?? null),
-        price_visible: Boolean(item.price_visible !== false),
-        availability: (item.availability as AvailabilityStatus) || (item.stock > 0 ? 'in_stock' : 'out_of_stock'),
-        stock: item.stock || 0,
-        barcode: item.barcode || null,
-        image: item.image || 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=800&q=80',
-        galleryImages: item.gallery_images || item.galleryImages || [
-          item.image || 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=800&q=80'
-        ],
-        description: item.description || 'Authentic curated luxury watch from Meghani Watch Co.',
-        warranty_months: item.warranty_months || 24,
-        specifications: item.specifications || undefined,
-        is_featured: Boolean(item.is_featured),
-        is_new_arrival: Boolean(item.is_new_arrival),
-        created_at: item.created_at || new Date().toISOString()
-      }));
+      const mappedResults: PublicProduct[] = rawList.map((item: any) => {
+        const cleanedImage = cleanImageUrl(item.image);
+        const fallbackImg = getCategoryFallbackImage(item.category, item.name);
+        const productImg = cleanedImage && cleanedImage.trim() ? cleanedImage : fallbackImg;
+        const rawGallery = item.gallery_images || item.galleryImages;
+        const cleanedGallery = Array.isArray(rawGallery)
+          ? (rawGallery.map(cleanImageUrl).filter(Boolean) as string[])
+          : [productImg];
+
+        return {
+          id: item.id,
+          name: item.name,
+          brand: item.brand || 'Meghani',
+          category: (item.category as ProductCategory) || 'analog',
+          price: item.price_visible === false || item.availability === 'on_request' ? null : (item.price ?? item.selling_price ?? null),
+          price_visible: Boolean(item.price_visible !== false),
+          availability: (item.availability as AvailabilityStatus) || (item.stock > 0 ? 'in_stock' : 'out_of_stock'),
+          stock: item.stock || 0,
+          barcode: item.barcode || null,
+          image: productImg,
+          galleryImages: cleanedGallery.length > 0 ? cleanedGallery : [productImg],
+          description: item.description || 'Authentic curated luxury watch from Meghani Watch Co.',
+          warranty_months: item.warranty_months || 24,
+          specifications: item.specifications || undefined,
+          is_featured: Boolean(item.is_featured),
+          is_new_arrival: Boolean(item.is_new_arrival),
+          created_at: item.created_at || new Date().toISOString()
+        };
+      });
 
       return {
         results: mappedResults,
@@ -792,6 +938,14 @@ export async function getPublicProductById(
     if (res.data) {
       const item = res.data;
       const isPriceHidden = item.price_visible === false || item.availability === 'on_request';
+      const cleanedImage = cleanImageUrl(item.image);
+      const fallbackImg = getCategoryFallbackImage(item.category, item.name);
+      const productImg = cleanedImage && cleanedImage.trim() ? cleanedImage : fallbackImg;
+      const rawGallery = item.gallery_images || item.galleryImages;
+      const cleanedGallery = Array.isArray(rawGallery)
+        ? (rawGallery.map(cleanImageUrl).filter(Boolean) as string[])
+        : [productImg];
+
       return {
         id: item.id,
         name: item.name,
@@ -802,10 +956,8 @@ export async function getPublicProductById(
         availability: item.availability || (item.stock > 0 ? 'in_stock' : 'out_of_stock'),
         stock: item.stock || 0,
         barcode: item.barcode || null,
-        image: item.image || 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=800&q=80',
-        galleryImages: item.gallery_images || item.galleryImages || [
-          item.image || 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=800&q=80'
-        ],
+        image: productImg,
+        galleryImages: cleanedGallery.length > 0 ? cleanedGallery : [productImg],
         description: item.description || '',
         warranty_months: item.warranty_months || 24,
         specifications: item.specifications || {
@@ -914,7 +1066,7 @@ export async function getPublicBrands(): Promise<BrandItem[]> {
         established: b.established || '',
         tagline: b.tagline || '',
         description: b.description || '',
-        heroImage: b.hero_image || 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80',
+        heroImage: cleanImageUrl(b.hero_image) || 'https://images.pexels.com/photos/190819/pexels-photo-190819.jpeg?auto=compress&cs=tinysrgb&w=1200',
         is_featured: Boolean(b.is_featured),
       }));
     }
@@ -938,7 +1090,7 @@ export async function getPublicCategories(): Promise<CategoryItem[]> {
         slug: c.slug,
         tagline: c.tagline || '',
         description: c.description || '',
-        imageUrl: c.image_url || 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=800&q=80',
+        imageUrl: cleanImageUrl(c.image_url) || getCategoryBannerFallback(c.slug),
         count: c.count || 0,
         features: c.features || [],
       }));

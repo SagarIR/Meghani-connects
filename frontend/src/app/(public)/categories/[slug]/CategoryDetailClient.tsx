@@ -94,6 +94,7 @@ export default function CategoryDetailClient({
             alt={`${category.name} Collection — Meghani Watch Co.`}
             fill
             priority
+            unoptimized={category.imageUrl.endsWith('.svg')}
             sizes="100vw"
             className="object-cover object-center opacity-30 brightness-90"
           />

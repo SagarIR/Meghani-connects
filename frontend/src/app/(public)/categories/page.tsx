@@ -72,6 +72,7 @@ export default async function CategoriesPage() {
                 src={category.imageUrl}
                 alt={`${category.name} - Watch Category | Meghani Watch Co.`}
                 fill
+                unoptimized={category.imageUrl.endsWith('.svg')}
                 sizes="(max-width: 1024px) 100vw, 40vw"
                 className="object-cover object-center"
               />

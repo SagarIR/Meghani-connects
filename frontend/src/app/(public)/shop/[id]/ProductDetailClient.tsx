@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,7 +20,7 @@ import {
   ZoomIn
 } from 'lucide-react';
 import { PublicProduct } from '@/types/public';
-import { buildWhatsAppEnquiryUrl, MEGHANI_STORE_INFO } from '@/services/publicCatalogue';
+import { buildWhatsAppEnquiryUrl, getCategoryFallbackImage, MEGHANI_STORE_INFO } from '@/services/publicCatalogue';
 
 interface ProductDetailClientProps {
   product: PublicProduct;
@@ -29,11 +29,21 @@ interface ProductDetailClientProps {
 const luxuryEase = [0.16, 1, 0.3, 1] as const;
 
 export default function ProductDetailClient({ product }: ProductDetailClientProps) {
+  const fallbackImg = getCategoryFallbackImage(product.category, product.name);
   const images = product.galleryImages && product.galleryImages.length > 0
     ? product.galleryImages
-    : [product.image || 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=1200&q=80'];
+    : [product.image || fallbackImg];
 
   const [selectedImage, setSelectedImage] = useState(images[0]);
+
+  useEffect(() => {
+    const initial = product.galleryImages && product.galleryImages.length > 0
+      ? product.galleryImages[0]
+      : (product.image || fallbackImg);
+    setSelectedImage(initial);
+  }, [product.id, product.image, product.galleryImages, fallbackImg]);
+
+  const isPlaceholder = selectedImage.startsWith('/images/placeholders/');
   const [activeTab, setActiveTab] = useState<'specs' | 'care' | 'delivery'>('specs');
   const [showViewingModal, setShowViewingModal] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
@@ -180,10 +190,20 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
               >
                 <Image
                   src={selectedImage}
-                  alt={`${product.brand} ${product.name} - Official Timepiece | Meghani Watch Co.`}
+                  alt={
+                    isPlaceholder
+                      ? `${product.brand} ${product.name} - Representative Illustration | Meghani Watch Co.`
+                      : `${product.brand} ${product.name} - Official Timepiece | Meghani Watch Co.`
+                  }
                   fill
                   priority
+                  unoptimized={selectedImage.endsWith('.svg')}
                   sizes="(max-width: 1024px) 100vw, 60vw"
+                  onError={() => {
+                    if (selectedImage !== fallbackImg) {
+                      setSelectedImage(fallbackImg);
+                    }
+                  }}
                   className="object-cover object-center"
                 />
               </motion.div>
@@ -218,6 +238,7 @@ export default function ProductDetailClient({ product }: ProductDetailClientProp
                       src={img}
                       alt={`${product.brand} ${product.name} - Detailed View ${index + 1}`}
                       fill
+                      unoptimized={img.endsWith('.svg')}
                       sizes="80px"
                       className={`object-cover object-center transition-opacity duration-300 ${
                         isSelected ? 'opacity-100' : 'opacity-60 hover:opacity-90'

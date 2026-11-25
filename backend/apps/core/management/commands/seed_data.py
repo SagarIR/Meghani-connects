@@ -48,6 +48,10 @@ class Command(BaseCommand):
             self.create_sales()
             self.create_repairs()
             self.create_expenses()
+            
+            # Enrich catalog with HSN, warranties, cash registers, and CRM workflows
+            from django.core.management import call_command
+            call_command('remediate_store_data')
         
         self.stdout.write(self.style.SUCCESS('Database seeded successfully!'))
 

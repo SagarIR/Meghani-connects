@@ -11,6 +11,9 @@ class ProductImageSerializer(serializers.ModelSerializer):
 
     def get_url(self, obj):
         if obj.image:
+            val_str = str(obj.image)
+            if val_str.startswith(('http://', 'https://', '/')):
+                return val_str
             return obj.image.url
         return obj.image_url
 
@@ -87,7 +90,7 @@ class FlexibleImageField(serializers.Field):
         if not value:
             return None
         val_str = str(value)
-        if val_str.startswith('http://') or val_str.startswith('https://'):
+        if val_str.startswith(('http://', 'https://', '/')):
             return val_str
         if hasattr(value, 'url'):
             try:
@@ -216,6 +219,7 @@ class PublicProductSerializer(serializers.ModelSerializer):
     - Confidential fields (cost_price, supplier_name, profit_margin) are excluded.
     - If price_visible is False, price is never exposed.
     """
+    image = FlexibleImageField(required=False, allow_null=True)
     brand = serializers.CharField(source='brand_name', read_only=True)
     category = serializers.CharField(source='category_slug_val', read_only=True)
     subcategory = serializers.CharField(source='subcategory_name', read_only=True)
@@ -240,10 +244,24 @@ class PublicProductSerializer(serializers.ModelSerializer):
     def get_gallery_images(self, obj):
         images = []
         if obj.image:
-            img_url = obj.image.url if hasattr(obj.image, 'url') else str(obj.image)
-            images.append(img_url)
+            val_str = str(obj.image)
+            if val_str.startswith(('http://', 'https://', '/')):
+                images.append(val_str)
+            elif hasattr(obj.image, 'url'):
+                try:
+                    images.append(obj.image.url)
+                except Exception:
+                    images.append(val_str)
+            else:
+                images.append(val_str)
         for img in obj.gallery_images.all():
-            url = img.image.url if img.image else img.image_url
+            if img.image_url:
+                url = img.image_url
+            elif img.image:
+                img_str = str(img.image)
+                url = img_str if img_str.startswith(('http://', 'https://', '/')) else img.image.url
+            else:
+                url = None
             if url and url not in images:
                 images.append(url)
         return images

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -21,7 +21,10 @@ import {
   PUBLIC_CATEGORIES,
   PUBLIC_OFFERS,
   PUBLIC_GALLERY,
-  MEGHANI_STORE_INFO
+  MEGHANI_STORE_INFO,
+  getPublicProducts,
+  getPublicBrands,
+  getPublicCategories
 } from '@/services/publicCatalogue';
 import { PublicProduct, BrandItem, CategoryItem, BusinessStoreInfo } from '@/types/public';
 import ProductCard from '@/components/public/ProductCard';
@@ -43,6 +46,36 @@ export default function HomeClient({
   categories = PUBLIC_CATEGORIES,
   storeInfo = MEGHANI_STORE_INFO
 }: HomeClientProps) {
+  const [displayProducts, setDisplayProducts] = useState<PublicProduct[]>(featuredProducts);
+  const [displayBrands, setDisplayBrands] = useState<BrandItem[]>(brands);
+  const [displayCategories, setDisplayCategories] = useState<CategoryItem[]>(categories);
+
+  useEffect(() => {
+    let isMounted = true;
+    getPublicProducts({ featured: true, pageSize: 6 })
+      .then((res) => {
+        if (isMounted && res.results && res.results.length > 0) {
+          setDisplayProducts(res.results);
+        }
+      })
+      .catch(() => {});
+
+    getPublicBrands()
+      .then((b) => {
+        if (isMounted && b && b.length > 0) setDisplayBrands(b);
+      })
+      .catch(() => {});
+
+    getPublicCategories()
+      .then((c) => {
+        if (isMounted && c && c.length > 0) setDisplayCategories(c);
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
   return (
     <>
       {/* Hero Section */}
@@ -52,12 +85,12 @@ export default function HomeClient({
         {/* Background Atmosphere */}
         <div className="absolute inset-0 z-0">
           <Image
-            src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=2000&q=80"
+            src="https://images.pexels.com/photos/190819/pexels-photo-190819.jpeg?auto=compress&cs=tinysrgb&w=2000"
             alt="Meghani Watch Co. Watch Craftsmanship"
             fill
             priority
             sizes="100vw"
-            className="object-cover object-center opacity-20"
+            className="object-cover object-center opacity-25"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0B0B0A] via-[#0B0B0A]/85 to-[#0B0B0A]/70" />
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#C9A45C]/15 via-transparent to-transparent pointer-events-none" />
@@ -215,7 +248,7 @@ export default function HomeClient({
         </motion.div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-          {featuredProducts.map((product, idx) => (
+          {displayProducts.map((product, idx) => (
             <ProductCard key={product.id} product={product} featured={product.is_featured} priority={idx < 3} />
           ))}
         </div>
@@ -252,7 +285,7 @@ export default function HomeClient({
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
-            {categories.map((cat, idx) => (
+            {displayCategories.map((cat, idx) => (
               <motion.div
                 key={cat.id}
                 initial={{ opacity: 0, y: 24 }}
@@ -269,8 +302,11 @@ export default function HomeClient({
                     src={cat.imageUrl}
                     alt={cat.name}
                     fill
+                    unoptimized={cat.imageUrl.endsWith('.svg')}
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 20vw"
-                    className="object-cover object-center group-hover:scale-108 transition-transform duration-700 ease-out opacity-40 group-hover:opacity-60 will-change-transform"
+                    className={`object-cover object-center group-hover:scale-108 transition-transform duration-700 ease-out will-change-transform ${
+                      cat.imageUrl.endsWith('.svg') ? 'opacity-80 group-hover:opacity-95' : 'opacity-40 group-hover:opacity-60'
+                    }`}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0B0B0A] via-[#0B0B0A]/60 to-transparent" />
 
@@ -326,7 +362,7 @@ export default function HomeClient({
         </motion.div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-          {brands.map((brand, idx) => (
+          {displayBrands.map((brand, idx) => (
             <motion.div
               key={brand.slug}
               initial={{ opacity: 0, y: 20 }}
@@ -367,7 +403,7 @@ export default function HomeClient({
               className="relative aspect-[4/3] rounded-2xl overflow-hidden border border-[#2A261F] shadow-2xl group"
             >
               <Image
-                src="https://images.unsplash.com/photo-1508057198894-247b23fe5ade?auto=format&fit=crop&w=1200&q=80"
+                src="https://images.pexels.com/photos/277319/pexels-photo-277319.jpeg?auto=compress&cs=tinysrgb&w=1200"
                 alt="Meghani Watch Co. Watchmaker Workshop in Vadodara"
                 fill
                 sizes="(max-width: 1024px) 100vw, 50vw"

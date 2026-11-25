@@ -15,7 +15,7 @@ export const metadata = buildPageMetadata({
     'free watch inspection Vadodara',
     'Casio watch offers Gujarat'
   ],
-  ogImage: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80',
+  ogImage: 'https://images.pexels.com/photos/125779/pexels-photo-125779.jpeg?auto=compress&cs=tinysrgb&w=1200',
 });
 
 export default async function OffersPage() {

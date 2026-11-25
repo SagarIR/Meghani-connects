@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000" role="img" aria-label="SMARTWATCH">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="42%" r="65%">
+      <stop offset="0%" stop-color="#221E17"/>
+      <stop offset="55%" stop-color="#13120F"/>
+      <stop offset="100%" stop-color="#090908"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F2DFB0"/>
+      <stop offset="45%" stop-color="#C9A45C"/>
+      <stop offset="100%" stop-color="#8E6C2E"/>
+    </linearGradient>
+    <linearGradient id="goldSoft" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#E8D5A7" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#C9A45C" stop-opacity="0.06"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="1000" fill="url(#bgGrad)"/>
+
+  <!-- Subtle guilloche horological background rings -->
+  <g fill="none" stroke="#C9A45C" stroke-opacity="0.10">
+    <circle cx="400" cy="435" r="238" stroke-width="1"/>
+    <circle cx="400" cy="435" r="199" stroke-width="1" stroke-dasharray="4 8"/>
+    <circle cx="400" cy="435" r="165" stroke-width="1"/>
+  </g>
+
+  <!-- Subtle framing border -->
+  <rect x="24" y="24" width="752" height="952" rx="18" fill="none" stroke="#2A261F" stroke-width="1.5"/>
+
+  <!-- Top Heritage Mark -->
+  <text x="400" y="68" text-anchor="middle" fill="#8D8980" font-family="Georgia, 'Times New Roman', serif" font-size="14" letter-spacing="6">MEGHANI WATCH CO.</text>
+  <line x1="345" y1="84" x2="455" y2="84" stroke="#C9A45C" stroke-opacity="0.4" stroke-width="1"/>
+
+  <!-- Main Horological Vector -->
+  <g transform="translate(400, 435) scale(0.85)">
+    
+    <path d="M-58,-132 L-50,-235 L50,-235 L58,-132 Z" fill="#171613" stroke="#C9A45C" stroke-width="2"/>
+    <path d="M-58,132 L-50,235 L50,235 L58,132 Z" fill="#171613" stroke="#C9A45C" stroke-width="2"/>
+    <rect x="116" y="-44" width="14" height="36" rx="5" fill="#171613" stroke="url(#goldGrad)" stroke-width="2.5"/>
+    <rect x="116" y="14" width="10" height="42" rx="3" fill="#171613" stroke="#C9A45C" stroke-width="2"/>
+    <rect x="-114" y="-134" width="228" height="268" rx="52" fill="#0F0E0C" stroke="url(#goldGrad)" stroke-width="4"/>
+    <rect x="-98" y="-118" width="196" height="236" rx="40" fill="#090908" stroke="#C9A45C" stroke-opacity="0.35" stroke-width="1.5"/>
+    <circle cx="0" cy="-22" r="56" fill="none" stroke="#2A261F" stroke-width="8"/>
+    <path d="M 0 -78 A 56 56 0 1 1 -48 6" fill="none" stroke="url(#goldGrad)" stroke-width="8" stroke-linecap="round"/>
+    <circle cx="0" cy="-22" r="38" fill="none" stroke="#2A261F" stroke-width="7"/>
+    <path d="M 0 -60 A 38 38 0 1 1 -20 10" fill="none" stroke="#E8D5A7" stroke-opacity="0.7" stroke-width="7" stroke-linecap="round"/>
+    <text x="0" y="-12" text-anchor="middle" fill="#F3EFE6" font-family="Arial, sans-serif" font-size="28" font-weight="bold">10:09</text>
+    <text x="0" y="72" text-anchor="middle" fill="#C9A45C" font-family="Arial, sans-serif" font-size="13" letter-spacing="2">72 BPM • 8,420 STEPS</text>
+    
+  </g>
+
+  <!-- Category / Type Title -->
+  <text x="400" y="876" text-anchor="middle" fill="#F3EFE6" font-family="Georgia, 'Times New Roman', serif" font-size="24" letter-spacing="1.5">SMARTWATCH</text>
+  <text x="400" y="902" text-anchor="middle" fill="#C9A45C" font-family="Arial, Helvetica, sans-serif" font-size="12" letter-spacing="3">CONNECTED HOROLOGY</text>
+
+  <!-- Bottom Neutral Pill -->
+  <rect x="195" y="922" width="410" height="34" rx="17" fill="#171613" stroke="#2A261F" stroke-width="1.2"/>
+  <text x="400" y="943" text-anchor="middle" fill="#8D8980" font-family="Arial, Helvetica, sans-serif" font-size="10.5" letter-spacing="2">REPRESENTATIVE ILLUSTRATION • PHOTO PENDING</text>
+</svg>

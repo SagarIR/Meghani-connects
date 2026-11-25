@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" width="800" height="1000" role="img" aria-label="WATCH STRAP">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="42%" r="65%">
+      <stop offset="0%" stop-color="#221E17"/>
+      <stop offset="55%" stop-color="#13120F"/>
+      <stop offset="100%" stop-color="#090908"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F2DFB0"/>
+      <stop offset="45%" stop-color="#C9A45C"/>
+      <stop offset="100%" stop-color="#8E6C2E"/>
+    </linearGradient>
+    <linearGradient id="goldSoft" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#E8D5A7" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#C9A45C" stop-opacity="0.06"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="1000" fill="url(#bgGrad)"/>
+
+  <!-- Subtle guilloche horological background rings -->
+  <g fill="none" stroke="#C9A45C" stroke-opacity="0.10">
+    <circle cx="400" cy="435" r="238" stroke-width="1"/>
+    <circle cx="400" cy="435" r="199" stroke-width="1" stroke-dasharray="4 8"/>
+    <circle cx="400" cy="435" r="165" stroke-width="1"/>
+  </g>
+
+  <!-- Subtle framing border -->
+  <rect x="24" y="24" width="752" height="952" rx="18" fill="none" stroke="#2A261F" stroke-width="1.5"/>
+
+  <!-- Top Heritage Mark -->
+  <text x="400" y="68" text-anchor="middle" fill="#8D8980" font-family="Georgia, 'Times New Roman', serif" font-size="14" letter-spacing="6">MEGHANI WATCH CO.</text>
+  <line x1="345" y1="84" x2="455" y2="84" stroke="#C9A45C" stroke-opacity="0.4" stroke-width="1"/>
+
+  <!-- Main Horological Vector -->
+  <g transform="translate(400, 435) scale(0.85)">
+    
+    <path d="M-44,-220 L44,-220 L52,-38 L-52,-38 Z" fill="#171613" stroke="url(#goldGrad)" stroke-width="3"/>
+    <line x1="-44" y1="-48" x2="44" y2="-48" stroke="#C9A45C" stroke-width="4" stroke-linecap="round"/>
+    <rect x="-32" y="-242" width="64" height="24" rx="5" fill="none" stroke="url(#goldGrad)" stroke-width="4"/>
+    <line x1="0" y1="-242" x2="0" y2="-206" stroke="url(#goldGrad)" stroke-width="3.5" stroke-linecap="round"/>
+    <line x1="-36" y1="-206" x2="-42" y2="-58" stroke="#C9A45C" stroke-opacity="0.45" stroke-dasharray="6 6" stroke-width="1.5"/>
+    <line x1="36" y1="-206" x2="42" y2="-58" stroke="#C9A45C" stroke-opacity="0.45" stroke-dasharray="6 6" stroke-width="1.5"/>
+    <path d="M-52,20 L52,20 L44,195 L0,235 L-44,195 Z" fill="#171613" stroke="url(#goldGrad)" stroke-width="3"/>
+    <line x1="-44" y1="30" x2="44" y2="30" stroke="#C9A45C" stroke-width="4" stroke-linecap="round"/>
+    <line x1="-42" y1="42" x2="-36" y2="188" stroke="#C9A45C" stroke-opacity="0.45" stroke-dasharray="6 6" stroke-width="1.5"/>
+    <line x1="42" y1="42" x2="36" y2="188" stroke="#C9A45C" stroke-opacity="0.45" stroke-dasharray="6 6" stroke-width="1.5"/>
+    <circle cx="0" cy="88" r="5" fill="#0B0B0A" stroke="#C9A45C" stroke-width="1.5"/>
+    <circle cx="0" cy="116" r="5" fill="#0B0B0A" stroke="#C9A45C" stroke-width="1.5"/>
+    <circle cx="0" cy="144" r="5" fill="#0B0B0A" stroke="#C9A45C" stroke-width="1.5"/>
+    <circle cx="0" cy="172" r="5" fill="#0B0B0A" stroke="#C9A45C" stroke-width="1.5"/>
+    
+  </g>
+
+  <!-- Category / Type Title -->
+  <text x="400" y="876" text-anchor="middle" fill="#F3EFE6" font-family="Georgia, 'Times New Roman', serif" font-size="24" letter-spacing="1.5">WATCH STRAP</text>
+  <text x="400" y="902" text-anchor="middle" fill="#C9A45C" font-family="Arial, Helvetica, sans-serif" font-size="12" letter-spacing="3">LEATHER &amp; STEEL BANDS</text>
+
+  <!-- Bottom Neutral Pill -->
+  <rect x="195" y="922" width="410" height="34" rx="17" fill="#171613" stroke="#2A261F" stroke-width="1.2"/>
+  <text x="400" y="943" text-anchor="middle" fill="#8D8980" font-family="Arial, Helvetica, sans-serif" font-size="10.5" letter-spacing="2">REPRESENTATIVE ILLUSTRATION • PHOTO PENDING</text>
+</svg>

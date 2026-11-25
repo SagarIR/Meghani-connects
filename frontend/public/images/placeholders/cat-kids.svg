@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="KIDS WATCHES">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="42%" r="65%">
+      <stop offset="0%" stop-color="#221E17"/>
+      <stop offset="55%" stop-color="#13120F"/>
+      <stop offset="100%" stop-color="#090908"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F2DFB0"/>
+      <stop offset="45%" stop-color="#C9A45C"/>
+      <stop offset="100%" stop-color="#8E6C2E"/>
+    </linearGradient>
+    <linearGradient id="goldSoft" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#E8D5A7" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#C9A45C" stop-opacity="0.06"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#bgGrad)"/>
+
+  <!-- Subtle guilloche horological background rings -->
+  <g fill="none" stroke="#C9A45C" stroke-opacity="0.10">
+    <circle cx="400" cy="245" r="190" stroke-width="1"/>
+    <circle cx="400" cy="245" r="159" stroke-width="1" stroke-dasharray="4 8"/>
+    <circle cx="400" cy="245" r="132" stroke-width="1"/>
+  </g>
+
+  <!-- Subtle framing border -->
+  <rect x="24" y="24" width="752" height="552" rx="18" fill="none" stroke="#2A261F" stroke-width="1.5"/>
+
+  <!-- Top Heritage Mark -->
+  <text x="400" y="68" text-anchor="middle" fill="#8D8980" font-family="Georgia, 'Times New Roman', serif" font-size="14" letter-spacing="6">MEGHANI WATCH CO.</text>
+  <line x1="345" y1="84" x2="455" y2="84" stroke="#C9A45C" stroke-opacity="0.4" stroke-width="1"/>
+
+  <!-- Main Horological Vector -->
+  <g transform="translate(400, 245) scale(0.68)">
+    
+    <path d="M-66,-124 L-56,-235 L56,-235 L66,-124 Z" fill="#171613" stroke="#C9A45C" stroke-width="2"/>
+    <path d="M-66,124 L-56,235 L56,235 L66,124 Z" fill="#171613" stroke="#C9A45C" stroke-width="2"/>
+    <line x1="-58" y1="-165" x2="58" y2="-165" stroke="#C9A45C" stroke-opacity="0.3" stroke-width="2"/>
+    <line x1="-56" y1="-195" x2="56" y2="-195" stroke="#C9A45C" stroke-opacity="0.3" stroke-width="2"/>
+    <line x1="-58" y1="165" x2="58" y2="165" stroke="#C9A45C" stroke-opacity="0.3" stroke-width="2"/>
+    <line x1="-56" y1="195" x2="56" y2="195" stroke="#C9A45C" stroke-opacity="0.3" stroke-width="2"/>
+    <rect x="-136" y="-56" width="14" height="28" rx="3" fill="#171613" stroke="url(#goldGrad)" stroke-width="2"/>
+    <rect x="-136" y="28" width="14" height="28" rx="3" fill="#171613" stroke="url(#goldGrad)" stroke-width="2"/>
+    <rect x="122" y="-56" width="14" height="28" rx="3" fill="#171613" stroke="url(#goldGrad)" stroke-width="2"/>
+    <rect x="122" y="28" width="14" height="28" rx="3" fill="#171613" stroke="url(#goldGrad)" stroke-width="2"/>
+    <polygon points="-75,-124 75,-124 124,-75 124,75 75,124 -75,124 -124,75 -124,-75" fill="#10100E" stroke="url(#goldGrad)" stroke-width="4"/>
+    <polygon points="-64,-108 64,-108 108,-64 108,64 64,108 -64,108 -108,64 -108,-64" fill="#151411" stroke="#C9A45C" stroke-opacity="0.4" stroke-width="1.5"/>
+    <rect x="-82" y="-56" width="164" height="112" rx="10" fill="#0A0D0B" stroke="#C9A45C" stroke-opacity="0.6" stroke-width="1.8"/>
+    <text x="0" y="-26" text-anchor="middle" fill="#8D8980" font-family="monospace" font-size="14" letter-spacing="3">MON 25</text>
+    <text x="0" y="22" text-anchor="middle" fill="#E8D5A7" font-family="monospace" font-size="40" font-weight="bold" letter-spacing="2">10:08</text>
+    <text x="0" y="44" text-anchor="middle" fill="#C9A45C" font-family="monospace" font-size="12" letter-spacing="2">CHRONO • WR 200M</text>
+    
+  </g>
+
+  <!-- Subtle Category Mark (kept upper-center so HTML card footer never overlaps) -->
+  <text x="400" y="460" text-anchor="middle" fill="#C9A45C" fill-opacity="0.7" font-family="Arial, Helvetica, sans-serif" font-size="11" letter-spacing="3.5">PLAYFUL &amp; DURABLE</text>
+</svg>

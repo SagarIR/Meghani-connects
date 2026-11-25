@@ -16,7 +16,7 @@ export const metadata: Metadata = buildPageMetadata({
     'watch repair in Vadodara',
     'watch showroom phone number'
   ],
-  ogImage: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80',
+  ogImage: 'https://images.pexels.com/photos/277319/pexels-photo-277319.jpeg?auto=compress&cs=tinysrgb&w=1200',
 });
 
 export default async function ContactPage() {

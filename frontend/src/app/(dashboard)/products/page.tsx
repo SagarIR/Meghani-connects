@@ -1234,7 +1234,7 @@ export default function ProductsPage() {
                 {showUrlInput ? (
                   <div className="space-y-1.5">
                     <Input 
-                      placeholder="https://images.example.com/tissot-prx.webp" 
+                      placeholder="https://res.cloudinary.com/your-cloud/image/upload/watch.webp" 
                       {...register('image')} 
                     />
                     <p className="text-xs text-[#8D8980]">Direct link to product photo.</p>

@@ -20,7 +20,7 @@ export const metadata = buildPageMetadata({
     'Sonata watches Vadodara',
     'Ajanta wall clocks Vadodara'
   ],
-  ogImage: 'https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1200&q=80',
+  ogImage: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=1200&q=80',
 });
 
 export default async function BrandsPage() {

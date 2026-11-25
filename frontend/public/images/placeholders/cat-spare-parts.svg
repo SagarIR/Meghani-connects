@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600" role="img" aria-label="WATCH SPARE PARTS">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="42%" r="65%">
+      <stop offset="0%" stop-color="#221E17"/>
+      <stop offset="55%" stop-color="#13120F"/>
+      <stop offset="100%" stop-color="#090908"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F2DFB0"/>
+      <stop offset="45%" stop-color="#C9A45C"/>
+      <stop offset="100%" stop-color="#8E6C2E"/>
+    </linearGradient>
+    <linearGradient id="goldSoft" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#E8D5A7" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#C9A45C" stop-opacity="0.06"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#bgGrad)"/>
+
+  <!-- Subtle guilloche horological background rings -->
+  <g fill="none" stroke="#C9A45C" stroke-opacity="0.10">
+    <circle cx="400" cy="245" r="190" stroke-width="1"/>
+    <circle cx="400" cy="245" r="159" stroke-width="1" stroke-dasharray="4 8"/>
+    <circle cx="400" cy="245" r="132" stroke-width="1"/>
+  </g>
+
+  <!-- Subtle framing border -->
+  <rect x="24" y="24" width="752" height="552" rx="18" fill="none" stroke="#2A261F" stroke-width="1.5"/>
+
+  <!-- Top Heritage Mark -->
+  <text x="400" y="68" text-anchor="middle" fill="#8D8980" font-family="Georgia, 'Times New Roman', serif" font-size="14" letter-spacing="6">MEGHANI WATCH CO.</text>
+  <line x1="345" y1="84" x2="455" y2="84" stroke="#C9A45C" stroke-opacity="0.4" stroke-width="1"/>
+
+  <!-- Main Horological Vector -->
+  <g transform="translate(400, 245) scale(0.68)">
+    
+    <circle cx="0" cy="-16" r="108" fill="#1B1914" stroke="url(#goldGrad)" stroke-width="5"/>
+    <circle cx="0" cy="-16" r="88" fill="#12110E" stroke="#C9A45C" stroke-opacity="0.55" stroke-width="2"/>
+    <text x="0" y="-34" text-anchor="middle" fill="#F3EFE6" font-family="monospace" font-size="28" font-weight="bold" letter-spacing="2">CR2032</text>
+    <text x="0" y="6" text-anchor="middle" fill="#C9A45C" font-family="Arial, sans-serif" font-size="22" font-weight="bold">+</text>
+    <text x="0" y="38" text-anchor="middle" fill="#8D8980" font-family="monospace" font-size="16" letter-spacing="2">3V LITHIUM</text>
+    
+  </g>
+
+  <!-- Subtle Category Mark (kept upper-center so HTML card footer never overlaps) -->
+  <text x="400" y="460" text-anchor="middle" fill="#C9A45C" fill-opacity="0.7" font-family="Arial, Helvetica, sans-serif" font-size="11" letter-spacing="3.5">BATTERIES &amp; MOVEMENTS</text>
+</svg>

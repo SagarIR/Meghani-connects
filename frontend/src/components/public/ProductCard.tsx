@@ -1,11 +1,12 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { MessageCircle, ArrowRight, ShieldCheck, Clock } from 'lucide-react';
 import { PublicProduct } from '@/types/public';
-import { buildWhatsAppEnquiryUrl } from '@/services/publicCatalogue';
+import { buildWhatsAppEnquiryUrl, getCategoryFallbackImage } from '@/services/publicCatalogue';
 
 interface ProductCardProps {
   product: PublicProduct;
@@ -18,6 +19,14 @@ const luxuryEase = [0.16, 1, 0.3, 1] as const;
 export default function ProductCard({ product, featured = false, priority = false }: ProductCardProps) {
   const isPriceHidden = !product.price_visible || product.availability === 'on_request' || product.price === null;
   const whatsappUrl = buildWhatsAppEnquiryUrl(product);
+  const fallbackImg = getCategoryFallbackImage(product.category, product.name);
+  const [imgSrc, setImgSrc] = useState<string>(product.image || fallbackImg);
+
+  useEffect(() => {
+    setImgSrc(product.image || fallbackImg);
+  }, [product.image, fallbackImg]);
+
+  const isPlaceholder = imgSrc.startsWith('/images/placeholders/');
 
   const getAvailabilityBadge = () => {
     switch (product.availability) {
@@ -65,11 +74,21 @@ export default function ProductCard({ product, featured = false, priority = fals
       <div className="relative aspect-[4/5] w-full overflow-hidden bg-[#0B0B0A]">
         <Link href={`/shop/${product.id}`} className="block w-full h-full">
           <Image
-            src={product.image || 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=800&q=80'}
-            alt={`${product.brand} ${product.name} - ${product.category} Watch | Meghani Watch Co.`}
+            src={imgSrc}
+            alt={
+              isPlaceholder
+                ? `${product.brand} ${product.name} - Representative Illustration | Meghani Watch Co.`
+                : `${product.brand} ${product.name} - ${product.category} Watch | Meghani Watch Co.`
+            }
             fill
             priority={priority}
+            unoptimized={imgSrc.endsWith('.svg')}
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            onError={() => {
+              if (imgSrc !== fallbackImg) {
+                setImgSrc(fallbackImg);
+              }
+            }}
             className="object-cover object-center group-hover:scale-105 transition-transform duration-700 ease-out will-change-transform"
           />
         </Link>
