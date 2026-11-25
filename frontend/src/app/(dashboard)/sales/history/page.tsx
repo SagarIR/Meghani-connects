@@ -204,7 +204,7 @@ export default function SalesHistoryPage() {
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-950/40 border border-emerald-800/40 text-emerald-400">
           <Banknote className="w-3 h-3" />
-          <span>CASH</span>
+          <span>{t('cashPayment', 'CASH')}</span>
         </span>
       )
     }
@@ -212,7 +212,7 @@ export default function SalesHistoryPage() {
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-sky-950/40 border border-sky-800/40 text-sky-400">
           <Smartphone className="w-3 h-3" />
-          <span>UPI</span>
+          <span>{t('upiPayment', 'UPI')}</span>
         </span>
       )
     }
@@ -220,14 +220,14 @@ export default function SalesHistoryPage() {
       return (
         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-950/40 border border-amber-800/40 text-amber-400">
           <CreditCard className="w-3 h-3" />
-          <span>CARD</span>
+          <span>{t('cardPayment', 'CARD')}</span>
         </span>
       )
     }
     return (
       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-[#1F1E1A] border border-[#C9A45C]/40 text-[#C9A45C]">
         <Split className="w-3 h-3" />
-        <span>SPLIT</span>
+        <span>{t('splitPayment', 'SPLIT')}</span>
       </span>
     )
   }
@@ -284,11 +284,11 @@ export default function SalesHistoryPage() {
         </div>
 
         <div className="bg-[#171613] border border-[#2A261F] rounded-xl p-4">
-          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">Average Sale</span>
+          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block">{t('averageSale', 'Average Sale')}</span>
           <p className="text-xl sm:text-2xl font-bold font-mono text-[#E8D5A7] mt-1">
             {formatCurrency(summaryMetrics.avgTicket)}
           </p>
-          <span className="text-[11px] text-[#8D8980] mt-0.5 block">Per sale</span>
+          <span className="text-[11px] text-[#8D8980] mt-0.5 block">{t('perSale', 'Per sale')}</span>
         </div>
 
         <div className="bg-[#171613] border border-[#2A261F] rounded-xl p-4">
@@ -337,11 +337,11 @@ export default function SalesHistoryPage() {
                          text-[#F3EFE6] text-sm focus:border-[#C9A45C] focus:ring-1 focus:ring-[#C9A45C]
                          outline-none cursor-pointer"
               >
-                <option value="all">All Payment Methods</option>
-                <option value="cash">Cash</option>
-                <option value="upi">UPI</option>
-                <option value="card">Card</option>
-                <option value="mixed">Split Payment</option>
+                <option value="all">{t('allPaymentMethods', 'All Payment Methods')}</option>
+                <option value="cash">{t('cashPayment', 'Cash')}</option>
+                <option value="upi">{t('upiPayment', 'UPI')}</option>
+                <option value="card">{t('cardPayment', 'Card')}</option>
+                <option value="mixed">{t('splitPayment', 'Split Payment')}</option>
               </select>
             </div>
 
@@ -385,11 +385,11 @@ export default function SalesHistoryPage() {
           <div className="w-16 h-16 mx-auto bg-[#1F1E1A] border border-[#2A261F] rounded-2xl flex items-center justify-center mb-4">
             <Receipt className="w-8 h-8 text-[#8D8980]" />
           </div>
-          <h3 className="text-lg font-serif font-bold text-[#F3EFE6] mb-1">No Invoices Found</h3>
-          <p className="text-sm text-[#8D8980] mb-5">Try changing your search or date filters.</p>
+          <h3 className="text-lg font-serif font-bold text-[#F3EFE6] mb-1">{t('noInvoicesFound', 'No Invoices Found')}</h3>
+          <p className="text-sm text-[#8D8980] mb-5">{t('tryChangingFilters', 'Try changing your search or date filters.')}</p>
           <Link href="/sales">
             <Button icon={<ShoppingCart className="w-4 h-4" />}>
-              Process New Sale
+              {t('processNewSale', 'Process New Sale')}
             </Button>
           </Link>
         </div>
@@ -399,15 +399,15 @@ export default function SalesHistoryPage() {
             <table className="w-full min-w-[850px]">
               <thead className="bg-[#12110F] border-b border-[#2A261F]">
                 <tr>
-                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Invoice #</th>
-                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Customer & Staff</th>
-                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Date & Time</th>
-                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Payment Method</th>
-                  <th className="px-5 py-3.5 text-right text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Total Amount</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">{t('invoiceNumberCol', 'Invoice #')}</th>
+                  <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">{t('customerStaffCol', 'Customer & Staff')}</th>
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">{t('dateTimeCol', 'Date & Time')}</th>
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">{t('paymentMethodCol', 'Payment Method')}</th>
+                  <th className="px-5 py-3.5 text-right text-xs font-semibold text-[#8D8980] uppercase tracking-wider">{t('totalAmountCol', 'Total Amount')}</th>
                   <th className="px-4 py-3.5 text-right text-xs font-semibold text-[#8D8980] uppercase tracking-wider">
-                    {isManagement ? 'Profit' : 'Profit Access'}
+                    {isManagement ? t('profitCol', 'Profit') : t('hiddenForStaff', 'Profit Access')}
                   </th>
-                  <th className="px-5 py-3.5 text-right text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Actions</th>
+                  <th className="px-5 py-3.5 text-right text-xs font-semibold text-[#8D8980] uppercase tracking-wider">{t('actionsCol', 'Actions')}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#2A261F]">

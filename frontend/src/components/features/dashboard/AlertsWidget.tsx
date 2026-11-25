@@ -7,6 +7,7 @@ import {
   ChevronRight, Bell, ChevronDown, CheckCircle2
 } from 'lucide-react'
 import { api } from '@/services/api'
+import { useAuth } from '@/context/AuthContext'
 import { usePreferences } from '@/context/PreferencesContext'
 import clsx from 'clsx'
 
@@ -46,6 +47,7 @@ interface AlertsData {
 }
 
 export default function AlertsWidget() {
+  const { user, loading: authLoading } = useAuth()
   const { t } = usePreferences()
   const [alerts, setAlerts] = useState<AlertsData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -53,8 +55,12 @@ export default function AlertsWidget() {
   const [isExpanded, setIsExpanded] = useState(true)
 
   useEffect(() => {
-    fetchAlerts()
-  }, [])
+    if (!authLoading && user) {
+      fetchAlerts()
+    } else if (!authLoading && !user) {
+      setLoading(false)
+    }
+  }, [authLoading, user])
 
   const fetchAlerts = async () => {
     try {

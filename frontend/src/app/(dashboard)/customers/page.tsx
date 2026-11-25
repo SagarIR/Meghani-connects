@@ -47,39 +47,40 @@ const languages = [
   { value: 'hi', label: 'Hindi (हिंदी)' },
 ]
 
-const getLoyaltyTier = (points: number) => {
-  if (points >= 5000) return { 
-    tier: 'Platinum Tier', 
-    color: 'text-[#E8D5A7]', 
-    bg: 'bg-[#C9A45C]/15', 
-    border: 'border-[#C9A45C]/40',
-    icon: Crown 
-  }
-  if (points >= 2000) return { 
-    tier: 'Gold Tier', 
-    color: 'text-[#C9A45C]', 
-    bg: 'bg-amber-950/30', 
-    border: 'border-amber-800/40',
-    icon: Star 
-  }
-  if (points >= 500) return { 
-    tier: 'Silver Tier', 
-    color: 'text-[#F3EFE6]', 
-    bg: 'bg-[#1F1E1A]', 
-    border: 'border-[#2A261F]',
-    icon: Award 
-  }
-  return { 
-    tier: 'Bronze Tier', 
-    color: 'text-[#8D8980]', 
-    bg: 'bg-[#12110F]', 
-    border: 'border-[#2A261F]',
-    icon: Gift 
-  }
-}
-
 export default function CustomersPage() {
   const { t } = usePreferences()
+
+  const getLoyaltyTier = (points: number) => {
+    if (points >= 5000) return { 
+      tier: t('platinumTier', 'Platinum VIP'), 
+      color: 'text-[#E8D5A7]', 
+      bg: 'bg-[#C9A45C]/15', 
+      border: 'border-[#C9A45C]/40',
+      icon: Crown 
+    }
+    if (points >= 2000) return { 
+      tier: t('goldTier', 'Gold VIP'), 
+      color: 'text-[#C9A45C]', 
+      bg: 'bg-amber-950/30', 
+      border: 'border-amber-800/40',
+      icon: Star 
+    }
+    if (points >= 500) return { 
+      tier: t('silverTier', 'Silver Member'), 
+      color: 'text-[#F3EFE6]', 
+      bg: 'bg-[#1F1E1A]', 
+      border: 'border-[#2A261F]',
+      icon: Award 
+    }
+    return { 
+      tier: t('bronzeTier', 'Classic Member'), 
+      color: 'text-[#8D8980]', 
+      bg: 'bg-[#12110F]', 
+      border: 'border-[#2A261F]',
+      icon: Gift 
+    }
+  }
+
   const [customers, setCustomers] = useState<Customer[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')

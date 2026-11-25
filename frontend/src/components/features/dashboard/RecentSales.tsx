@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { ShoppingBag, User, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { api } from '@/services/api'
+import { useAuth } from '@/context/AuthContext'
 import { usePreferences } from '@/context/PreferencesContext'
 
 interface Sale {
@@ -17,13 +18,18 @@ interface Sale {
 }
 
 export default function RecentSales() {
+  const { user, loading: authLoading } = useAuth()
   const { t } = usePreferences()
   const [sales, setSales] = useState<Sale[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchRecentSales()
-  }, [])
+    if (!authLoading && user) {
+      fetchRecentSales()
+    } else if (!authLoading && !user) {
+      setLoading(false)
+    }
+  }, [authLoading, user])
 
   const fetchRecentSales = async () => {
     try {

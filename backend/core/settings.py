@@ -296,9 +296,34 @@ SIMPLE_JWT = {
 }
 
 # CORS Settings
-CORS_ALLOWED_ORIGINS = os.getenv('CORS_ALLOWED_ORIGINS', 'http://localhost:3000,http://localhost:3001,http://127.0.0.1:3000,http://127.0.0.1:3001').split(',')
+default_cors_origins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+    'https://meghani-connects.vercel.app',
+    'https://meghaniwatch.com',
+    'https://www.meghaniwatch.com',
+]
+custom_cors = os.getenv('CORS_ALLOWED_ORIGINS')
+if custom_cors:
+    CORS_ALLOWED_ORIGINS = [origin.strip() for origin in custom_cors.split(',') if origin.strip()]
+else:
+    CORS_ALLOWED_ORIGINS = default_cors_origins
+
+CORS_ALLOWED_ORIGIN_REGEXES = [
+    r"^https://.*\.vercel\.app$",
+    r"^https://.*\.meghaniwatch\.com$",
+    r"^http://localhost:[0-9]+$",
+    r"^http://127\.0\.0\.1:[0-9]+$",
+]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = DEBUG  # Allow all origins in development
+
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    'CSRF_TRUSTED_ORIGINS',
+    'https://*.vercel.app,https://meghani-connects.vercel.app,https://*.meghaniwatch.com,http://localhost:3000,http://127.0.0.1:3000'
+).split(',')
 
 # Celery Configuration
 CELERY_BROKER_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')

@@ -160,6 +160,23 @@ interface ProductItem {
 
 export default function RepairsPage() {
   const { t } = usePreferences()
+
+  const getStatusInfo = (status: string) => {
+    const config = statusConfig[status] || statusConfig.received
+    let localizedLabel = config.label
+    switch (status) {
+      case 'received': localizedLabel = t('statusReceived', config.label); break;
+      case 'diagnosing': localizedLabel = t('statusDiagnosing', config.label); break;
+      case 'awaiting_approval': localizedLabel = t('statusAwaitingApproval', config.label); break;
+      case 'in_repair': localizedLabel = t('statusInRepair', config.label); break;
+      case 'testing': localizedLabel = t('statusTesting', config.label); break;
+      case 'ready': localizedLabel = t('statusReadyCollection', config.label); break;
+      case 'delivered': localizedLabel = t('statusDelivered', config.label); break;
+      case 'cancelled': localizedLabel = t('statusCancelled', config.label); break;
+    }
+    return { ...config, label: localizedLabel }
+  }
+
   const [repairs, setRepairs] = useState<Repair[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -662,23 +679,26 @@ export default function RepairsPage() {
                 : 'bg-[#12110F] border border-[#2A261F] text-[#8D8980] hover:text-[#F3EFE6]'
             )}
           >
-            All Stages ({stats.total})
+            {t('allStages', 'All Stages')} ({stats.total})
           </button>
-          {Object.entries(statusConfig).map(([key, config]) => (
-            <button
-              key={key}
-              onClick={() => setStatusFilter(statusFilter === key ? '' : key)}
-              className={clsx(
-                'px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5 border',
-                statusFilter === key
-                  ? `${config.bg} ${config.color} ${config.border} font-bold`
-                  : 'bg-[#12110F] border-[#2A261F] text-[#8D8980] hover:text-[#F3EFE6]'
-              )}
-            >
-              <config.icon className="w-3.5 h-3.5" />
-              <span>{config.label}</span>
-            </button>
-          ))}
+          {Object.entries(statusConfig).map(([key, config]) => {
+            const statusInfo = getStatusInfo(key)
+            return (
+              <button
+                key={key}
+                onClick={() => setStatusFilter(statusFilter === key ? '' : key)}
+                className={clsx(
+                  'px-3 py-1.5 rounded-lg text-xs font-medium transition-all whitespace-nowrap flex items-center gap-1.5 border',
+                  statusFilter === key
+                    ? `${config.bg} ${config.color} ${config.border} font-bold`
+                    : 'bg-[#12110F] border-[#2A261F] text-[#8D8980] hover:text-[#F3EFE6]'
+                )}
+              >
+                <config.icon className="w-3.5 h-3.5" />
+                <span>{statusInfo.label}</span>
+              </button>
+            )
+          })}
         </div>
       </div>
 
@@ -703,17 +723,17 @@ export default function RepairsPage() {
           <div className="w-16 h-16 mx-auto bg-[#1F1E1A] border border-[#2A261F] rounded-2xl flex items-center justify-center mb-4">
             <Wrench className="w-8 h-8 text-[#8D8980]" />
           </div>
-          <h3 className="text-lg font-serif font-bold text-[#F3EFE6] mb-1">No Repair Tickets Found</h3>
-          <p className="text-sm text-[#8D8980] mb-5">There are no repair tickets matching your active filter criteria.</p>
+          <h3 className="text-lg font-serif font-bold text-[#F3EFE6] mb-1">{t('noRepairsFound', 'No Repair Tickets Found')}</h3>
+          <p className="text-sm text-[#8D8980] mb-5">{t('noRepairsMatchingFilter', 'There are no repair tickets matching your active filter criteria.')}</p>
           <Button onClick={openAddModal} icon={<Plus className="w-4 h-4" />}>
-            New Repair Ticket
+            {t('newRepairTicket', 'New Repair Ticket')}
           </Button>
         </div>
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           <AnimatePresence>
             {repairs.map((repair, index) => {
-              const config = statusConfig[repair.status] || statusConfig.received
+              const config = getStatusInfo(repair.status)
               const StatusIcon = config.icon
               
               return (

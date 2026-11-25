@@ -165,18 +165,18 @@ export default function WarrantiesPage() {
 
   const getWarrantyBadge = (w: Warranty) => {
     if (w.status === 'voided') {
-      return <Badge variant="danger">Voided</Badge>
+      return <Badge variant="danger">{t('voided', 'Voided')}</Badge>
     }
     if (w.is_expired) {
-      return <Badge variant="gray">Expired</Badge>
+      return <Badge variant="gray">{t('expired', 'Expired')}</Badge>
     }
     if (w.days_remaining <= 30) {
-      return <Badge variant="warning">{w.days_remaining}d Left</Badge>
+      return <Badge variant="warning">{w.days_remaining} {t('daysLeft', 'days left')}</Badge>
     }
     if (w.status === 'claimed') {
-      return <Badge variant="info">Claim Filed</Badge>
+      return <Badge variant="info">{t('claimFiled', 'Claim Filed')}</Badge>
     }
-    return <Badge variant="success">Active Coverage</Badge>
+    return <Badge variant="success">{t('activeCoverage', 'Active Coverage')}</Badge>
   }
 
   const formatCurrency = (amount: number | string) => {
@@ -240,35 +240,35 @@ export default function WarrantiesPage() {
       {/* Summary KPI Strip */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
         <div className="bg-[#171613] border border-[#2A261F] rounded-xl p-4">
-          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block font-medium">Active Warranties</span>
+          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block font-medium">{t('activeWarranties', 'Active Warranties')}</span>
           <p className="text-xl sm:text-2xl font-bold font-mono text-emerald-400 mt-1">
             {stats.active}
           </p>
-          <span className="text-[11px] text-emerald-500/80 mt-0.5 block">Under active coverage</span>
+          <span className="text-[11px] text-emerald-500/80 mt-0.5 block">{t('underActiveCoverage', 'Under active coverage')}</span>
         </div>
 
         <div className="bg-[#171613] border border-[#2A261F] rounded-xl p-4">
-          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block font-medium">Expiring (&lt;30 Days)</span>
+          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block font-medium">{t('expiringWarranties', 'Expiring (<30 Days)')}</span>
           <p className="text-xl sm:text-2xl font-bold font-mono text-amber-400 mt-1">
             {stats.expiring}
           </p>
-          <span className="text-[11px] text-amber-500/80 mt-0.5 block">Renewal / checkup due</span>
+          <span className="text-[11px] text-amber-500/80 mt-0.5 block">{t('renewalDue', 'Renewal / checkup due')}</span>
         </div>
 
         <div className="bg-[#171613] border border-[#2A261F] rounded-xl p-4">
-          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block font-medium">Total Claims</span>
+          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block font-medium">{t('totalClaims', 'Total Claims')}</span>
           <p className="text-xl sm:text-2xl font-bold font-mono text-[#C9A45C] mt-1">
             {stats.totalClaims}
           </p>
-          <span className="text-[11px] text-[#8D8980] mt-0.5 block">Service & claim repairs</span>
+          <span className="text-[11px] text-[#8D8980] mt-0.5 block">{t('serviceClaimRepairs', 'Service & claim repairs')}</span>
         </div>
 
         <div className="bg-[#171613] border border-[#2A261F] rounded-xl p-4">
-          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block font-medium">Voided Certificates</span>
+          <span className="text-[11px] text-[#8D8980] uppercase tracking-wider block font-medium">{t('voidedCertificates', 'Voided Certificates')}</span>
           <p className="text-xl sm:text-2xl font-bold font-mono text-[#8D8980] mt-1">
             {stats.voided}
           </p>
-          <span className="text-[11px] text-[#8D8980] mt-0.5 block">Revoked or lapsed coverage</span>
+          <span className="text-[11px] text-[#8D8980] mt-0.5 block">{t('revokedCoverage', 'Revoked or lapsed coverage')}</span>
         </div>
       </div>
 
@@ -284,7 +284,7 @@ export default function WarrantiesPage() {
           )}
         >
           <ShieldCheck className="w-4 h-4" />
-          <span>Warranty Certificates</span>
+          <span>{t('warrantyCertificates', 'Warranty Certificates')}</span>
           <span className={clsx(
             'px-2 py-0.5 rounded-full text-[11px] font-mono',
             activeTab === 'certificates' ? 'bg-[#0B0B0A]/20 text-[#0B0B0A]' : 'bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F]'
@@ -303,7 +303,7 @@ export default function WarrantiesPage() {
           )}
         >
           <Wrench className="w-4 h-4" />
-          <span>Service Claims History</span>
+          <span>{t('serviceClaims', 'Service Claims & Filings')}</span>
           <span className={clsx(
             'px-2 py-0.5 rounded-full text-[11px] font-mono',
             activeTab === 'claims' ? 'bg-[#0B0B0A]/20 text-[#0B0B0A]' : 'bg-[#1F1E1A] text-[#C9A45C] border border-[#2A261F]'
@@ -323,7 +323,7 @@ export default function WarrantiesPage() {
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8D8980] group-focus-within:text-[#C9A45C] transition-colors" />
                 <input
                   type="text"
-                  placeholder="Search certificate #, customer name, phone, serial, invoice..."
+                  placeholder={t('searchWarrantyPlaceholder', 'Search certificate #, customer name, phone, serial, invoice...')}
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   className="w-full pl-10 pr-4 py-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl 
@@ -342,19 +342,19 @@ export default function WarrantiesPage() {
                               text-[#F3EFE6] text-sm focus:border-[#C9A45C] focus:ring-1 focus:ring-[#C9A45C]
                               outline-none cursor-pointer"
                   >
-                    <option value="all">All Warranty Statuses</option>
-                    <option value="active">Active & Covered</option>
-                    <option value="expiring">Expiring Soon (&lt;30d)</option>
-                    <option value="claimed">Claim Filed</option>
-                    <option value="expired">Expired</option>
-                    <option value="voided">Voided</option>
+                    <option value="all">{t('allWarrantyStatuses', 'All Warranty Statuses')}</option>
+                    <option value="active">{t('activeCoverage', 'Active & Covered')}</option>
+                    <option value="expiring">{t('expiringWarranties', 'Expiring Soon (<30d)')}</option>
+                    <option value="claimed">{t('claimFiled', 'Claim Filed')}</option>
+                    <option value="expired">{t('expired', 'Expired')}</option>
+                    <option value="voided">{t('voided', 'Voided')}</option>
                   </select>
                 </div>
 
                 <button
                   onClick={fetchData}
                   className="p-2.5 bg-[#12110F] border border-[#2A261F] rounded-xl text-[#8D8980] hover:text-[#C9A45C] hover:border-[#C9A45C]/50 transition-colors"
-                  title="Refresh Data"
+                  title={t('refreshRecords', 'Refresh Data')}
                 >
                   <RefreshCw className="w-4 h-4" />
                 </button>
@@ -368,9 +368,9 @@ export default function WarrantiesPage() {
               <div className="w-16 h-16 mx-auto bg-[#1F1E1A] border border-[#2A261F] rounded-2xl flex items-center justify-center mb-4">
                 <ShieldCheck className="w-8 h-8 text-[#8D8980]" />
               </div>
-              <h3 className="text-lg font-serif font-bold text-[#F3EFE6] mb-1">No Warranty Certificates Found</h3>
+              <h3 className="text-lg font-serif font-bold text-[#F3EFE6] mb-1">{t('noWarrantiesFound', 'No Warranty Certificates Found')}</h3>
               <p className="text-sm text-[#8D8980]">
-                No certificates match your search query or status filter. Certificates are automatically generated upon watch sales.
+                {t('noWarrantiesFoundDesc', 'No certificates match your search query or status filter. Certificates are automatically generated upon watch sales.')}
               </p>
             </div>
           ) : (
@@ -379,13 +379,13 @@ export default function WarrantiesPage() {
                 <table className="w-full min-w-[850px]">
                   <thead className="bg-[#12110F] border-b border-[#2A261F]">
                     <tr>
-                      <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Certificate #</th>
-                      <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Watch / Product</th>
-                      <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Customer</th>
-                      <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Invoice Ref</th>
-                      <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Coverage Period</th>
-                      <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Status</th>
-                      <th className="px-5 py-3.5 text-right text-xs font-semibold text-[#8D8980] uppercase tracking-wider">Actions</th>
+                      <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">{t('certificateCol', 'Certificate #')}</th>
+                      <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">{t('productSerialCol', 'Watch / Product')}</th>
+                      <th className="px-5 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">{t('customerPhoneCol', 'Customer')}</th>
+                      <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">{t('invoiceNumberCol', 'Invoice Ref')}</th>
+                      <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">{t('coveragePeriodCol', 'Coverage Period')}</th>
+                      <th className="px-4 py-3.5 text-left text-xs font-semibold text-[#8D8980] uppercase tracking-wider">{t('statusCol', 'Status')}</th>
+                      <th className="px-5 py-3.5 text-right text-xs font-semibold text-[#8D8980] uppercase tracking-wider">{t('actionsCol', 'Actions')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#2A261F]">

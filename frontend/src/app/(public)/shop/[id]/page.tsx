@@ -32,6 +32,9 @@ interface ProductDetailPageProps {
   params: { id: string };
 }
 
+export const dynamicParams = true;
+export const revalidate = 0;
+
 // Statically prerender all seed public products for ultra-fast LCP & SEO indexing
 export async function generateStaticParams() {
   return SEED_PUBLIC_PRODUCTS.map((product) => ({

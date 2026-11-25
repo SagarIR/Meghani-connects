@@ -24,6 +24,9 @@ export const metadata: Metadata = buildPageMetadata({
   ogImage: 'https://images.unsplash.com/photo-1524805444758-089113d48a6d?auto=format&fit=crop&w=1200&q=80',
 });
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default function ShopPage() {
   const catalogueSchema = getItemListSchema(
     'Meghani Watch Co. Watch Collection',

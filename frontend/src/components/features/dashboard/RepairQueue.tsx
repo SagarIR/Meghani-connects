@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Wrench, ChevronRight } from 'lucide-react'
 import Link from 'next/link'
 import { api } from '@/services/api'
+import { useAuth } from '@/context/AuthContext'
 import { usePreferences } from '@/context/PreferencesContext'
 import clsx from 'clsx'
 
@@ -19,13 +20,18 @@ interface Repair {
 }
 
 export default function RepairQueue() {
+  const { user, loading: authLoading } = useAuth()
   const { t } = usePreferences()
   const [repairs, setRepairs] = useState<Repair[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchRepairs()
-  }, [])
+    if (!authLoading && user) {
+      fetchRepairs()
+    } else if (!authLoading && !user) {
+      setLoading(false)
+    }
+  }, [authLoading, user])
 
   const fetchRepairs = async () => {
     try {

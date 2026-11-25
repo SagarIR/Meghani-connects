@@ -272,13 +272,13 @@ export default function AnalyticsSuitePage() {
       {/* Navigation Segmented Controls */}
       <div className="flex overflow-x-auto gap-2 border-b border-[#2A261F] pb-2 scrollbar-none">
         {[
-          { id: 'forecasting', label: 'Sales Forecasting', icon: TrendingUp },
-          { id: 'reorder', label: 'Smart Reordering', icon: PackageSearch, count: reorderData?.summary?.critical },
-          { id: 'abc', label: 'ABC Inventory', icon: PieChartIcon },
-          { id: 'anomalies', label: 'Activity Alerts', icon: AlertTriangle, count: anomalyData?.counts_by_severity?.critical },
-          { id: 'crm', label: 'Customer Insights', icon: Users },
-          { id: 'assistant', label: 'Store AI Assistant', icon: Sparkles },
-          { id: 'audit', label: 'Activity Log', icon: ShieldCheck },
+          { id: 'forecasting', label: t('salesForecasting', 'Sales Forecasting'), icon: TrendingUp },
+          { id: 'reorder', label: t('smartReordering', 'Smart Reordering'), icon: PackageSearch, count: reorderData?.summary?.critical },
+          { id: 'abc', label: t('abcInventory', 'ABC Inventory'), icon: PieChartIcon },
+          { id: 'anomalies', label: t('activityAlerts', 'Activity Alerts'), icon: AlertTriangle, count: anomalyData?.counts_by_severity?.critical },
+          { id: 'crm', label: t('customerInsights', 'Customer Insights'), icon: Users },
+          { id: 'assistant', label: t('storeAIAssistant', 'Store AI Assistant'), icon: Sparkles },
+          { id: 'audit', label: t('activityAuditLog', 'Activity Log'), icon: ShieldCheck },
         ].map((tab) => {
           const Icon = tab.icon
           const isActive = activeTab === tab.id
@@ -313,7 +313,7 @@ export default function AnalyticsSuitePage() {
           {/* Horizon Selector & Meta */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-[#171613] p-4 rounded-2xl border border-[#2A261F]">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono text-[#8D8980]">FORECAST HORIZON:</span>
+              <span className="text-xs font-mono text-[#8D8980]">{t('forecastHorizon', 'FORECAST HORIZON:')}</span>
               {[30, 60, 90].map((h) => (
                 <button
                   key={h}

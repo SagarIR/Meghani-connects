@@ -109,13 +109,13 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         )}
       >
         {/* Brand Header */}
-        <div className="h-20 flex items-center justify-between px-5 border-b border-[#2A261F] bg-[#0B0B0A]">
+        <div className="h-20 flex items-center justify-between px-5 border-b border-[#2A261F] bg-[#0B0B0A] [data-theme=light]:bg-[#FAF8F5] [data-theme=light]:border-[#DFD7C5]">
           <Link href="/dashboard" className="flex items-center gap-3 group">
             <div className="relative">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1C1B17] to-[#12110F] border border-[#C9A45C]/40 flex items-center justify-center shadow-lg group-hover:border-[#C9A45C] transition-colors">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#1C1B17] to-[#12110F] [data-theme=light]:from-[#FFFFFF] [data-theme=light]:to-[#F4F1EA] border border-[#C9A45C]/40 flex items-center justify-center shadow-lg group-hover:border-[#C9A45C] transition-colors">
                 <Watch className="w-5 h-5 text-[#C9A45C]" />
               </div>
-              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[#0B0B0A]" />
+              <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-[#0B0B0A] [data-theme=light]:border-[#FAF8F5]" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
@@ -196,14 +196,14 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
         </nav>
 
         {/* Staff Profile & Session Footer */}
-        <div className="p-3 border-t border-[#2A261F] bg-[#0B0B0A]">
-          <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#141311] border border-[#2A261F]/80">
+        <div className="p-3 border-t border-[#2A261F] bg-[#0B0B0A] [data-theme=light]:bg-[#FAF8F5] [data-theme=light]:border-[#DFD7C5]">
+          <div className="flex items-center justify-between p-2.5 rounded-xl bg-[#141311] [data-theme=light]:bg-[#FFFFFF] [data-theme=light]:shadow-sm border border-[#2A261F]/80 [data-theme=light]:border-[#DFD7C5]">
             <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-8 h-8 rounded-lg bg-[#2A261F] border border-[#C9A45C]/30 flex items-center justify-center text-xs font-bold text-[#C9A45C] flex-shrink-0">
+              <div className="w-8 h-8 rounded-lg bg-[#2A261F] [data-theme=light]:bg-[#F0ECE1] border border-[#C9A45C]/30 flex items-center justify-center text-xs font-bold text-[#C9A45C] flex-shrink-0">
                 {user?.name ? user.name.charAt(0).toUpperCase() : 'M'}
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-semibold text-[#F3EFE6] truncate leading-tight">
+                <p className="text-xs font-semibold text-[#F3EFE6] [data-theme=light]:text-[#1A1815] truncate leading-tight">
                   {user?.name || user?.username || 'Staff User'}
                 </p>
                 <div className="flex items-center gap-1.5 mt-0.5">
@@ -217,7 +217,7 @@ export default function Sidebar({ isOpen, onClose }: SidebarProps) {
 
             <button
               onClick={logout}
-              title="Sign Out"
+              title={t('logout', 'Sign Out')}
               className="p-1.5 rounded-lg text-[#8D8980] hover:text-red-400 hover:bg-red-950/40 border border-transparent hover:border-red-800/40 transition-colors flex-shrink-0"
               aria-label="Logout"
             >

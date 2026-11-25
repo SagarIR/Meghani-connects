@@ -37,7 +37,7 @@ interface DashboardStats {
 }
 
 export default function DashboardPage() {
-  const { user } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const { t } = usePreferences()
   const [stats, setStats] = useState<DashboardStats | null>(null)
   const [loading, setLoading] = useState(true)
@@ -48,8 +48,12 @@ export default function DashboardPage() {
   const isManagement = user?.role === 'admin' || user?.role === 'manager'
 
   useEffect(() => {
-    fetchStats()
-  }, [])
+    if (!authLoading && user) {
+      fetchStats()
+    } else if (!authLoading && !user) {
+      setLoading(false)
+    }
+  }, [authLoading, user])
 
   const fetchStats = async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true)
@@ -72,7 +76,7 @@ export default function DashboardPage() {
     }).format(amount)
   }
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="space-y-6">
         <div className="h-24 bg-[#171613] border border-[#2A261F] rounded-2xl animate-pulse" />

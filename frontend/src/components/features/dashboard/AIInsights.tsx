@@ -7,6 +7,7 @@ import {
   CheckCircle, Info, RefreshCw
 } from 'lucide-react'
 import { api } from '@/services/api'
+import { useAuth } from '@/context/AuthContext'
 import { usePreferences } from '@/context/PreferencesContext'
 import clsx from 'clsx'
 
@@ -50,14 +51,19 @@ const typeStyles: Record<string, { pill: string; icon: React.ReactNode }> = {
 }
 
 export default function AIInsights() {
+  const { user, loading: authLoading } = useAuth()
   const { t } = usePreferences()
   const [data, setData] = useState<AIInsightsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
 
   useEffect(() => {
-    fetchInsights()
-  }, [])
+    if (!authLoading && user) {
+      fetchInsights()
+    } else if (!authLoading && !user) {
+      setLoading(false)
+    }
+  }, [authLoading, user])
 
   const fetchInsights = async (showRefresh = false) => {
     if (showRefresh) setRefreshing(true)

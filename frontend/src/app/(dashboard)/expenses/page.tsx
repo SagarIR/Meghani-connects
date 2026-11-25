@@ -47,6 +47,35 @@ export default function ExpensesPage() {
   const { t } = usePreferences()
   const isManagement = user?.role === 'admin' || user?.role === 'manager'
 
+  const getCategoryInfo = (cat: string) => {
+    const info = categoryConfig[cat] || categoryConfig.other
+    let localizedLabel = info.label
+    switch (cat) {
+      case 'rent': localizedLabel = t('storeRent', info.label); break;
+      case 'salary': localizedLabel = t('staffSalaries', info.label); break;
+      case 'utilities': localizedLabel = t('electricityUtilities', info.label); break;
+      case 'maintenance': localizedLabel = t('repairsMaintenance', info.label); break;
+      case 'purchase': localizedLabel = t('stockPurchases', info.label); break;
+      case 'marketing': localizedLabel = t('marketingAdv', info.label); break;
+      case 'transport': localizedLabel = t('courierShipping', info.label); break;
+      case 'other': localizedLabel = t('otherExpenses', info.label); break;
+    }
+    return { ...info, label: localizedLabel }
+  }
+
+  const getPaymentModeInfo = (mode: string) => {
+    const info = paymentModeLabels[mode] || paymentModeLabels.cash
+    let localizedLabel = info.label
+    switch (mode) {
+      case 'cash': localizedLabel = t('cashDrawer', info.label); break;
+      case 'upi': localizedLabel = t('upiPayment', info.label); break;
+      case 'card': localizedLabel = t('cardPayment', info.label); break;
+      case 'bank_transfer': localizedLabel = t('netBanking', info.label); break;
+      case 'cheque': localizedLabel = t('cheque', info.label); break;
+    }
+    return { ...info, label: localizedLabel }
+  }
+
   // Navigation tab
   const [activeTab, setActiveTab] = useState<'expenses' | 'till'>('expenses')
 
@@ -407,7 +436,7 @@ export default function ExpensesPage() {
           )}
         >
           <Receipt className="w-4 h-4" />
-          <span>Expense Ledgers & Vouchers</span>
+          <span>{t('expenseLedgers', 'Expense Ledgers & Vouchers')}</span>
         </button>
         <button
           onClick={() => setActiveTab('till')}
@@ -419,7 +448,7 @@ export default function ExpensesPage() {
           )}
         >
           <Landmark className="w-4 h-4" />
-          <span>Till & Cash Drawer Reconciliation</span>
+          <span>{t('tillReconciliation', 'Till & Cash Drawer Reconciliation')}</span>
           {till?.is_closed ? (
             <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
           ) : (
@@ -438,7 +467,7 @@ export default function ExpensesPage() {
               <Wallet className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Total Expenses</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">{t('totalExpenses', 'Total Expenses')}</p>
               <p className="text-xl sm:text-2xl font-bold font-mono text-[#F3EFE6] mt-0.5">
                 {formatCurrency(totalExpenses)}
               </p>
@@ -452,7 +481,7 @@ export default function ExpensesPage() {
               <Calendar className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">This Month</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">{t('thisMonth', 'This Month')}</p>
               <p className="text-xl sm:text-2xl font-bold font-mono text-[#C9A45C] mt-0.5">
                 {formatCurrency(thisMonthTotal)}
               </p>
@@ -466,7 +495,7 @@ export default function ExpensesPage() {
               <TrendingDown className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Average Expense</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">{t('averageExpense', 'Average Expense')}</p>
               <p className="text-xl sm:text-2xl font-bold font-mono text-[#E8D5A7] mt-0.5">
                 {formatCurrency(avgExpense)}
               </p>
@@ -480,9 +509,9 @@ export default function ExpensesPage() {
               <PieChart className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs text-[#8D8980] uppercase tracking-wider">Top Category</p>
+              <p className="text-xs text-[#8D8980] uppercase tracking-wider">{t('topCategory', 'Top Category')}</p>
               <p className="text-base font-bold font-serif text-[#F3EFE6] truncate mt-0.5">
-                {topCategory ? (categoryConfig[topCategory[0]]?.label || topCategory[0]) : 'None'}
+                {topCategory ? getCategoryInfo(topCategory[0]).label : 'None'}
               </p>
             </div>
           </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { api } from '@/services/api'
+import { useAuth } from '@/context/AuthContext'
 import { usePreferences } from '@/context/PreferencesContext'
 import { format } from 'date-fns'
 
@@ -14,13 +15,18 @@ interface SalesData {
 }
 
 export default function SalesChart() {
+  const { user, loading: authLoading } = useAuth()
   const { t, theme } = usePreferences()
   const [data, setData] = useState<SalesData[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchChartData()
-  }, [])
+    if (!authLoading && user) {
+      fetchChartData()
+    } else if (!authLoading && !user) {
+      setLoading(false)
+    }
+  }, [authLoading, user])
 
   const fetchChartData = async () => {
     try {
